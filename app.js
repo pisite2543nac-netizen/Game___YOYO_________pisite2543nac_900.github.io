@@ -11,6 +11,8 @@ import { firebaseConfig } from "./firebase-config.js";
 import { LANGUAGES, LESSONS, DIFFICULTIES } from "./lessons.js";
 import { REWARD_ITEMS } from "./reward-data.js";
 import { DEFAULT_CHARACTER, DEFAULT_ZONE_STATE } from "./character-system.js";
+import { OFFICIAL_STAGES, OFFICIAL_TOTAL_SCORE } from "./official-data.js";
+import { RANKING_CONFIG, seasonIdFromDate, seasonRange, calculateRankMetrics } from "./ranking-system.js";
 
 const firebaseApp = initializeApp(firebaseConfig);
 const auth = getAuth(firebaseApp);
@@ -23,6 +25,7 @@ const state = {
   mistakes:0, keystrokes:0, correctText:"",
   historyUnsub:null,
   roomUnsub:null, roomCode:null, roomData:null,
+  officialProgress:{}, officialSelected:null, officialUnsub:null,
   pvpStartTime:0, pvpTimer:null, pvpMistakes:0, pvpKeys:0, pvpCorrectText:""
 };
 
@@ -52,8 +55,12 @@ async function ensureProfileDefaults(){
   if(!snap.exists()) return;
   const d = snap.data();
   const patch = {};
-  if(typeof d.pointsBalance !== "number") patch.pointsBalance = 0;
-  if(typeof d.pointsLifetime !== "number") patch.pointsLifetime = 0;
+  if(typeof d.tokenBalance !== "number") {
+    patch.tokenBalance = typeof d.pointsBalance === "number" ? d.pointsBalance : 0;
+  }
+  if(typeof d.tokenLifetime !== "number") {
+    patch.tokenLifetime = typeof d.pointsLifetime === "number" ? d.pointsLifetime : 0;
+  }
   if(!Array.isArray(d.inventory)) patch.inventory = [];
   if(!d.progress) patch.progress = {html:{maxUnlockedStage:1},python:{maxUnlockedStage:1}};
   else {
@@ -92,7 +99,9 @@ $("registerForm").addEventListener("submit",async e=>{
       uid:state.uid,studentId:sid,fullName:$("fullName").value.trim(),
       educationLevel:$("educationLevel").value,classroom:$("classroom").value,
       department:$("department").value.trim(),role:"student",status:"active",
-      pointsBalance:0,pointsLifetime:0,inventory:[],
+      tokenBalance:0,tokenLifetime:0,inventory:[],
+      officialProgress:{},officialSubmitted:false,
+      rank:{seasonId:null,rating:0,tierId:"bronze",tierName:"Bronze"},
       progress:{html:{maxUnlockedStage:1},python:{maxUnlockedStage:1}},
       character:{...DEFAULT_CHARACTER,displayName:$("fullName").value.trim()},
       zone:{...DEFAULT_ZONE_STATE},
@@ -123,10 +132,21 @@ async function enterPortal(){
   await ensureProfileDefaults();
   showScreen("userPortal");
   $("portalWelcome").textContent=`${state.player.fullName} · ${state.player.studentId} · ${state.player.educationLevel}${state.player.classroom}`;
-  $("userPoints").textContent=Number(state.player.pointsBalance||0).toLocaleString();
+  $("userTokens").textContent=Number(state.player.tokenBalance||0).toLocaleString();
+  renderUserRank();
   renderLanguages();
   renderRewardShop();
   listenHistory();
+
+  // คำนวณ Rank ของ Season ปัจจุบันเมื่อ User เข้าใช้งาน
+  // ถ้าครบรอบ 60 วัน seasonId จะเปลี่ยนโดยอัตโนมัติ
+  try {
+    await updateMyRank();
+    await ensureProfileDefaults();
+    renderUserRank();
+  } catch (error) {
+    console.warn("Ranking update skipped:", error);
+  }
 }
 
 $("logoutUserButton").onclick=async()=>{
@@ -227,7 +247,9 @@ document.querySelectorAll("[data-game-mode]").forEach(b=>b.onclick=()=>{
   state.gameMode=b.dataset.gameMode;
   document.querySelectorAll("[data-game-mode]").forEach(x=>x.classList.toggle("selected",x===b));
   $("classicConfig").classList.toggle("hidden",state.gameMode!=="classic");
+  $("officialConfig").classList.toggle("hidden",state.gameMode!=="official");
   $("pvpConfig").classList.toggle("hidden",state.gameMode!=="pvp");
+  if(state.gameMode==="official") renderOfficialStages();
 });
 
 function renderDifficulty(){
@@ -304,7 +326,7 @@ function prepareClassic(){
   $("timeRuleLabel").textContent=`เป้าหมาย ${state.lesson.timeLimit}s`;
   $("fileName").textContent=`${state.language.id}_stage_${String(state.lesson.stage).padStart(2,"0")}`;
   $("typingStatus").textContent="พิมพ์ตัวแรกเพื่อเริ่มจับเวลา";
-  $("saveState").textContent=`รางวัล ${state.lesson.rewardPoints} แต้ม`;
+  $("saveState").textContent=`รางวัล ${state.lesson.rewardPoints} Token`;
   $("statTime").textContent="00:00";
   ["statWpm","statMistakes","statScore"].forEach(id=>$(id).textContent="0");
   $("statAccuracy").textContent="100%";
@@ -317,10 +339,10 @@ async function startClassic(){
   const r=await addDoc(collection(db,"attempts"),{
     uid:state.uid,studentId:state.player.studentId,fullName:state.player.fullName,
     educationLevel:state.player.educationLevel,classroom:state.player.classroom,department:state.player.department,
-    language:state.language.name,languageId:state.language.id,modeName:"Classic",
+    language:state.language.name,languageId:state.language.id,modeName:state.gameMode==="official"?"Official":"Classic",
     difficulty:state.difficulty.name,difficultyId:state.difficulty.id,stage:state.lesson.stage,
     lessonId:state.lesson.id,levelTitle:state.lesson.title,status:"playing",
-    score:0,rewardPoints:state.lesson.rewardPoints,wpm:0,accuracy:0,mistakes:0,elapsedSeconds:0,createdAt:serverTimestamp()
+    score:0,rewardPoints:state.gameMode==="official"?0:state.lesson.rewardPoints,wpm:0,accuracy:0,mistakes:0,elapsedSeconds:0,createdAt:serverTimestamp()
   });
   state.attemptId=r.id;
   state.timer=setInterval(updateClassicStats,100);
@@ -407,7 +429,7 @@ function updateClassicStats(){
   $("statWpm").textContent=Math.round(wpm());
   $("statAccuracy").textContent=`${accuracy().toFixed(0)}%`;
   $("statMistakes").textContent=state.mistakes;
-  $("statScore").textContent=liveScore();
+  $("statScore").textContent=state.gameMode==="official"?"—":Number(state.lesson.rewardPoints||0);
 }
 
 async function awardCompletion(){
@@ -424,8 +446,8 @@ async function awardCompletion(){
     const progress={...(d.progress||{})};
     progress[lang]={...(progress[lang]||{}),maxUnlockedStage:newUnlocked};
     tx.update(ref,{
-      pointsBalance:Number(d.pointsBalance||0)+reward,
-      pointsLifetime:Number(d.pointsLifetime||0)+reward,
+      tokenBalance:Number(d.tokenBalance||0)+reward,
+      tokenLifetime:Number(d.tokenLifetime||0)+reward,
       progress,
       updatedAt:serverTimestamp()
     });
@@ -435,23 +457,63 @@ async function awardCompletion(){
 
 async function finishClassic(){
   if(state.finished)return;
-  state.finished=true;clearInterval(state.timer);
+  state.finished=true;
+  clearInterval(state.timer);
+
   const e=elapsed();
   const wp=Math.round(((state.correctText.length/5)/Math.max(e/60,1/60))*100)/100;
   const acc=Math.round(accuracy()*100)/100;
   const score=liveScore();
+
+  if(state.gameMode==="official"){
+    const item=state.officialSelected;
+    const officialScore=calculateOfficialStageScore(item,acc,wp,e);
+
+    if(state.attemptId)await updateDoc(doc(db,"attempts",state.attemptId),{
+      status:"completed",
+      modeName:"Official",
+      officialStage:item.officialStage,
+      academicScore:officialScore,
+      academicMaxScore:item.maxScore,
+      score:0,
+      rewardPoints:0,
+      wpm:wp,accuracy:acc,mistakes:state.mistakes,
+      elapsedSeconds:Math.round(e*100)/100,
+      finishedAt:serverTimestamp()
+    });
+
+    await saveOfficialStage(item,officialScore,acc,wp,Math.round(e*100)/100);
+    await updateMyRank();
+
+    $("resultTitle").textContent=`ผ่านด่านทางการ ${item.officialStage}/30`;
+    $("resultText").textContent="ผลคะแนนถูกเก็บสำหรับครู และจะส่งจริงเมื่อทำครบ 30 ด่านแล้วกดส่งงาน";
+    $("resultScore").textContent="บันทึกแล้ว";
+    $("resultWpm").textContent=wp;
+    $("resultAccuracy").textContent=`${acc}%`;
+    $("resultTime").textContent=`${e.toFixed(2)}s`;
+    $("nextLevelButton").style.display="none";
+
+    await leaveRealFullscreen();
+    showScreen("resultScreen");
+    return;
+  }
+
   if(state.attemptId)await updateDoc(doc(db,"attempts",state.attemptId),{
     status:"completed",score,rewardPoints:state.lesson.rewardPoints,wpm:wp,accuracy:acc,
     mistakes:state.mistakes,elapsedSeconds:Math.round(e*100)/100,finishedAt:serverTimestamp()
   });
+
   await awardCompletion();
-  $("resultTitle").textContent=`ผ่าน Stage ${state.lesson.stage} +${state.lesson.rewardPoints} แต้ม`;
+  await updateMyRank();
+
+  $("resultTitle").textContent=`ผ่าน Stage ${state.lesson.stage} +${state.lesson.rewardPoints} Token`;
   $("resultText").textContent=`${state.language.name} · ${state.difficulty.name} · ${state.lesson.title}`;
-  $("resultScore").textContent=score.toLocaleString();
+  $("resultScore").textContent=`+${state.lesson.rewardPoints} Token`;
   $("resultWpm").textContent=wp;
   $("resultAccuracy").textContent=`${acc}%`;
   $("resultTime").textContent=`${e.toFixed(2)}s`;
   $("nextLevelButton").style.display=state.lesson.stage<50?"":"none";
+
   await leaveRealFullscreen();
   showScreen("resultScreen");
 }
@@ -470,14 +532,14 @@ $("nextLevelButton").onclick=async()=>{
 $("portalButton").onclick=async()=>{await ensureProfileDefaults();await enterPortal()};
 
 function renderRewardShop(){
-  const balance=Number(state.player?.pointsBalance||0);
+  const balance=Number(state.player?.tokenBalance||0);
   const owned=new Set(state.player?.inventory||[]);
   $("rewardShop").innerHTML=REWARD_ITEMS.map(item=>`
     <article class="reward-card ${owned.has(item.id)?"owned":""}">
       <div class="reward-icon">${item.icon}</div>
       <h3>${esc(item.name)}</h3>
       <p>${esc(item.description)}</p>
-      <div class="reward-cost">${item.cost.toLocaleString()} pts</div>
+      <div class="reward-cost">${item.cost.toLocaleString()} Token</div>
       <button class="btn ${owned.has(item.id)?"ghost":"secondary"}" data-redeem="${item.id}" ${owned.has(item.id)||balance<item.cost?"disabled":""}>
         ${owned.has(item.id)?"มีแล้ว":balance<item.cost?"แต้มไม่พอ":"แลกของ"}
       </button>
@@ -493,14 +555,15 @@ async function redeemReward(id){
     await runTransaction(db,async tx=>{
       const snap=await tx.get(ref);
       const d=snap.data();
-      const balance=Number(d.pointsBalance||0);
+      const balance=Number(d.tokenBalance||0);
       const inv=Array.isArray(d.inventory)?d.inventory:[];
       if(inv.includes(id))throw new Error("มีไอเทมแล้ว");
       if(balance<item.cost)throw new Error("แต้มไม่พอ");
-      tx.update(ref,{pointsBalance:balance-item.cost,inventory:[...inv,id],updatedAt:serverTimestamp()});
+      tx.update(ref,{tokenBalance:balance-item.cost,inventory:[...inv,id],updatedAt:serverTimestamp()});
     });
     await ensureProfileDefaults();
-    $("userPoints").textContent=Number(state.player.pointsBalance||0).toLocaleString();
+    $("userTokens").textContent=Number(state.player.tokenBalance||0).toLocaleString();
+  renderUserRank();
     renderRewardShop();
   }catch(err){alert(err.message)}
 }
@@ -516,6 +579,153 @@ function listenHistory(){
     $("userBestWpm").textContent=Math.max(0,...done.map(x=>Number(x.wpm||0))).toFixed(0);
     $("userHistoryBody").innerHTML=rows.slice(0,10).map(x=>`<tr><td>${fmtDate(x.createdAt)}</td><td>${esc(x.language||"-")}</td><td>${esc(x.modeName||"-")}</td><td>${esc(x.difficulty||"-")}</td><td>${esc(x.status)}</td><td>${Number(x.score||0).toLocaleString()}</td><td>${Number(x.wpm||0).toFixed(1)}</td><td>${Number(x.accuracy||0).toFixed(1)}%</td></tr>`).join("")||`<tr><td colspan="8" class="empty">ยังไม่มีประวัติ</td></tr>`;
   });
+}
+
+
+function renderUserRank(){
+  const rank=state.player?.rank || {};
+  const tierIcon=rank.tierIcon || "🥉";
+  const tierName=rank.tierName || "Bronze";
+  const rating=Number(rank.rating||0);
+  $("userRank").textContent=`${tierIcon} ${tierName} ${rating}`;
+  const range=seasonRange(new Date());
+  $("rankSeasonLabel").textContent=`${seasonIdFromDate(new Date())} · ${range.end.toLocaleDateString("th-TH")}`;
+}
+
+function officialStageSource(item){
+  return LESSONS.find(l=>l.language===item.language && Number(l.stage)===Number(item.sourceStage));
+}
+
+function officialProgressMap(){
+  return state.player?.officialProgress || {};
+}
+
+function renderOfficialStages(){
+  const progress=officialProgressMap();
+  const done=OFFICIAL_STAGES.filter(s=>progress[String(s.officialStage)]?.completed).length;
+  $("officialCompletedCount").textContent=done;
+  $("officialSubmitStatus").textContent=state.player?.officialSubmitted ? "ส่งแล้ว" : "ยังไม่ส่ง";
+  $("submitOfficialButton").disabled = done !== OFFICIAL_STAGES.length || !!state.player?.officialSubmitted;
+
+  $("officialStageGrid").innerHTML=OFFICIAL_STAGES.map(item=>{
+    const p=progress[String(item.officialStage)]||{};
+    return `<button class="official-stage ${p.completed?"completed":""}" data-official="${item.officialStage}">
+      <span>${String(item.officialStage).padStart(2,"0")}</span>
+      <strong>${item.languageName} · ${esc(item.title)}</strong>
+      <small>${p.completed?"✓ ทำแล้ว":"ยังไม่ทำ"} · ${item.maxScore} คะแนน</small>
+    </button>`;
+  }).join("");
+
+  document.querySelectorAll("[data-official]").forEach(b=>b.onclick=()=>startOfficialStage(Number(b.dataset.official)));
+}
+
+async function startOfficialStage(stageNo){
+  const item=OFFICIAL_STAGES.find(x=>x.officialStage===stageNo);
+  const lesson=officialStageSource(item);
+  if(!item||!lesson)return;
+  state.gameMode="official";
+  state.officialSelected=item;
+  state.language=LANGUAGES.find(x=>x.id===item.language);
+  state.lesson=lesson;
+  state.difficulty=DIFFICULTIES.find(x=>x.id===lesson.difficulty);
+  prepareClassic();
+  $("modeBadge").textContent=`📋 ทางการ · ${item.languageName}`;
+  $("challengeTitle").textContent=`ทางการ ${stageNo}/30 · ${item.title}`;
+  $("statScore").textContent="—";
+  $("saveState").textContent=`คะแนนเต็ม ${item.maxScore} · ส่งให้ Admin เมื่อส่งงานครบ`;
+  showScreen("gameScreen");
+  await requestRealFullscreen();
+  setTimeout(()=>$("typingInput").focus(),120);
+}
+
+function calculateOfficialStageScore(item, acc, wp, elapsedSeconds){
+  // คะแนนทางการเน้นความถูกต้องก่อน แล้วค่อยโบนัสความเร็ว
+  const accuracyRatio=Math.max(0,Math.min(1,acc/100));
+  const timeTarget=Number(state.lesson?.timeLimit||90);
+  const speedRatio=Math.max(0,Math.min(1,timeTarget/Math.max(elapsedSeconds,1)));
+  const normalized=accuracyRatio*0.85 + speedRatio*0.15;
+  return Math.max(0,Math.min(item.maxScore,Math.round(item.maxScore*normalized*100)/100));
+}
+
+async function saveOfficialStage(item, score, acc, wp, elapsedSeconds){
+  const ref=doc(db,"users",state.uid);
+  await runTransaction(db,async tx=>{
+    const snap=await tx.get(ref);
+    if(!snap.exists())return;
+    const d=snap.data();
+    const officialProgress={...(d.officialProgress||{})};
+    const prev=officialProgress[String(item.officialStage)];
+    // เก็บผลดีที่สุดของด่าน
+    if(!prev || Number(score)>Number(prev.score||0)){
+      officialProgress[String(item.officialStage)]={
+        completed:true,
+        score,
+        maxScore:item.maxScore,
+        accuracy:acc,
+        wpm:wp,
+        elapsedSeconds,
+        lessonId:state.lesson.id,
+        updatedAt:new Date().toISOString()
+      };
+    }
+    tx.update(ref,{officialProgress,updatedAt:serverTimestamp()});
+  });
+  await ensureProfileDefaults();
+}
+
+$("submitOfficialButton").onclick=async()=>{
+  const progress=officialProgressMap();
+  const completed=OFFICIAL_STAGES.filter(s=>progress[String(s.officialStage)]?.completed);
+  if(completed.length!==30){alert("ต้องทำครบ 30 ด่านก่อนส่งงาน");return;}
+  if(state.player?.officialSubmitted){alert("ส่งงานทางการแล้ว");return;}
+
+  const totalScore=OFFICIAL_STAGES.reduce((sum,s)=>sum+Number(progress[String(s.officialStage)]?.score||0),0);
+  const avgAccuracy=OFFICIAL_STAGES.reduce((sum,s)=>sum+Number(progress[String(s.officialStage)]?.accuracy||0),0)/30;
+  const avgWpm=OFFICIAL_STAGES.reduce((sum,s)=>sum+Number(progress[String(s.officialStage)]?.wpm||0),0)/30;
+
+  const submission={
+    uid:state.uid,
+    studentId:state.player.studentId,
+    fullName:state.player.fullName,
+    educationLevel:state.player.educationLevel,
+    classroom:state.player.classroom,
+    department:state.player.department,
+    completedStages:30,
+    totalScore:Math.round(totalScore*100)/100,
+    maxScore:OFFICIAL_TOTAL_SCORE,
+    avgAccuracy:Math.round(avgAccuracy*10)/10,
+    avgWpm:Math.round(avgWpm*10)/10,
+    progress,
+    submittedAt:serverTimestamp()
+  };
+
+  await setDoc(doc(db,"official_submissions",state.uid),submission);
+  await updateDoc(doc(db,"users",state.uid),{officialSubmitted:true,officialSubmittedAt:serverTimestamp()});
+  await ensureProfileDefaults();
+  renderOfficialStages();
+  alert("ส่งงานทางการให้ครูเรียบร้อยแล้ว");
+}
+
+async function updateMyRank(){
+  const seasonId=seasonIdFromDate(new Date());
+  const range=seasonRange(new Date());
+
+  const attempts=[];
+  // ใช้ข้อมูลจาก history listener ผ่าน Firestore query ใหม่ให้ชัดเจน
+  const qs=await import("https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js");
+  const snap=await qs.getDocs(query(collection(db,"attempts"),where("uid","==",state.uid)));
+  snap.forEach(d=>{
+    const a=d.data();
+    const dt=a.createdAt?.toDate?.();
+    if(dt && dt>=range.start && dt<=range.end)attempts.push(a);
+  });
+
+  const activeDays=new Set(attempts.map(a=>a.createdAt?.toDate?.()?.toISOString().slice(0,10)).filter(Boolean)).size;
+  const metrics=calculateRankMetrics(attempts,activeDays);
+  const rank={seasonId,...metrics,updatedAt:new Date().toISOString()};
+  await updateDoc(doc(db,"users",state.uid),{rank,updatedAt:serverTimestamp()});
+  state.player.rank=rank;
+  renderUserRank();
 }
 
 /* PVP V1: โครงเดิมยังคงอยู่ เตรียมต่อยอด Strict Engine และ 2D Zone รอบถัดไป */

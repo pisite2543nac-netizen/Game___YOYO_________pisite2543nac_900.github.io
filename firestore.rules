@@ -38,6 +38,18 @@ service cloud.firestore {
       allow delete: if isAdmin();
     }
 
+
+    match /official_submissions/{uid} {
+      allow create, update: if signedIn() && request.auth.uid == uid;
+      allow read: if signedIn() && request.auth.uid == uid;
+      allow read, write: if isAdmin();
+    }
+
+    match /rankings/{rankingId} {
+      allow read: if signedIn();
+      allow write: if isAdmin();
+    }
+
     match /attempts/{attemptId} {
       allow create: if signedIn() && request.resource.data.uid == request.auth.uid;
       allow read, update: if signedIn() && resource.data.uid == request.auth.uid;

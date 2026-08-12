@@ -6,9 +6,10 @@ import {
 } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
 import { firebaseConfig, ADMIN_USERNAME, ADMIN_EMAIL, ADMIN_UID } from "./firebase-config.js";
 import { DEFAULT_MODES, DEFAULT_LEVELS } from "./default-data.js";
+import { seasonIdFromDate, seasonRange, calculateRankMetrics } from "./ranking-system.js";
 
 const app=initializeApp(firebaseConfig),auth=getAuth(app),db=getFirestore(app),$=id=>document.getElementById(id);
-let cache={users:[],attempts:[],levels:[],modes:[]},unsubs=[];
+let cache={users:[],attempts:[],levels:[],modes:[],official:[]},unsubs=[];
 
 const isAdmin=user=>!!user&&user.uid===ADMIN_UID;
 const dateValue=v=>{try{return v?.toDate?.()?.getTime?.()||0}catch{return 0}};
@@ -36,8 +37,9 @@ function startRealtime(){
   unsubs.push(onSnapshot(collection(db,"attempts"),snap=>{cache.attempts=snap.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>dateValue(b.createdAt)-dateValue(a.createdAt));renderAll()}));
   unsubs.push(onSnapshot(collection(db,"levels"),snap=>{cache.levels=snap.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>Number(a.levelNo)-Number(b.levelNo));renderAll()}));
   unsubs.push(onSnapshot(collection(db,"game_modes"),snap=>{cache.modes=snap.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>Number(a.sortOrder||0)-Number(b.sortOrder||0));renderAll()}));
+  unsubs.push(onSnapshot(collection(db,"official_submissions"),snap=>{cache.official=snap.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>dateValue(b.submittedAt)-dateValue(a.submittedAt));renderAll()}));
 }
-function renderAll(){renderMetrics();renderResults();renderUsers();renderLevels()}
+function renderAll(){renderMetrics();renderResults();renderUsers();renderLevels();renderOfficial();renderRanking()}
 function renderMetrics(){
   const completed=cache.attempts.filter(x=>x.status==="completed");
   const avg=completed.length?Math.round(completed.reduce((s,x)=>s+Number(x.score||0),0)/completed.length):0;
@@ -49,7 +51,7 @@ function renderResults(){
   document.querySelectorAll("[data-delete-attempt]").forEach(b=>b.onclick=async()=>{if(confirm("ลบผลรายการนี้?"))await deleteDoc(doc(db,"attempts",b.dataset.deleteAttempt))});
 }
 function renderUsers(){
-  $("usersBody").innerHTML=cache.users.map(x=>`<tr><td>${formatDate(x.createdAt)}</td><td>${esc(x.studentId)}</td><td><strong>${esc(x.fullName)}</strong></td><td>${esc(x.educationLevel||"")}${esc(x.classroom||"")}</td><td>${esc(x.department)}</td><td><strong>${Number(x.pointsBalance||0).toLocaleString()}</strong></td><td><span class="status status-active">${esc(x.status||"active")}</span></td><td><button class="mini-delete" data-delete-user="${x.id}">ลบข้อมูล</button></td></tr>`).join("")||`<tr><td colspan="8" class="empty">ยังไม่มีสมาชิก</td></tr>`;
+  $("usersBody").innerHTML=cache.users.map(x=>`<tr><td>${formatDate(x.createdAt)}</td><td>${esc(x.studentId)}</td><td><strong>${esc(x.fullName)}</strong></td><td>${esc(x.educationLevel||"")}${esc(x.classroom||"")}</td><td>${esc(x.department)}</td><td><strong>${Number(x.tokenBalance||0).toLocaleString()}</strong></td><td><span class="status status-active">${esc(x.status||"active")}</span></td><td><button class="mini-delete" data-delete-user="${x.id}">ลบข้อมูล</button></td></tr>`).join("")||`<tr><td colspan="8" class="empty">ยังไม่มีสมาชิก</td></tr>`;
   document.querySelectorAll("[data-delete-user]").forEach(b=>b.onclick=async()=>{if(confirm("ลบข้อมูลสมาชิกจาก Firestore? หมายเหตุ: บัญชี Authentication ต้องลบใน Firebase Console แยกต่างหาก"))await deleteDoc(doc(db,"users",b.dataset.deleteUser))});
 }
 function renderLevels(){
@@ -57,6 +59,88 @@ function renderLevels(){
   document.querySelectorAll("[data-edit-level]").forEach(b=>b.onclick=()=>{const x=cache.levels.find(l=>l.id===b.dataset.editLevel);if(!x)return;$("editLevelNo").value=x.levelNo;$("editTitle").value=x.title;$("editLanguage").value=x.language;$("editDifficulty").value=x.difficulty;$("editBasePoints").value=x.basePoints;$("editTimeLimit").value=x.timeLimit;$("editMultiplier").value=x.difficultyMultiplier;$("editDescription").value=x.description||"";$("editCode").value=x.code;window.scrollTo({top:$("levelForm").offsetTop-30,behavior:"smooth"})});
   document.querySelectorAll("[data-delete-level]").forEach(b=>b.onclick=async()=>{if(confirm("ลบโจทย์นี้?"))await deleteDoc(doc(db,"levels",b.dataset.deleteLevel))});
 }
+
+function renderOfficial(){
+  if(!$("officialBody"))return;
+  $("officialBody").innerHTML=cache.official.map(x=>`<tr>
+    <td>${formatDate(x.submittedAt)}</td>
+    <td>${esc(x.studentId)}</td>
+    <td><strong>${esc(x.fullName)}</strong></td>
+    <td>${esc(x.educationLevel||"")}${esc(x.classroom||"")}</td>
+    <td>${esc(x.department)}</td>
+    <td>${esc(x.completedStages||0)}/30</td>
+    <td><strong>${Number(x.totalScore||0).toFixed(2)} / ${Number(x.maxScore||40)}</strong></td>
+    <td>${Number(x.avgAccuracy||0).toFixed(1)}%</td>
+    <td>${Number(x.avgWpm||0).toFixed(1)}</td>
+  </tr>`).join("")||`<tr><td colspan="9" class="empty">ยังไม่มีผู้ส่งงานทางการ</td></tr>`;
+}
+
+function seasonAttemptsForUser(uid){
+  const range=seasonRange(new Date());
+  return cache.attempts.filter(a=>{
+    if(a.uid!==uid || a.status!=="completed")return false;
+    const dt=a.createdAt?.toDate?.();
+    return !!dt && dt>=range.start && dt<=range.end;
+  });
+}
+
+function renderRanking(){
+  if(!$("rankingBody"))return;
+  const seasonId=seasonIdFromDate(new Date()),range=seasonRange(new Date());
+  $("adminSeasonId").textContent=seasonId;
+  $("adminSeasonRange").textContent=`${range.start.toLocaleDateString("th-TH")} – ${range.end.toLocaleDateString("th-TH")}`;
+
+  const rows=cache.users.map(u=>{
+    const attempts=seasonAttemptsForUser(u.id);
+    const days=new Set(attempts.map(a=>a.createdAt?.toDate?.()?.toISOString().slice(0,10)).filter(Boolean)).size;
+    const m=calculateRankMetrics(attempts,days);
+    return {user:u,...m};
+  }).sort((a,b)=>b.rating-a.rating);
+
+  $("rankingBody").innerHTML=rows.map((r,i)=>`<tr>
+    <td><strong>${i+1}</strong></td>
+    <td>${esc(r.user.fullName)}<br><small>${esc(r.user.studentId)}</small></td>
+    <td><strong>${r.tierIcon} ${r.tierName}</strong></td>
+    <td>${r.rating}</td>
+    <td>${r.diligence}</td>
+    <td>${r.accuracy}</td>
+    <td>${r.speed}</td>
+    <td>${r.consistency}</td>
+    <td>${r.avgWpm}</td>
+  </tr>`).join("")||`<tr><td colspan="9" class="empty">ยังไม่มีข้อมูล Ranking</td></tr>`;
+}
+
+async function persistRanking(){
+  const seasonId=seasonIdFromDate(new Date());
+  for(const u of cache.users){
+    const attempts=seasonAttemptsForUser(u.id);
+    const days=new Set(attempts.map(a=>a.createdAt?.toDate?.()?.toISOString().slice(0,10)).filter(Boolean)).size;
+    const m=calculateRankMetrics(attempts,days);
+    await setDoc(doc(db,"rankings",`${seasonId}_${u.id}`),{
+      seasonId,uid:u.id,studentId:u.studentId,fullName:u.fullName,...m,updatedAt:serverTimestamp()
+    },{merge:true});
+    await setDoc(doc(db,"users",u.id),{
+      rank:{seasonId,...m,updatedAt:new Date().toISOString()}
+    },{merge:true});
+  }
+}
+
+if($("recalculateRanking"))$("recalculateRanking").onclick=async()=>{
+  await persistRanking();
+  alert("คำนวณ Ranking Season ปัจจุบันเรียบร้อย");
+};
+
+if($("exportOfficialCsv"))$("exportOfficialCsv").onclick=()=>{
+  const h=["submitted_at","student_id","name","class","department","completed","score","max_score","accuracy","wpm"];
+  const q=v=>`"${String(v??"").replaceAll('"','""')}"`;
+  const rows=cache.official.map(x=>[
+    formatDate(x.submittedAt),x.studentId,x.fullName,
+    `${x.educationLevel||""}${x.classroom||""}`,x.department,
+    x.completedStages,x.totalScore,x.maxScore,x.avgAccuracy,x.avgWpm
+  ].map(q).join(","));
+  downloadFile("official_scores.csv","\ufeff"+h.join(",")+"\n"+rows.join("\n"),"text/csv;charset=utf-8");
+};
+
 $("levelForm").addEventListener("submit",async e=>{e.preventDefault();const n=Number($("editLevelNo").value),id=`level_${String(n).padStart(2,"0")}`;await setDoc(doc(db,"levels",id),{levelNo:n,title:$("editTitle").value.trim(),language:$("editLanguage").value.trim(),difficulty:$("editDifficulty").value,basePoints:Number($("editBasePoints").value),timeLimit:Number($("editTimeLimit").value),difficultyMultiplier:Number($("editMultiplier").value),description:$("editDescription").value.trim(),code:$("editCode").value,isActive:true,updatedAt:serverTimestamp()},{merge:true});e.target.reset();$("editBasePoints").value=100;$("editTimeLimit").value=90;$("editMultiplier").value=1});
 $("seedDefaults").onclick=async()=>{if(!confirm("คืนค่า 4 โหมดและ 12 Level เริ่มต้น?"))return;const batch=writeBatch(db);DEFAULT_MODES.forEach(x=>{const {id,...data}=x;batch.set(doc(db,"game_modes",id),{...data,id,isActive:true},{merge:true})});DEFAULT_LEVELS.forEach(x=>batch.set(doc(db,"levels",`level_${String(x.levelNo).padStart(2,"0")}`),{...x,isActive:true},{merge:true}));await batch.commit()};
 async function deleteCollectionDocs(name){const rows=await getDocs(collection(db,name));let batch=writeBatch(db),count=0;for(const item of rows.docs){batch.delete(item.ref);if(++count>=450){await batch.commit();batch=writeBatch(db);count=0}}if(count)await batch.commit()}

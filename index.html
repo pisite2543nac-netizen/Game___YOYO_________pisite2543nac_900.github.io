@@ -137,7 +137,8 @@
       <div class="card portal-stat"><span>เล่นสำเร็จ</span><strong id="userCompleted">0</strong></div>
       <div class="card portal-stat"><span>คะแนนสูงสุด</span><strong id="userBestScore">0</strong></div>
       <div class="card portal-stat"><span>WPM สูงสุด</span><strong id="userBestWpm">0</strong></div>
-      <div class="card portal-stat points-stat"><span>แต้มสะสม</span><strong id="userPoints">0</strong><small>POINTS</small></div>
+      <div class="card portal-stat points-stat"><span>Token สะสม</span><strong id="userTokens">0</strong><small>TOKENS</small></div>
+      <div class="card portal-stat rank-stat"><span>Rank Season</span><strong id="userRank">-</strong><small id="rankSeasonLabel">60 DAYS</small></div>
     </div>
 
     <section class="card">
@@ -179,6 +180,12 @@
           <small>เล่นคนเดียว จับเวลา วัด WPM / Accuracy / Mistakes และคะแนน</small>
           <div><span>Solo</span><span>Timer</span><span>3 Difficulties</span></div>
         </button>
+        <button class="mode-choice official-mode" data-game-mode="official">
+          <span class="mode-choice-icon">📋</span>
+          <strong>ทางการ</strong>
+          <small>30 ด่านสำหรับงานครู คะแนนรวมเต็ม 40 คะแนน ต้องกดส่งงานเมื่อทำเสร็จ</small>
+          <div><span>30 Stages</span><span>40 Scores</span><span>Teacher</span></div>
+        </button>
         <button class="mode-choice" data-game-mode="pvp">
           <span class="mode-choice-icon">⚔️</span>
           <strong>PVP Realtime</strong>
@@ -204,6 +211,31 @@
       <div class="config-footer">
         <div id="classicLessonSummary" class="selected-summary">ยังไม่ได้เลือกภาษา/ระดับ</div>
         <button id="startClassicButton" class="btn primary" disabled>เริ่ม Classic</button>
+      </div>
+    </section>
+
+
+    <section id="officialConfig" class="card hidden">
+      <div class="section-title">
+        <div>
+          <span class="section-kicker">OFFICIAL · TEACHER ASSIGNMENT</span>
+          <h2>โหมดทางการ 30 ด่าน</h2>
+          <p class="muted-line">คะแนนเต็มรวม 40 คะแนน คะแนนจะไม่แสดงในหน้า User และจะถูกส่งไปหน้า Admin เมื่อกด “ส่งงานทางการ” เท่านั้น</p>
+        </div>
+      </div>
+
+      <div class="official-summary-grid">
+        <div><span>จำนวนด่าน</span><strong>30</strong></div>
+        <div><span>คะแนนเต็ม</span><strong>40</strong></div>
+        <div><span>ทำแล้ว</span><strong id="officialCompletedCount">0</strong></div>
+        <div><span>สถานะ</span><strong id="officialSubmitStatus">ยังไม่ส่ง</strong></div>
+      </div>
+
+      <div id="officialStageGrid" class="official-stage-grid"></div>
+
+      <div class="official-actions">
+        <button id="submitOfficialButton" class="btn primary" disabled>ส่งงานทางการให้ครู</button>
+        <small>ปุ่มจะเปิดเมื่อทำครบ 30 ด่าน และใช้ส่งคะแนนเข้าระบบ Admin</small>
       </div>
     </section>
 
@@ -244,8 +276,8 @@
       <div class="section-title">
         <div>
           <span class="section-kicker">POINT SHOP</span>
-          <h2>ร้านแลกของด้วยแต้ม</h2>
-          <p class="muted-line">ผ่านด่านเพื่อสะสมแต้ม แล้วนำมาแลกไอเทมสำหรับโปรไฟล์และระบบตัวละครในอนาคต</p>
+          <h2>Token Shop</h2>
+          <p class="muted-line">ผ่านด่านทั่วไปเพื่อสะสม Token แล้วนำมาแลกไอเทมสำหรับโปรไฟล์และระบบตัวละครในอนาคต</p>
         </div>
       </div>
       <div id="rewardShop" class="reward-grid"></div>
@@ -325,7 +357,7 @@
         <div><span>WPM</span><strong id="statWpm">0</strong></div>
         <div><span>Accuracy</span><strong id="statAccuracy">100%</strong></div>
         <div><span>Mistakes</span><strong id="statMistakes">0</strong></div>
-        <div><span>แต้มด่าน</span><strong id="statScore">0</strong></div>
+        <div><span>Token ด่าน</span><strong id="statScore">0</strong></div>
       </div>
 
       <div class="game-main-area">

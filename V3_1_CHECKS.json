@@ -1,0 +1,12 @@
+{
+  "official_stages": 30,
+  "official_total_score": 40,
+  "first_20_each": [
+    1
+  ],
+  "last_10_each": [
+    2
+  ],
+  "index_mentions_40": true,
+  "admin_mentions_40": true
+}

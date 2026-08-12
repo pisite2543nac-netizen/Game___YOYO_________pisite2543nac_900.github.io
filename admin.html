@@ -54,6 +54,8 @@
         <button class="tab active" data-tab="resultsTab">ผลการเล่น</button>
         <button class="tab" data-tab="usersTab">สมาชิก User</button>
         <button class="tab" data-tab="levelsTab">จัดการโจทย์ Code</button>
+        <button class="tab" data-tab="officialTab">คะแนนทางการ</button>
+        <button class="tab" data-tab="rankingTab">Ranking</button>
         <button class="tab" data-tab="backupTab">สำรองข้อมูล</button>
       </div>
 
@@ -127,6 +129,53 @@
         </form>
 
         <div id="levelCards" class="level-admin-cards"></div>
+      </section>
+
+
+      <section id="officialTab" class="admin-tab-panel hidden">
+        <div class="panel-title">
+          <div>
+            <h2>คะแนนงานทางการ</h2>
+            <p>แสดงเฉพาะงานที่ User กด “ส่งงานทางการ” แล้ว คะแนนเต็ม 40 คะแนน</p>
+          </div>
+          <button id="exportOfficialCsv" class="btn secondary">ดาวน์โหลดคะแนน CSV</button>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>วันส่ง</th><th>เลขนักศึกษา</th><th>ชื่อ</th><th>ชั้น/ห้อง</th>
+                <th>แผนก</th><th>ทำครบ</th><th>คะแนน /40</th><th>Accuracy</th><th>WPM</th>
+              </tr>
+            </thead>
+            <tbody id="officialBody"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section id="rankingTab" class="admin-tab-panel hidden">
+        <div class="panel-title">
+          <div>
+            <h2>Ranking Season 60 วัน</h2>
+            <p>คำนวณจากความขยัน 35% · Accuracy 30% · Speed 20% · Consistency 15%</p>
+          </div>
+          <button id="recalculateRanking" class="btn secondary">คำนวณ Rank ใหม่</button>
+        </div>
+        <div class="ranking-season-banner">
+          <span>Season</span><strong id="adminSeasonId">-</strong>
+          <span id="adminSeasonRange">-</span>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>#</th><th>ผู้เล่น</th><th>Rank</th><th>Rating</th><th>ขยัน</th>
+                <th>แม่นยำ</th><th>ความเร็ว</th><th>สม่ำเสมอ</th><th>WPM เฉลี่ย</th>
+              </tr>
+            </thead>
+            <tbody id="rankingBody"></tbody>
+          </table>
+        </div>
       </section>
 
       <section id="backupTab" class="admin-tab-panel hidden">
