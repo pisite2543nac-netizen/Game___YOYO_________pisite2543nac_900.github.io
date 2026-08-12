@@ -10,9 +10,7 @@ service cloud.firestore {
     // แก้ Email นี้ให้ตรงกับ Admin ที่สร้างใน Firebase Authentication
     function isAdmin() {
       return signedIn()
-        && request.auth.token.email in [
-          "teacher@example.com"
-        ];
+        && request.auth.uid == "TWUrLjOh3BTa1cBNwDXKk4X2IAg1";
     }
 
     match /game_modes/{modeId} {

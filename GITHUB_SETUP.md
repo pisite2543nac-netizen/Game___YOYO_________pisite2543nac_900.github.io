@@ -160,3 +160,71 @@ game_modes
 `levels` = โจทย์ Code
 
 `game_modes` = โหมดเกม
+
+
+---
+
+## ค่า Admin ของเวอร์ชันนี้
+
+หน้า `admin.html` ใช้:
+
+```text
+Username: Pisit_2000
+```
+
+ระบบจะเชื่อม Username นี้กับ Firebase Authentication บัญชีภายใน:
+
+```text
+pisit_2000@thc-nr.local
+```
+
+ให้ไปที่:
+
+```text
+Firebase Console
+> Authentication
+> Users
+> Add user
+```
+
+สร้างผู้ใช้:
+
+```text
+Email: pisit_2000@thc-nr.local
+Password: ใช้รหัสผ่าน Admin ที่คุณกำหนดไว้
+```
+
+เวลาเข้า `/admin.html` ให้กรอก:
+
+```text
+Username: Pisit_2000
+Password: รหัสเดียวกับ Firebase Authentication
+```
+
+รหัสผ่านไม่ได้เก็บไว้ใน JavaScript หรือ Repository เพื่อไม่ให้ผู้ใช้ GitHub เปิดดูรหัสผ่านได้
+
+
+---
+
+## Firebase Admin UID ที่ตั้งไว้
+
+โปรเจกต์เวอร์ชันนี้ตรวจสิทธิ์ Admin จาก Firebase UID โดยตรง:
+
+```text
+TWUrLjOh3BTa1cBNwDXKk4X2IAg1
+```
+
+ดังนั้นบัญชี Firebase Authentication ที่มี UID นี้จะเป็น Admin
+
+ค่า Username สำหรับหน้าเว็บยังเป็น:
+
+```text
+Pisit_2000
+```
+
+และ Password ใช้รหัสเดียวกับบัญชี Firebase Authentication
+
+ข้อดีของการตรวจด้วย UID:
+- ไม่ขึ้นกับ Email
+- เปลี่ยน Email ภายหลังได้โดยไม่ต้องแก้ Firestore Rules
+- ปลอดภัยและแน่นอนกว่าการตรวจจาก Username ในฐานข้อมูล

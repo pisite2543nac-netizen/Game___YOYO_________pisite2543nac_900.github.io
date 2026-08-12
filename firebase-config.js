@@ -1,18 +1,14 @@
-// 1) Firebase Console > Project settings > General
-// 2) Your apps > Web app
-// 3) Copy firebaseConfig มาแทนค่าด้านล่าง
-// 4) เปลี่ยนชื่อไฟล์นี้จาก firebase-config.example.js เป็น firebase-config.js
-
 export const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_PROJECT.firebaseapp.com",
-  projectId: "YOUR_PROJECT_ID",
-  storageBucket: "YOUR_PROJECT.firebasestorage.app",
-  messagingSenderId: "YOUR_SENDER_ID",
-  appId: "YOUR_APP_ID"
+  apiKey: "AIzaSyAScKt0szL6-KpA0KqQlROq2v59vBbBrxc",
+  authDomain: "thc-nr.firebaseapp.com",
+  projectId: "thc-nr",
+  storageBucket: "thc-nr.firebasestorage.app",
+  messagingSenderId: "839632570247",
+  appId: "1:839632570247:web:4c2d2413270df99dd7f522",
+  measurementId: "G-LWCNWGSZTS"
 };
 
-// Email Admin ต้องตรงกับบัญชีใน Firebase Authentication
-export const ADMIN_EMAILS = [
-  "teacher@example.com"
-];
+export const ADMIN_USERNAME = "Pisit_2000";
+export const ADMIN_EMAIL = "pisit_2000@thc-nr.local";
+
+export const ADMIN_UID = "TWUrLjOh3BTa1cBNwDXKk4X2IAg1";

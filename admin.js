@@ -7,7 +7,7 @@ import {
   writeBatch, serverTimestamp
 } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
 
-import { firebaseConfig, ADMIN_EMAILS } from "./firebase-config.js";
+import { firebaseConfig, ADMIN_USERNAME, ADMIN_EMAIL, ADMIN_UID } from "./firebase-config.js";
 import { DEFAULT_MODES, DEFAULT_LEVELS } from "./default-data.js";
 
 const app = initializeApp(firebaseConfig);
@@ -18,21 +18,25 @@ const $ = id => document.getElementById(id);
 let cache = { users: [], attempts: [], levels: [], modes: [] };
 
 function isAdmin(user) {
-  return !!user?.email && ADMIN_EMAILS.map(x => x.toLowerCase()).includes(user.email.toLowerCase());
+  return !!user && user.uid === ADMIN_UID;
 }
 
 $("adminLoginForm").addEventListener("submit", async e => {
   e.preventDefault();
   $("adminLoginError").textContent = "";
   try {
+    if ($("adminUsername").value.trim() !== ADMIN_USERNAME) {
+      throw new Error("Username ไม่ถูกต้อง");
+    }
+
     const result = await signInWithEmailAndPassword(
       auth,
-      $("adminEmail").value.trim(),
+      ADMIN_EMAIL,
       $("adminPassword").value
     );
     if (!isAdmin(result.user)) {
       await signOut(auth);
-      throw new Error("บัญชีนี้ไม่ได้อยู่ในรายชื่อ ADMIN_EMAILS");
+      throw new Error("บัญชีนี้ไม่ใช่ Admin");
     }
   } catch (error) {
     $("adminLoginError").textContent = "เข้าสู่ระบบไม่สำเร็จ: " + error.message;
