@@ -1,73 +1,75 @@
-# Code Typing Game V2 — Exam-style User + Admin
+# Code Typing Game — Realtime User + Admin
 
-เวอร์ชันนี้ปรับโครงตามเว็บระบบสอบออนไลน์ต้นฉบับ
+## สิ่งที่เพิ่มในเวอร์ชันนี้
 
-## User Flow
+### ระบบ User แบบบัญชีจริง
+- หน้าเข้าสู่ระบบ
+- หน้าลงทะเบียนผู้ใช้ใหม่
+- ใช้เลขประจำตัวนักศึกษา + Password
+- เลือกระดับชั้น
+- เลือกห้อง / กลุ่ม
+- แผนกวิชา
+- Password + Confirm Password
+- ข้อมูลสมาชิกเก็บใน Firestore collection `users`
+- Firebase Authentication ใช้ Email/Password ภายใน
+- ระบบแปลงเลขนักศึกษาเป็น Email ภายในอัตโนมัติ เช่น `12345@student.thc-nr.local`
+  ผู้ใช้ไม่ต้องรู้หรือกรอก Email นี้
 
-1. หน้าแรกแสดงคำชี้แจง
-2. แบบฟอร์มลงทะเบียนยังคงมีเฉพาะ
-   - ชื่อ-นามสกุล
-   - เลขประจำตัวนักศึกษา
-   - ชั้น/กลุ่มเรียน
-   - แผนกวิชา
-   - ยอมรับคำชี้แจง
-3. ลงทะเบียนสำเร็จ → เข้า User Panel
-4. User Panel แสดงสถิติของผู้ใช้
-5. เลือก Game Mode
-6. เลือก Level
-7. เข้าเกมพิมพ์ Code
-8. บันทึก Score / WPM / Accuracy / Mistakes / Time
-9. ดูประวัติการเล่นและเลือกเล่น Level อื่นได้
+### หลัง Login
+- เข้า User Panel
+- เลือก Game Mode
+- เลือก Level
+- ดูสถิติของตัวเอง
+- ประวัติผลเกมแบบ Realtime
+- เล่น Classic / Speed / Accuracy / Hardcore
 
-## Admin Flow
+### Admin Realtime
+Admin ใช้ Firestore `onSnapshot()` กับ
+- users
+- attempts
+- levels
+- game_modes
 
-หน้า `admin.html`
+เมื่อ User สมัครใหม่:
+1. Firebase Authentication สร้าง Account
+2. Firestore สร้าง `users/{uid}`
+3. Admin ที่เปิดอยู่ได้รับข้อมูลใหม่ทันที
+4. ตัวเลขสมาชิกและตาราง User อัปเดตโดยไม่ต้อง Refresh
 
-Login:
-- Username: Pisit_2000
-- Password: รหัสผ่านของบัญชี Firebase Authentication
-- ตรวจสิทธิ์ Admin จาก Firebase UID ที่กำหนดไว้
+เมื่อผู้เล่นเริ่ม/จบเกม:
+- attempts อัปเดต
+- ตารางผลและ Dashboard Admin เปลี่ยนทันที
 
-เมนู:
-1. ผลการเล่น
-   - ดูทั้งหมด
-   - ลบทีละรายการ
-   - ลบทั้งหมด
-   - Export CSV
-2. ผู้ลงทะเบียน
-   - ดูทั้งหมด
-   - ลบทีละคน
-   - ลบทั้งหมด
-3. จัดการโจทย์ Code
-   - เพิ่ม Level
-   - แก้ไข Level
-   - ลบ Level
-   - กำหนดภาษา
-   - Difficulty
-   - Base Points
-   - Time Limit
-   - Difficulty Multiplier
-   - Description
-   - Code Text
-   - คืนค่า 12 Level เริ่มต้น
-4. สำรองข้อมูล
-   - Export JSON
-   - Import JSON
+## Firebase Authentication ที่ต้องเปิด
 
-## Firebase Collections
+Firebase Console > Authentication > Sign-in method
 
-- `players`
-- `attempts`
-- `levels`
-- `game_modes`
+เปิด:
+- Email/Password
 
-## สำคัญก่อนเปิดใช้งาน
+Anonymous Authentication ไม่จำเป็นสำหรับ User รุ่นนี้แล้ว
 
-Firebase Authentication ต้องเปิด:
-- Anonymous สำหรับ User
-- Email/Password สำหรับ Admin
+Admin ยังคงใช้ Email/Password เดิม
 
-Firestore Rules:
-นำไฟล์ `firestore.rules` ไป Publish ใน Firebase Console
+## Firestore Rules
 
-Admin UID ถูกตั้งใน Rules และ `firebase-config.js` แล้ว
+Copy ไฟล์ `firestore.rules` ไปที่:
+Firestore Database > Rules > Publish
+
+Admin UID:
+`TWUrLjOh3BTa1cBNwDXKk4X2IAg1`
+
+## Firestore Collections
+
+- `users` สมาชิก
+- `attempts` ผลการเล่น
+- `levels` โจทย์
+- `game_modes` โหมดเกม
+
+## หมายเหตุการลบ User จาก Admin
+
+หน้า Admin สามารถลบข้อมูลสมาชิกใน Firestore ได้ทันที
+แต่การลบบัญชี Firebase Authentication ของ User รายอื่นจาก Browser ทำไม่ได้อย่างปลอดภัยด้วย Client SDK
+
+หากต้องการ "ลบบัญชี Authentication" ด้วยปุ่มเดียวใน Admin จริง ๆ
+ควรเพิ่ม Backend/Cloud Function ด้วย Firebase Admin SDK ในขั้นต่อไป

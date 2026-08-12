@@ -7,210 +7,229 @@
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <header class="site-header">
-    <div class="wrap header-inner">
-      <div>
-        <div class="kicker">NANGRONG TECHNICAL COLLEGE</div>
-        <h1>ระบบเกมพิมพ์ Code วิทยาลัยเทคนิคนางรอง</h1>
-        <p>ฝึกทักษะการพิมพ์โปรแกรมสำหรับระดับ ปวช. และ ปวส.</p>
-      </div>
-      <a class="admin-link" href="admin.html">Admin</a>
+<header class="site-header">
+  <div class="wrap header-inner">
+    <div>
+      <div class="kicker">NANGRONG TECHNICAL COLLEGE</div>
+      <h1>ระบบเกมพิมพ์ Code</h1>
+      <p>วิทยาลัยเทคนิคนางรอง</p>
     </div>
-  </header>
+    <a class="admin-link" href="admin.html">Admin</a>
+  </div>
+</header>
 
-  <main class="wrap">
-    <!-- เหมือนหน้าเดิม: คำชี้แจงก่อน -->
-    <section id="introScreen" class="card hero-card">
-      <div class="exam-summary-line">
-        <span>เกมพิมพ์ Code</span>
-        <strong>12 Level</strong>
-        <strong>4 โหมด</strong>
-        <strong>จับเวลา + WPM</strong>
-      </div>
+<main class="wrap">
+  <section id="authScreen" class="card account-card">
+    <div class="creator-banner">ผู้จัดทำ: นายพิสิษฐ์ หุนตระนี ครูพิเศษสอน</div>
 
-      <h2>คำชี้แจงการเล่น</h2>
-      <ol class="instruction-list">
-        <li>โจทย์ Code จะถูกจัดตาม Level จากง่ายไปยาก ครอบคลุม HTML, CSS, JavaScript, Python และ Flask</li>
-        <li>คะแนนของแต่ละ Level ไม่เท่ากัน โดยคิดจากคะแนนฐาน ความยาก ความเร็ว ความแม่นยำ และจำนวนครั้งที่พิมพ์ผิด</li>
-        <li>ก่อนเข้าสู่ระบบเกมต้องลงทะเบียนให้ครบถ้วน ได้แก่ ชื่อ-นามสกุล ชั้น/กลุ่มเรียน แผนกวิชา และเลขประจำตัวนักศึกษา</li>
-        <li>เมื่อลงทะเบียนสำเร็จ ระบบจะเข้าสู่หน้า User เพื่อเลือกโหมดเกมและ Level ก่อนเริ่มเล่น</li>
-        <li>Classic เป็นโหมดมาตรฐาน ส่วน Speed Rush, Accuracy Pro และ Hardcore มีกติกาและตัวคูณคะแนนแตกต่างกัน</li>
-        <li>ระบบเริ่มจับเวลาเมื่อผู้เล่นเริ่มพิมพ์ และบันทึก WPM, Accuracy, Mistakes และเวลาเล่น</li>
-        <li>ในโหมดที่จำกัดเวลา เมื่อหมดเวลาระบบจะยุติรอบและบันทึกสถานะอัตโนมัติ</li>
-        <li>Hardcore ไม่อนุญาตให้ใช้ Backspace หรือ Delete</li>
-        <li>ผลการเล่นจะถูกบันทึกลง Firebase Firestore กลาง และผู้ดูแลระบบสามารถตรวจสอบได้จากหน้า Admin</li>
-        <li>ผู้เล่นควรพิมพ์ด้วยตนเอง และไม่แก้ไข Source Code ของหน้าเว็บระหว่างเล่น</li>
-      </ol>
-      <p class="creator-line">ผู้จัดทำ: นายพิสิษฐ์ หุนตระนี ครูพิเศษสอน</p>
+    <div class="auth-tabs">
+      <button id="loginTab" class="auth-tab active" type="button">เข้าสู่ระบบ</button>
+      <button id="registerTab" class="auth-tab" type="button">ลงทะเบียนผู้ใช้ใหม่</button>
+    </div>
+
+    <section id="loginPanel" class="auth-panel">
+      <span class="section-kicker">STUDENT LOGIN</span>
+      <h2>เข้าสู่ระบบผู้เล่น</h2>
+      <p class="muted-line">ใช้เลขประจำตัวนักศึกษาและรหัสผ่านที่สร้างไว้ตอนลงทะเบียน</p>
+
+      <form id="loginForm" class="form-grid">
+        <label>
+          <span>เลขประจำตัวนักศึกษา</span>
+          <input id="loginStudentId" inputmode="numeric" pattern="[0-9]+" required placeholder="กรอกเฉพาะตัวเลข">
+        </label>
+        <label>
+          <span>รหัสผ่าน</span>
+          <div class="password-row">
+            <input id="loginPassword" type="password" required placeholder="กรอกรหัสผ่าน">
+            <button class="show-password" type="button" data-toggle-password="loginPassword">แสดง</button>
+          </div>
+        </label>
+        <div class="full form-footer">
+          <span id="loginMessage"></span>
+          <button class="btn primary" type="submit">เข้าสู่ระบบ</button>
+        </div>
+      </form>
     </section>
 
-    <!-- แบบฟอร์มคงเหมือนเว็บต้นฉบับ: ไม่มีเลือก Mode/Level -->
-    <section id="registerScreen" class="card">
-      <h2>ลงทะเบียนเพื่อเข้าสู่ระบบเกม</h2>
+    <section id="registerPanel" class="auth-panel hidden">
+      <span class="section-kicker">NEW STUDENT ACCOUNT</span>
+      <h2>ลงทะเบียนผู้เล่น</h2>
+      <p class="muted-line">ลงทะเบียนครั้งแรกเพียงครั้งเดียว จากนั้นใช้เลขนักศึกษาและรหัสผ่าน Login ได้</p>
+
       <form id="registerForm" class="form-grid">
+        <label>
+          <span>เลขประจำตัวนักศึกษา</span>
+          <input id="studentId" inputmode="numeric" pattern="[0-9]+" required placeholder="กรอกเฉพาะตัวเลข">
+        </label>
+
         <label>
           <span>ชื่อ-นามสกุล</span>
           <input id="fullName" required placeholder="เช่น นายสมชาย ใจดี">
         </label>
+
         <label>
-          <span>เลขประจำตัวนักศึกษา</span>
-          <input id="studentId" required placeholder="กรอกเลขนักศึกษา">
+          <span>ระดับชั้น</span>
+          <select id="educationLevel" required>
+            <option value="">-- เลือกระดับชั้น --</option>
+            <option>ปวช.1</option>
+            <option>ปวช.2</option>
+            <option>ปวช.3</option>
+            <option>ปวส.1</option>
+            <option>ปวส.2</option>
+          </select>
         </label>
+
         <label>
-          <span>ชั้น / กลุ่มเรียน</span>
-          <input id="classroom" required placeholder="เช่น ปวช.2/1">
+          <span>ห้อง / กลุ่ม</span>
+          <select id="classroom" required>
+            <option value="">-- เลือกห้อง --</option>
+            <option>/1</option><option>/2</option><option>/3</option>
+            <option>/4</option><option>/5</option><option>/6</option>
+          </select>
         </label>
+
         <label>
           <span>แผนกวิชา</span>
           <input id="department" required placeholder="เช่น เทคโนโลยีสารสนเทศ">
         </label>
 
-        <label class="consent full">
+        <label>
+          <span>สร้างรหัสผ่าน</span>
+          <div class="password-row">
+            <input id="password" type="password" minlength="6" required placeholder="อย่างน้อย 6 ตัวอักษร">
+            <button class="show-password" type="button" data-toggle-password="password">แสดง</button>
+          </div>
+        </label>
+
+        <label>
+          <span>ยืนยันรหัสผ่าน</span>
+          <div class="password-row">
+            <input id="confirmPassword" type="password" minlength="6" required placeholder="กรอกรหัสผ่านอีกครั้ง">
+            <button class="show-password" type="button" data-toggle-password="confirmPassword">แสดง</button>
+          </div>
+        </label>
+
+        <label class="full consent">
           <input id="acceptRules" type="checkbox">
-          <span>ข้าพเจ้าได้อ่านและยอมรับคำชี้แจงการเล่นแล้ว</span>
+          <span>ข้าพเจ้ายืนยันว่าข้อมูลถูกต้อง และยอมรับคำชี้แจงการใช้งานระบบ</span>
         </label>
 
         <div class="full form-footer">
-          <span id="registerHint">กรอกข้อมูลให้ครบก่อนเข้าสู่ระบบ</span>
-          <button id="startButton" class="btn primary" type="submit" disabled>
-            ลงทะเบียนและเข้าสู่ระบบ
-          </button>
+          <span id="registerMessage">เมื่อลงทะเบียนสำเร็จ ชื่อจะปรากฏในหน้า Admin แบบเรียลไทม์</span>
+          <button id="registerButton" class="btn primary" type="submit" disabled>ลงทะเบียนและสร้างบัญชี</button>
         </div>
       </form>
     </section>
+  </section>
 
-    <!-- หน้า User หลังลงทะเบียนสำเร็จ -->
-    <section id="userPortal" class="hidden">
-      <div class="user-portal-head card">
+  <section id="userPortal" class="hidden">
+    <div class="user-portal-head card">
+      <div>
+        <span class="section-kicker">USER PANEL</span>
+        <h2>เลือกโหมดเกมพิมพ์ Code</h2>
+        <p id="portalWelcome">-</p>
+      </div>
+      <button id="logoutUserButton" class="btn ghost">ออกจากระบบ</button>
+    </div>
+
+    <div class="portal-stat-grid">
+      <div class="card portal-stat"><span>เล่นทั้งหมด</span><strong id="userTotalAttempts">0</strong></div>
+      <div class="card portal-stat"><span>เล่นสำเร็จ</span><strong id="userCompleted">0</strong></div>
+      <div class="card portal-stat"><span>คะแนนสูงสุด</span><strong id="userBestScore">0</strong></div>
+      <div class="card portal-stat"><span>WPM สูงสุด</span><strong id="userBestWpm">0</strong></div>
+    </div>
+
+    <section class="card">
+      <div class="section-title">
+        <div><span class="section-kicker">SELECT GAME MODE</span><h2>เลือกโหมดเกม</h2></div>
+      </div>
+      <div id="modeCards" class="mode-card-grid"></div>
+    </section>
+
+    <section class="card">
+      <div class="section-title">
         <div>
-          <span class="section-kicker">USER PANEL</span>
-          <h2>ระบบเกมพิมพ์ Code</h2>
-          <p id="portalWelcome">-</p>
+          <span class="section-kicker">SELECT LEVEL</span>
+          <h2 id="selectedModeTitle">เลือก Level</h2>
+          <p id="selectedModeDescription" class="muted-line">กรุณาเลือกโหมดก่อน</p>
         </div>
-        <button id="changeUserButton" class="btn ghost">เปลี่ยนผู้ใช้งาน</button>
       </div>
-
-      <div class="portal-stat-grid">
-        <div class="card portal-stat"><span>เล่นทั้งหมด</span><strong id="userTotalAttempts">0</strong></div>
-        <div class="card portal-stat"><span>เล่นสำเร็จ</span><strong id="userCompleted">0</strong></div>
-        <div class="card portal-stat"><span>คะแนนสูงสุด</span><strong id="userBestScore">0</strong></div>
-        <div class="card portal-stat"><span>WPM สูงสุด</span><strong id="userBestWpm">0</strong></div>
-      </div>
-
-      <section class="card">
-        <div class="section-title">
-          <div>
-            <span class="section-kicker">SELECT GAME MODE</span>
-            <h2>เลือกโหมดเกม</h2>
-          </div>
-        </div>
-        <div id="modeCards" class="mode-card-grid"></div>
-      </section>
-
-      <section class="card">
-        <div class="section-title">
-          <div>
-            <span class="section-kicker">SELECT LEVEL</span>
-            <h2 id="selectedModeTitle">เลือก Level</h2>
-            <p id="selectedModeDescription" class="muted-line">กรุณาเลือกโหมดก่อน</p>
-          </div>
-        </div>
-        <div id="levelCards" class="level-card-grid"></div>
-      </section>
-
-      <section class="card">
-        <div class="section-title">
-          <div>
-            <span class="section-kicker">YOUR HISTORY</span>
-            <h2>ประวัติการเล่นล่าสุด</h2>
-          </div>
-        </div>
-        <div class="table-wrap">
-          <table>
-            <thead>
-              <tr><th>วันเวลา</th><th>โหมด</th><th>Level</th><th>สถานะ</th><th>คะแนน</th><th>WPM</th><th>Accuracy</th></tr>
-            </thead>
-            <tbody id="userHistoryBody"></tbody>
-          </table>
-        </div>
-      </section>
+      <div id="levelCards" class="level-card-grid"></div>
     </section>
 
-    <!-- หน้าเกม -->
-    <section id="gameScreen" class="card hidden">
-      <div class="game-head">
-        <div>
-          <span id="modeBadge" class="badge">CLASSIC</span>
-          <h2 id="challengeTitle">Level 1</h2>
-          <p id="challengeDescription"></p>
-        </div>
-        <div class="player-box">
-          <strong id="playerName">-</strong>
-          <span id="playerMeta">-</span>
-        </div>
-      </div>
-
-      <div class="game-stats">
-        <div><span>LEVEL</span><strong id="statLevel">01</strong></div>
-        <div><span>เวลา</span><strong id="statTime">00:00</strong></div>
-        <div><span>WPM</span><strong id="statWpm">0</strong></div>
-        <div><span>Accuracy</span><strong id="statAccuracy">100%</strong></div>
-        <div><span>Mistakes</span><strong id="statMistakes">0</strong></div>
-        <div><span>คะแนน</span><strong id="statScore">0</strong></div>
-      </div>
-
-      <div class="code-info">
-        <span id="languageLabel">HTML</span>
-        <span id="difficultyLabel">ง่าย</span>
-        <span id="timeRuleLabel">จับเวลา</span>
-      </div>
-
-      <div id="typingStage" class="typing-stage" tabindex="0">
-        <div class="editor-bar">
-          <div class="editor-dots"><i></i><i></i><i></i></div>
-          <span id="fileName">challenge_01</span>
-          <span id="typingStatus">คลิกที่ Code แล้วเริ่มพิมพ์</span>
-        </div>
-        <pre id="typingDisplay" class="typing-display"></pre>
-        <textarea id="typingInput" class="hidden-input" spellcheck="false" autocorrect="off" autocapitalize="off" autocomplete="off"></textarea>
-      </div>
-
-      <div class="progress-line">
-        <div class="progress-track"><div id="progressBar"></div></div>
-        <span id="progressText">0 / 0</span>
-      </div>
-
-      <div class="keyboard-area">
-        <p>คีย์บอร์ดจำลอง</p>
-        <div id="keyboard" class="keyboard"></div>
-      </div>
-
-      <div class="game-bottom">
-        <button id="quitButton" class="btn danger" type="button">ยุติการเล่น</button>
-        <button id="backPortalButton" class="btn ghost" type="button">กลับหน้าเลือกโหมด</button>
-        <span id="saveState">ยังไม่บันทึกผล</span>
+    <section class="card">
+      <div class="section-title"><div><span class="section-kicker">YOUR HISTORY</span><h2>ประวัติการเล่นล่าสุด</h2></div></div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>วันเวลา</th><th>โหมด</th><th>Level</th><th>สถานะ</th><th>คะแนน</th><th>WPM</th><th>Accuracy</th></tr></thead>
+          <tbody id="userHistoryBody"></tbody>
+        </table>
       </div>
     </section>
+  </section>
 
-    <section id="resultScreen" class="card hidden result-screen">
-      <span class="section-kicker">RESULT</span>
-      <h2 id="resultTitle">บันทึกผลเรียบร้อยแล้ว</h2>
-      <p id="resultText"></p>
-      <div class="result-grid">
-        <div><span>Score</span><strong id="resultScore">0</strong></div>
-        <div><span>WPM</span><strong id="resultWpm">0</strong></div>
-        <div><span>Accuracy</span><strong id="resultAccuracy">0%</strong></div>
-        <div><span>Time</span><strong id="resultTime">0s</strong></div>
+  <section id="gameScreen" class="card hidden">
+    <div class="game-head">
+      <div>
+        <span id="modeBadge" class="badge">CLASSIC</span>
+        <h2 id="challengeTitle">Level 1</h2>
+        <p id="challengeDescription"></p>
       </div>
-      <div class="result-actions">
-        <button id="playAgainButton" class="btn secondary">เล่น Level เดิมอีกครั้ง</button>
-        <button id="nextLevelButton" class="btn primary">Level ถัดไป</button>
-        <button id="portalButton" class="btn ghost">กลับหน้าเลือกโหมด</button>
-      </div>
-    </section>
-  </main>
+      <div class="player-box"><strong id="playerName">-</strong><span id="playerMeta">-</span></div>
+    </div>
 
-  <footer><div class="wrap">ระบบเกมพิมพ์ Code · วิทยาลัยเทคนิคนางรอง</div></footer>
-  <script type="module" src="app.js"></script>
+    <div class="game-stats">
+      <div><span>LEVEL</span><strong id="statLevel">01</strong></div>
+      <div><span>เวลา</span><strong id="statTime">00:00</strong></div>
+      <div><span>WPM</span><strong id="statWpm">0</strong></div>
+      <div><span>Accuracy</span><strong id="statAccuracy">100%</strong></div>
+      <div><span>Mistakes</span><strong id="statMistakes">0</strong></div>
+      <div><span>คะแนน</span><strong id="statScore">0</strong></div>
+    </div>
+
+    <div class="code-info">
+      <span id="languageLabel">HTML</span><span id="difficultyLabel">ง่าย</span><span id="timeRuleLabel">จับเวลา</span>
+    </div>
+
+    <div id="typingStage" class="typing-stage" tabindex="0">
+      <div class="editor-bar">
+        <div class="editor-dots"><i></i><i></i><i></i></div>
+        <span id="fileName">challenge_01</span>
+        <span id="typingStatus">คลิกที่ Code แล้วเริ่มพิมพ์</span>
+      </div>
+      <pre id="typingDisplay" class="typing-display"></pre>
+      <textarea id="typingInput" class="hidden-input" spellcheck="false" autocorrect="off" autocapitalize="off" autocomplete="off"></textarea>
+    </div>
+
+    <div class="progress-line"><div class="progress-track"><div id="progressBar"></div></div><span id="progressText">0 / 0</span></div>
+    <div class="keyboard-area"><p>คีย์บอร์ดจำลอง</p><div id="keyboard" class="keyboard"></div></div>
+
+    <div class="game-bottom">
+      <button id="quitButton" class="btn danger">ยุติการเล่น</button>
+      <button id="backPortalButton" class="btn ghost">กลับหน้าเลือกโหมด</button>
+      <span id="saveState">ยังไม่บันทึกผล</span>
+    </div>
+  </section>
+
+  <section id="resultScreen" class="card hidden result-screen">
+    <span class="section-kicker">RESULT</span>
+    <h2 id="resultTitle">บันทึกผลเรียบร้อยแล้ว</h2>
+    <p id="resultText"></p>
+    <div class="result-grid">
+      <div><span>Score</span><strong id="resultScore">0</strong></div>
+      <div><span>WPM</span><strong id="resultWpm">0</strong></div>
+      <div><span>Accuracy</span><strong id="resultAccuracy">0%</strong></div>
+      <div><span>Time</span><strong id="resultTime">0s</strong></div>
+    </div>
+    <div class="result-actions">
+      <button id="playAgainButton" class="btn secondary">เล่น Level เดิมอีกครั้ง</button>
+      <button id="nextLevelButton" class="btn primary">Level ถัดไป</button>
+      <button id="portalButton" class="btn ghost">กลับหน้าเลือกโหมด</button>
+    </div>
+  </section>
+</main>
+
+<footer><div class="wrap">ระบบเกมพิมพ์ Code · วิทยาลัยเทคนิคนางรอง</div></footer>
+<script type="module" src="app.js"></script>
 </body>
 </html>

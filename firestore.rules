@@ -7,35 +7,30 @@ service cloud.firestore {
       return request.auth != null;
     }
 
-    // แก้ Email นี้ให้ตรงกับ Admin ที่สร้างใน Firebase Authentication
     function isAdmin() {
       return signedIn()
         && request.auth.uid == "TWUrLjOh3BTa1cBNwDXKk4X2IAg1";
     }
 
     match /game_modes/{modeId} {
-      allow read: if true;
+      allow read: if signedIn();
       allow write: if isAdmin();
     }
 
     match /levels/{levelId} {
-      allow read: if true;
+      allow read: if signedIn();
       allow write: if isAdmin();
     }
 
-    match /players/{uid} {
+    match /users/{uid} {
       allow create: if signedIn() && request.auth.uid == uid;
       allow read, update: if signedIn() && request.auth.uid == uid;
       allow read, write: if isAdmin();
     }
 
     match /attempts/{attemptId} {
-      allow create: if signedIn()
-        && request.resource.data.uid == request.auth.uid;
-
-      allow read, update: if signedIn()
-        && resource.data.uid == request.auth.uid;
-
+      allow create: if signedIn() && request.resource.data.uid == request.auth.uid;
+      allow read, update: if signedIn() && resource.data.uid == request.auth.uid;
       allow read, write: if isAdmin();
     }
   }
