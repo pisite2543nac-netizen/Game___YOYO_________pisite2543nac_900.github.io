@@ -1,72 +1,73 @@
-# Code Typing Game — GitHub Pages + Firebase
+# Code Typing Game V2 — Exam-style User + Admin
 
-เวอร์ชันนี้ออกแบบตามโครงเว็บสอบออนไลน์เดิม:
-- หน้าผู้เล่น: คำชี้แจง → ลงทะเบียน → เริ่มกิจกรรม → จับเวลา → บันทึกผล
-- หน้า Admin แยก
-- Firebase Firestore เป็นฐานข้อมูลกลาง
-- อัปขึ้น GitHub Pages ได้โดยตรง
-- ไม่ใช้ Python/Flask บนเซิร์ฟเวอร์ เพราะ GitHub Pages เป็น Static Hosting
+เวอร์ชันนี้ปรับโครงตามเว็บระบบสอบออนไลน์ต้นฉบับ
 
-## ไฟล์
+## User Flow
 
-```text
-index.html
-admin.html
-style.css
-app.js
-admin.js
-default-data.js
-firebase-config.example.js
-firestore.rules
-README.md
-GITHUB_SETUP.md
-```
+1. หน้าแรกแสดงคำชี้แจง
+2. แบบฟอร์มลงทะเบียนยังคงมีเฉพาะ
+   - ชื่อ-นามสกุล
+   - เลขประจำตัวนักศึกษา
+   - ชั้น/กลุ่มเรียน
+   - แผนกวิชา
+   - ยอมรับคำชี้แจง
+3. ลงทะเบียนสำเร็จ → เข้า User Panel
+4. User Panel แสดงสถิติของผู้ใช้
+5. เลือก Game Mode
+6. เลือก Level
+7. เข้าเกมพิมพ์ Code
+8. บันทึก Score / WPM / Accuracy / Mistakes / Time
+9. ดูประวัติการเล่นและเลือกเล่น Level อื่นได้
 
-## สิ่งที่มี
+## Admin Flow
 
-### ผู้เล่น
-- ลงทะเบียนชื่อ
-- เลขนักศึกษา
-- ชั้น/กลุ่ม
-- แผนก
-- เลือก Game Mode
-- เลือก Level
-- Classic Mode
-- Speed Rush
-- Accuracy Pro
-- Hardcore
-- Code Typing
-- WPM
-- Accuracy
-- Mistakes
-- Score
-- Timer
-- Keyboard Highlight
-- บันทึกผล Firestore
+หน้า `admin.html`
 
-### Admin
-- Firebase Authentication Email/Password
-- Dashboard
-- จำนวนโจทย์
-- จำนวนผู้ลงทะเบียน
-- จำนวนรอบที่สำเร็จ
-- คะแนนเฉลี่ย
-- ดูผลทั้งหมด
-- ลบผล
-- ดูผู้ลงทะเบียน
-- ลบผู้ลงทะเบียน
-- เพิ่ม/แก้ไข/ลบ Level
-- คืนค่า 12 Level
-- Export CSV
-- Export JSON
-- Import JSON
+Login:
+- Username: Pisit_2000
+- Password: รหัสผ่านของบัญชี Firebase Authentication
+- ตรวจสิทธิ์ Admin จาก Firebase UID ที่กำหนดไว้
 
-## สำคัญ
+เมนู:
+1. ผลการเล่น
+   - ดูทั้งหมด
+   - ลบทีละรายการ
+   - ลบทั้งหมด
+   - Export CSV
+2. ผู้ลงทะเบียน
+   - ดูทั้งหมด
+   - ลบทีละคน
+   - ลบทั้งหมด
+3. จัดการโจทย์ Code
+   - เพิ่ม Level
+   - แก้ไข Level
+   - ลบ Level
+   - กำหนดภาษา
+   - Difficulty
+   - Base Points
+   - Time Limit
+   - Difficulty Multiplier
+   - Description
+   - Code Text
+   - คืนค่า 12 Level เริ่มต้น
+4. สำรองข้อมูล
+   - Export JSON
+   - Import JSON
 
-ก่อนใช้งาน ต้องตั้งค่า:
-1. Firebase Authentication: เปิด Anonymous และ Email/Password
-2. Firestore Database
-3. Firebase Web App
-4. firebase-config.js
-5. firestore.rules
-6. Admin Email ให้ตรงกันทั้ง firebase-config.js และ firestore.rules
+## Firebase Collections
+
+- `players`
+- `attempts`
+- `levels`
+- `game_modes`
+
+## สำคัญก่อนเปิดใช้งาน
+
+Firebase Authentication ต้องเปิด:
+- Anonymous สำหรับ User
+- Email/Password สำหรับ Admin
+
+Firestore Rules:
+นำไฟล์ `firestore.rules` ไป Publish ใน Firebase Console
+
+Admin UID ถูกตั้งใน Rules และ `firebase-config.js` แล้ว
