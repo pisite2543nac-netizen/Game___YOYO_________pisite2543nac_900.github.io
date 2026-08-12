@@ -2930,3 +2930,32 @@ html,body.social-zone-page{
   .zone-v40-player-card{left:6px;right:6px;top:auto;bottom:6px;width:auto}
   .zone-v40-modal{padding:7px}.zone-v40-modal-card{width:100%;max-height:calc(100dvh - 14px);padding:15px;border-width:2px}
 }
+
+
+/* ==================================================================
+   V4.1 — GM EXCLUSIVE CHARACTER + 24H ZONE CHAT
+   ================================================================== */
+.zone-chat-history-button{background:linear-gradient(180deg,#6d4aa7,#4d337d)!important;color:#fff!important;border-color:#7553ad!important}
+.gm-admin-panel,.gm-zone-entry{background:linear-gradient(180deg,#8b223d,#5d1328)!important;color:#ffe9a8!important;border-color:#d3a43d!important}
+.zone-chat-history-card{width:min(900px,calc(100vw - 40px))}
+.zone-chat-history-head{display:flex;justify-content:space-between;gap:18px;align-items:flex-end;margin-bottom:12px}
+.zone-chat-history-head h2{margin:5px 0}.zone-chat-history-head p{margin:0;color:#746753;font-size:9px}
+.zone-chat-history-legend{display:flex;gap:6px}.zone-chat-history-legend span{padding:6px 8px;border-radius:999px;font-size:7px;font-weight:900}
+.zone-chat-history-legend .user{background:#e8f0f5;color:#45677d}.zone-chat-history-legend .gm{background:#64172c;color:#ffe8a3;border:1px solid #d6a943}
+.zone-chat-history-list{height:min(560px,65vh);overflow:auto;display:grid;gap:7px;padding:4px}
+.zone-chat-log-row{display:grid;grid-template-columns:46px minmax(0,1fr);gap:9px;padding:10px;border:1px solid #ddd4c4;border-radius:11px;background:#fff}
+.zone-chat-log-row.gm{background:linear-gradient(135deg,#fff6dc,#fff);border:2px solid #c99837;box-shadow:0 5px 18px rgba(142,89,25,.1)}
+.zone-chat-log-avatar{width:42px;height:42px;border-radius:11px;display:grid;place-items:center;background:#16394f;color:#fff;font-size:9px;font-weight:1000}
+.zone-chat-log-row.gm .zone-chat-log-avatar{background:#6b1730;color:#ffe6a0;border:2px solid #d6a843}
+.zone-chat-log-body>div{display:flex;gap:8px;align-items:center}.zone-chat-log-body strong{font-size:10px}.zone-chat-log-body time{margin-left:auto;font-size:7px;color:#897967}
+.zone-chat-log-body p{margin:5px 0;font-size:12px;line-height:1.5;color:#253d4b}.zone-chat-log-row.gm p{color:#61182c;font-weight:700}.zone-chat-log-body small{font-size:7px;color:#8a7964}.zone-chat-empty{padding:40px;text-align:center;color:#897a68}
+.gm-exclusive-mini{border-color:#d3a33e!important;background:linear-gradient(#fff6dc,#fff)!important}
+
+.admin-zone-chat-summary{display:flex;gap:8px;margin-bottom:12px}.admin-zone-chat-summary span{padding:8px 11px;border-radius:9px;background:#edf3f6;font-size:8px}.admin-zone-chat-summary b{font-size:15px;color:#244c73;margin-right:3px}
+.admin-zone-chat-list{display:grid;gap:7px;max-height:650px;overflow:auto;padding:3px}
+.admin-zone-chat-message{display:grid;grid-template-columns:46px minmax(0,1fr) auto;gap:10px;align-items:start;padding:10px;border:1px solid #dce3e7;border-radius:10px;background:#fff}
+.admin-zone-chat-message.gm{background:#fff7dc;border:2px solid #ca9b32}.admin-zone-chat-avatar{width:42px;height:42px;border-radius:10px;background:#153a51;color:#fff;display:grid;place-items:center;font-size:9px;font-weight:900}
+.admin-zone-chat-message.gm .admin-zone-chat-avatar{background:#65162c;color:#ffe5a0;border:2px solid #d1a23c}.admin-zone-chat-meta{display:flex;flex-wrap:wrap;gap:7px;align-items:center}.admin-zone-chat-meta strong{font-size:10px}.admin-zone-chat-meta span,.admin-zone-chat-meta time{font-size:8px;color:#7a8992}.admin-zone-chat-meta time{margin-left:auto}.admin-zone-chat-content p{margin:5px 0;font-size:11px;line-height:1.5}.admin-zone-chat-message.gm .admin-zone-chat-content p{color:#64172d;font-weight:700}.admin-zone-chat-content small{font-size:7px;color:#897967}
+.btn.warning{background:#c7892e!important;color:#fff!important;border-color:#ad721f!important}
+
+@media(max-width:900px){.zone-chat-history-head{display:block}.zone-chat-history-legend{margin-top:8px}.admin-zone-chat-message{grid-template-columns:42px minmax(0,1fr)}.admin-zone-chat-message>.mini-delete{grid-column:1/-1}.admin-zone-chat-meta time{margin-left:0}}

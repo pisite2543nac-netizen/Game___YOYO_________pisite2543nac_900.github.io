@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Admin | ระบบเกมพิมพ์ Code</title>
-  <link rel="stylesheet" href="./style.css?v=4.0.0">
+  <link rel="stylesheet" href="./style.css?v=4.1.0">
 </head>
 <body class="admin-page">
   <main class="wrap admin-wrap">
@@ -38,6 +38,7 @@
           <p>ผู้จัดทำ: นายพิสิษฐ์ หุนตระนี ครูพิเศษสอน</p>
         </div>
         <div>
+          <a class="btn gm-zone-entry" href="./zone.html?v=4.1.0">🌙 เข้า 2D Zone · GM</a>
           <a class="btn ghost" href="index.html">หน้าผู้เล่น</a>
           <button id="logoutAdmin" class="btn secondary">ออกจากระบบ</button>
         </div>
@@ -57,6 +58,7 @@
         <button class="tab" data-tab="officialTab">คะแนนทางการ</button>
         <button class="tab" data-tab="rankingTab">Ranking</button>
         <button class="tab zone-admin-tab" data-tab="zoneControlTab">🌙 ควบคุม 2D Zone</button>
+        <button class="tab zone-chat-admin-tab" data-tab="zoneChatLogTab">💬 ประวัติแชต Zone</button>
         <button class="tab" data-tab="backupTab">สำรองข้อมูล</button>
       </div>
 
@@ -217,6 +219,26 @@
         </div>
       </section>
 
+
+      <section id="zoneChatLogTab" class="admin-tab-panel hidden">
+        <div class="panel-title">
+          <div>
+            <h2>ประวัติแชต 2D Zone</h2>
+            <p>User เก็บ/แสดง 24 ชั่วโมง · GM เป็นข้อความถาวรจนกว่าจะลบ · ใช้ตรวจสอบการสนทนาในกลุ่ม</p>
+          </div>
+          <div class="button-row">
+            <button id="exportZoneChatCsv" class="btn secondary">ดาวน์โหลด Chat CSV</button>
+            <button id="cleanupExpiredZoneChat" class="btn warning">ล้าง User Chat ที่หมดอายุ</button>
+          </div>
+        </div>
+        <div class="admin-zone-chat-summary">
+          <span><b id="zoneChat24hMetric">0</b> USER 24H</span>
+          <span><b id="zoneChatGmMetric">0</b> GM PERMANENT</span>
+          <span><b id="zoneChatTotalMetric">0</b> แสดงทั้งหมด</span>
+        </div>
+        <div id="zoneChatAdminList" class="admin-zone-chat-list"></div>
+      </section>
+
       <section id="backupTab" class="admin-tab-panel hidden">
         <div class="panel-title">
           <div>
@@ -235,6 +257,6 @@
     </section>
   </main>
 
-  <script type="module" src="./admin.js?v=4.0.0"></script>
+  <script type="module" src="./admin.js?v=4.1.0"></script>
 </body>
 </html>

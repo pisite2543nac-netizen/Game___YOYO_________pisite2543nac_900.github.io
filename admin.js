@@ -2,14 +2,14 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/12.2.1/firebas
 import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-auth.js";
 import {
   getFirestore, collection, doc, getDocs, setDoc, deleteDoc, updateDoc,
-  writeBatch, serverTimestamp, onSnapshot, Timestamp
+  writeBatch, serverTimestamp, onSnapshot, Timestamp, query, orderBy, limit
 } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
-import { firebaseConfig, ADMIN_USERNAME, ADMIN_EMAIL, ADMIN_UID } from "./firebase-config.js";
-import { DEFAULT_MODES, DEFAULT_LEVELS } from "./default-data.js";
-import { seasonIdFromDate, seasonRange, calculateRankMetrics } from "./ranking-system.js";
+import { firebaseConfig, ADMIN_USERNAME, ADMIN_EMAIL, ADMIN_UID } from "./firebase-config.js?v=4.1.0";
+import { DEFAULT_MODES, DEFAULT_LEVELS } from "./default-data.js?v=4.1.0";
+import { seasonIdFromDate, seasonRange, calculateRankMetrics } from "./ranking-system.js?v=4.1.0";
 
 const app=initializeApp(firebaseConfig),auth=getAuth(app),db=getFirestore(app),$=id=>document.getElementById(id);
-let cache={users:[],attempts:[],levels:[],modes:[],official:[],zonePositions:[],zoneModeration:[]},unsubs=[];
+let cache={users:[],attempts:[],levels:[],modes:[],official:[],zonePositions:[],zoneModeration:[],zoneMessages:[]},unsubs=[];
 
 const isAdmin=user=>!!user&&user.uid===ADMIN_UID;
 const dateValue=v=>{try{return v?.toDate?.()?.getTime?.()||0}catch{return 0}};
@@ -40,8 +40,10 @@ function startRealtime(){
   unsubs.push(onSnapshot(collection(db,"official_submissions"),snap=>{cache.official=snap.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>dateValue(b.submittedAt)-dateValue(a.submittedAt));renderAll()}));
   unsubs.push(onSnapshot(collection(db,"zone_positions"),snap=>{cache.zonePositions=snap.docs.map(d=>({id:d.id,...d.data()}));renderAll()}));
   unsubs.push(onSnapshot(collection(db,"zone_moderation"),snap=>{cache.zoneModeration=snap.docs.map(d=>({id:d.id,...d.data()}));renderAll()}));
+  const chatQuery=query(collection(db,"zone_messages"),orderBy("createdAt","desc"),limit(500));
+  unsubs.push(onSnapshot(chatQuery,snap=>{cache.zoneMessages=snap.docs.map(d=>({id:d.id,...d.data()})).filter(x=>x.zoneId===ACTIVE_ZONE_ID);renderAll()}));
 }
-function renderAll(){renderMetrics();renderResults();renderUsers();renderLevels();renderOfficial();renderRanking();renderZoneControl()}
+function renderAll(){renderMetrics();renderResults();renderUsers();renderLevels();renderOfficial();renderRanking();renderZoneControl();renderZoneChatLog()}
 function renderMetrics(){
   const completed=cache.attempts.filter(x=>x.status==="completed");
   const avg=completed.length?Math.round(completed.reduce((s,x)=>s+Number(x.score||0),0)/completed.length):0;
@@ -145,7 +147,7 @@ if($("exportOfficialCsv"))$("exportOfficialCsv").onclick=()=>{
 
 
 const ZONE_ONLINE_STALE_MS=95000;
-const ACTIVE_ZONE_ID="thai_social_zone_v4";
+const ACTIVE_ZONE_ID="thai_social_zone_v4_1";
 
 function zonePositionOnline(p){
   if(!p?.online || p.zoneId!==ACTIVE_ZONE_ID)return false;
@@ -244,7 +246,7 @@ function renderZoneControl(){
 async function setZoneOffline(uid){
   try{
     await setDoc(doc(db,"zone_positions",uid),{
-      zoneId:"thai_social_zone_v4",
+      zoneId:"thai_social_zone_v4_1",
       online:false,
       updatedAt:serverTimestamp()
     },{merge:true});
@@ -307,6 +309,65 @@ async function unbanZoneUser(uid){
     updatedAt:serverTimestamp()
   },{merge:true});
 }
+
+
+const USER_ZONE_CHAT_TTL_MS=24*60*60*1000;
+function zoneChatIsGM(m){return m?.isGM===true || m?.uid===ADMIN_UID}
+function zoneChatVisible(m,now=Date.now()){
+  if(zoneChatIsGM(m))return true;
+  const created=m?.createdAt?.toDate?.();
+  return !!created && (now-created.getTime())<USER_ZONE_CHAT_TTL_MS;
+}
+function zoneChatExpired(m,now=Date.now()){
+  if(zoneChatIsGM(m))return false;
+  const created=m?.createdAt?.toDate?.();
+  return !!created && (now-created.getTime())>=USER_ZONE_CHAT_TTL_MS;
+}
+function zoneChatUserName(m){
+  if(zoneChatIsGM(m))return "Game Master";
+  return cache.users.find(u=>u.id===m.uid)?.fullName||"-";
+}
+function zoneChatExpiryLabel(m){
+  if(zoneChatIsGM(m))return "ถาวร";
+  const created=m?.createdAt?.toDate?.();
+  const until=created?created.getTime()+USER_ZONE_CHAT_TTL_MS:Date.now();
+  const left=Math.max(0,until-Date.now()),h=Math.floor(left/3600000),min=Math.floor((left%3600000)/60000);
+  return left>0?`${h}ชม. ${min}น.`:"หมดอายุ";
+}
+function renderZoneChatLog(){
+  if(!$("zoneChatAdminList"))return;
+  const visible=cache.zoneMessages.filter(zoneChatVisible);
+  const user24=visible.filter(m=>!zoneChatIsGM(m)).length,gmCount=visible.filter(zoneChatIsGM).length;
+  $("zoneChat24hMetric").textContent=user24;$("zoneChatGmMetric").textContent=gmCount;$("zoneChatTotalMetric").textContent=visible.length;
+  $("zoneChatAdminList").innerHTML=visible.length?visible.map(m=>{
+    const gm=zoneChatIsGM(m),dt=m.createdAt?.toDate?.();
+    return `<article class="admin-zone-chat-message ${gm?"gm":"user"}">
+      <div class="admin-zone-chat-avatar">${gm?"GM":esc(String(m.studentId||"?").slice(-2))}</div>
+      <div class="admin-zone-chat-content">
+        <div class="admin-zone-chat-meta"><strong>${gm?"GM · GAME MASTER":esc(m.studentId||"USER")}</strong><span>${esc(zoneChatUserName(m))}</span><time>${dt?dt.toLocaleString("th-TH"):"-"}</time></div>
+        <p>${esc(m.text||"")}</p>
+        <small>${gm?"ประกาศ GM · ไม่หมดอายุ":`ข้อความ User · เหลือ ${zoneChatExpiryLabel(m)}`}</small>
+      </div>
+      <button class="mini-delete" data-delete-zone-message="${m.id}">ลบ</button>
+    </article>`;
+  }).join(""):`<div class="empty">ยังไม่มีข้อความใน Zone</div>`;
+  document.querySelectorAll("[data-delete-zone-message]").forEach(btn=>btn.onclick=async()=>{if(confirm("ลบข้อความนี้?"))await deleteDoc(doc(db,"zone_messages",btn.dataset.deleteZoneMessage))});
+}
+async function cleanupExpiredZoneMessages(showAlert=true){
+  const expired=cache.zoneMessages.filter(zoneChatExpired);
+  if(!expired.length){if(showAlert)alert("ไม่มี User Chat ที่หมดอายุ");return 0}
+  let batch=writeBatch(db),count=0,total=0;
+  for(const m of expired){batch.delete(doc(db,"zone_messages",m.id));count++;total++;if(count>=400){await batch.commit();batch=writeBatch(db);count=0}}
+  if(count)await batch.commit();if(showAlert)alert(`ล้างข้อความหมดอายุ ${total} รายการแล้ว`);return total;
+}
+if($("cleanupExpiredZoneChat"))$("cleanupExpiredZoneChat").onclick=()=>cleanupExpiredZoneMessages(true);
+if($("exportZoneChatCsv"))$("exportZoneChatCsv").onclick=()=>{
+  const rows=cache.zoneMessages.filter(zoneChatVisible),q=v=>`"${String(v??"").replaceAll('"','""')}"`;
+  const data=[["date","type","student_id","name","message","expires"].join(","),...rows.map(m=>[
+    formatDate(m.createdAt),zoneChatIsGM(m)?"GM":"USER",zoneChatIsGM(m)?"GM":m.studentId,zoneChatUserName(m),m.text,zoneChatIsGM(m)?"PERMANENT":zoneChatExpiryLabel(m)
+  ].map(q).join(","))].join("\n");
+  downloadText(`zone_chat_${new Date().toISOString().slice(0,10)}.csv`,"\ufeff"+data,"text/csv;charset=utf-8");
+};
 
 $("levelForm").addEventListener("submit",async e=>{e.preventDefault();const n=Number($("editLevelNo").value),id=`level_${String(n).padStart(2,"0")}`;await setDoc(doc(db,"levels",id),{levelNo:n,title:$("editTitle").value.trim(),language:$("editLanguage").value.trim(),difficulty:$("editDifficulty").value,basePoints:Number($("editBasePoints").value),timeLimit:Number($("editTimeLimit").value),difficultyMultiplier:Number($("editMultiplier").value),description:$("editDescription").value.trim(),code:$("editCode").value,isActive:true,updatedAt:serverTimestamp()},{merge:true});e.target.reset();$("editBasePoints").value=100;$("editTimeLimit").value=90;$("editMultiplier").value=1});
 $("seedDefaults").onclick=async()=>{if(!confirm("คืนค่า 4 โหมดและ 12 Level เริ่มต้น?"))return;const batch=writeBatch(db);DEFAULT_MODES.forEach(x=>{const {id,...data}=x;batch.set(doc(db,"game_modes",id),{...data,id,isActive:true},{merge:true})});DEFAULT_LEVELS.forEach(x=>batch.set(doc(db,"levels",`level_${String(x.levelNo).padStart(2,"0")}`),{...x,isActive:true},{merge:true}));await batch.commit()};

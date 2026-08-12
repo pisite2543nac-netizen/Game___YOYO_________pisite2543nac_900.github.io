@@ -7,12 +7,12 @@ import {
   getFirestore, collection, doc, getDoc, getDocs, setDoc, addDoc, updateDoc, deleteDoc,
   serverTimestamp, query, where, orderBy, limit, onSnapshot, runTransaction
 } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
-import { firebaseConfig } from "./firebase-config.js";
-import { LANGUAGES, LESSONS, DIFFICULTIES } from "./lessons.js";
-import { REWARD_ITEMS, RARITY_META } from "./reward-data.js";
-import { DEFAULT_CHARACTER, DEFAULT_ZONE_STATE } from "./character-system.js";
-import { OFFICIAL_STAGES, OFFICIAL_TOTAL_SCORE } from "./official-data.js";
-import { RANKING_CONFIG, seasonIdFromDate, seasonRange, calculateRankMetrics } from "./ranking-system.js";
+import { firebaseConfig } from "./firebase-config.js?v=4.1.0";
+import { LANGUAGES, LESSONS, DIFFICULTIES } from "./lessons.js?v=4.1.0";
+import { REWARD_ITEMS, RARITY_META } from "./reward-data.js?v=4.1.0";
+import { DEFAULT_CHARACTER, DEFAULT_ZONE_STATE } from "./character-system.js?v=4.1.0";
+import { OFFICIAL_STAGES, OFFICIAL_TOTAL_SCORE } from "./official-data.js?v=4.1.0";
+import { RANKING_CONFIG, seasonIdFromDate, seasonRange, calculateRankMetrics } from "./ranking-system.js?v=4.1.0";
 
 const firebaseApp = initializeApp(firebaseConfig);
 const auth = getAuth(firebaseApp);

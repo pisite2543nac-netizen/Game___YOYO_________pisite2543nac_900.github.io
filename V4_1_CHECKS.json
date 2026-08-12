@@ -1,0 +1,9 @@
+{
+  "gm_character": true,
+  "gm_admin_enters": true,
+  "user_chat_exact_24h": true,
+  "gm_message_permanent": true,
+  "server_timestamp_rule": true,
+  "ttl_field": true,
+  "admin_chat_log": true
+}
