@@ -2,7 +2,7 @@
 <html lang="th">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1">
   <title>ระบบเกมพิมพ์ Code | วิทยาลัยเทคนิคนางรอง</title>
   <link rel="stylesheet" href="style.css">
 </head>
@@ -242,40 +242,72 @@
     <section id="pvpConfig" class="card hidden">
       <div class="section-title">
         <div>
-          <span class="section-kicker">PVP REALTIME</span>
-          <h2>สร้างห้องหรือเข้าร่วมห้อง</h2>
-          <p class="muted-line">เบื้องต้นรองรับ 2 คน ใช้ภาษาและโจทย์เดียวกัน ผู้ที่พิมพ์ครบก่อนเป็นผู้ชนะ</p>
+          <span class="section-kicker">PVP MATCHMAKING · REALTIME</span>
+          <h2>จับคู่ PVP ให้เร็วขึ้น</h2>
+          <p class="muted-line">
+            มีเพียง 2 ทางเลือก: สร้างห้องใหม่ หรือให้ระบบค้นหาห้องว่างให้อัตโนมัติ
+            Room Code ทุกห้องสุ่มโดยระบบเท่านั้น ผู้เล่นไม่สามารถตั้ง Code เองได้
+          </p>
         </div>
       </div>
 
-      <div class="pvp-grid">
-        <div class="pvp-box">
-          <h3>สร้างห้อง</h3>
-          <p>ระบบจะสร้างรหัสห้อง 6 ตัวเพื่อส่งให้เพื่อน</p>
-          <button id="createRoomButton" class="btn primary">สร้างห้อง PVP</button>
+      <div class="pvp-match-actions">
+        <button id="createRoomButton" class="pvp-match-card create" type="button">
+          <span class="pvp-match-icon">➕</span>
+          <strong>สร้างห้อง</strong>
+          <small>ระบบสุ่ม Room Code ใหม่ที่ไม่ซ้ำ แล้วเปิด Lobby รอผู้เล่นอีก 1 คน</small>
+          <em>AUTO ROOM CODE</em>
+        </button>
+
+        <button id="findRoomButton" class="pvp-match-card find" type="button">
+          <span class="pvp-match-icon">🔎</span>
+          <strong>ค้นหาห้อง</strong>
+          <small>ระบบค้นหา Lobby ที่กำลังรออยู่ แล้วสุ่มเข้าห้องที่ว่างให้อัตโนมัติ</small>
+          <em>RANDOM MATCH</em>
+        </button>
+      </div>
+
+      <div id="matchmakingStatus" class="matchmaking-status">
+        <span class="matchmaking-dot"></span>
+        <strong id="matchmakingStatusText">พร้อมจับคู่</strong>
+        <small id="matchmakingStatusDetail">เลือก “สร้างห้อง” หรือ “ค้นหาห้อง”</small>
+      </div>
+
+      <div id="pvpLobby" class="pvp-lobby pvp-lobby-v2 hidden">
+        <div class="room-code-card">
+          <span>ROOM CODE · ระบบสร้างอัตโนมัติ</span>
+          <strong id="roomCodeLabel">------</strong>
+          <small>Code นี้เป็นแบบอ่านอย่างเดียว ผู้เล่นไม่สามารถแก้ไขได้</small>
         </div>
-        <div class="pvp-box">
-          <h3>เข้าร่วมห้อง</h3>
-          <div class="join-row">
-            <input id="roomCodeInput" maxlength="6" placeholder="ROOM CODE">
-            <button id="joinRoomButton" class="btn secondary">เข้าห้อง</button>
-          </div>
+
+        <div class="pvp-player-slot">
+          <span>ผู้เล่น 1</span>
+          <strong id="pvpPlayer1">รอผู้เล่น...</strong>
+          <small>HOST</small>
+        </div>
+
+        <div class="pvp-player-slot">
+          <span>ผู้เล่น 2</span>
+          <strong id="pvpPlayer2">รอผู้เล่น...</strong>
+          <small>CHALLENGER</small>
+        </div>
+
+        <div class="pvp-status-slot">
+          <span>สถานะ</span>
+          <strong id="pvpStatus">WAITING</strong>
+          <small id="pvpLobbyHint">กำลังรอผู้เล่น...</small>
         </div>
       </div>
 
-      <div id="pvpLobby" class="pvp-lobby hidden">
-        <div><span>Room</span><strong id="roomCodeLabel">------</strong></div>
-        <div><span>ผู้เล่น 1</span><strong id="pvpPlayer1">รอผู้เล่น...</strong></div>
-        <div><span>ผู้เล่น 2</span><strong id="pvpPlayer2">รอผู้เล่น...</strong></div>
-        <div><span>สถานะ</span><strong id="pvpStatus">Waiting</strong></div>
+      <div class="pvp-lobby-actions">
+        <button id="startPvpButton" class="btn primary hidden" type="button">เริ่มการแข่งขัน</button>
+        <button id="leaveLobbyButton" class="btn ghost hidden" type="button">ออกจากห้อง</button>
       </div>
-      <button id="startPvpButton" class="btn primary hidden">เริ่มการแข่งขัน</button>
     </section>
 
     <section class="card">
       <div class="section-title">
-        <div>
-          <span class="section-kicker">POINT SHOP</span>
+        <div><span class="section-kicker">POINT SHOP</span>
           <h2>Token Shop</h2>
           <p class="muted-line">ผ่านด่านทั่วไปเพื่อสะสม Token แล้วนำมาแลกไอเทมสำหรับโปรไฟล์และระบบตัวละครในอนาคต</p>
         </div>
@@ -335,6 +367,28 @@
 
   <section id="gameScreen" class="game-fullscreen hidden">
     <div id="gameShell" class="game-shell">
+      <div id="mobileGameTools" class="mobile-game-tools" aria-label="เครื่องมือเกมบนมือถือ">
+        <button id="mobileFocusButton" type="button" class="mobile-tool-btn">⌨️ พิมพ์ต่อ</button>
+        <button id="mobileStatsButton" type="button" class="mobile-tool-btn">📊 สถิติ</button>
+        <button id="mobileExitButton" type="button" class="mobile-tool-btn danger-lite">✕ ออก</button>
+      </div>
+
+      <div id="mobileStatsSheet" class="mobile-stats-sheet hidden" role="dialog" aria-modal="true" aria-label="สถิติการเล่น">
+        <div class="mobile-sheet-card">
+          <div class="mobile-sheet-head">
+            <strong>สถิติการเล่น</strong>
+            <button id="closeMobileStats" type="button" aria-label="ปิด">✕</button>
+          </div>
+          <div class="mobile-stats-grid">
+            <div><span>ด่าน</span><strong id="mobileStatLevel">01</strong></div>
+            <div><span>เวลา</span><strong id="mobileStatTime">00:00</strong></div>
+            <div><span>WPM</span><strong id="mobileStatWpm">0</strong></div>
+            <div><span>Accuracy</span><strong id="mobileStatAccuracy">100%</strong></div>
+            <div><span>Mistakes</span><strong id="mobileStatMistakes">0</strong></div>
+            <div><span>Token</span><strong id="mobileStatToken">0</strong></div>
+          </div>
+        </div>
+      </div>
       <div class="fullscreen-topbar">
         <div class="game-identity">
           <span id="modeBadge" class="badge">⌨️ CLASSIC</span>
@@ -344,7 +398,7 @@
           </div>
         </div>
 
-        <div class="game-top-actions">
+        <div class="game-top-actions"><span id="deviceHint" class="device-hint" aria-live="polite"></span>
           <span id="playerName">-</span>
           <button id="fullscreenButton" class="btn ghost small-btn" type="button">⛶ เต็มหน้าจอ</button>
           <button id="quitButton" class="btn danger small-btn" type="button">ออก</button>
@@ -369,7 +423,7 @@
             <span id="saveState">พร้อมเล่น</span>
           </div>
 
-          <div id="typingStage" class="typing-stage strict-stage" tabindex="0">
+          <div id="typingStage" class="typing-stage strict-stage" tabindex="0" role="application" aria-label="พื้นที่พิมพ์โค้ด">
             <div class="editor-bar">
               <div class="editor-dots"><i></i><i></i><i></i></div>
               <span id="fileName">challenge_01</span>

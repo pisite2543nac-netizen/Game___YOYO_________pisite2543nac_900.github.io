@@ -1,0 +1,11 @@
+{
+  "no_room_input": true,
+  "no_join_button": true,
+  "create_button": true,
+  "find_button": true,
+  "system_random_code": true,
+  "unique_code_check": true,
+  "random_match": true,
+  "transaction_join": true,
+  "mobile_css": true
+}

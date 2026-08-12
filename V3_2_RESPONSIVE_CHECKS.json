@@ -1,0 +1,8 @@
+{
+  "viewport_fit_cover": true,
+  "100dvh": true,
+  "safe_area": true,
+  "mobile_toolbar": true,
+  "mobile_stats_sheet": true,
+  "admin_responsive": true
+}

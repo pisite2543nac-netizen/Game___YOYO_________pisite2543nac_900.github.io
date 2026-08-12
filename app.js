@@ -4,7 +4,7 @@ import {
   signOut, onAuthStateChanged
 } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-auth.js";
 import {
-  getFirestore, collection, doc, getDoc, setDoc, addDoc, updateDoc,
+  getFirestore, collection, doc, getDoc, getDocs, setDoc, addDoc, updateDoc, deleteDoc,
   serverTimestamp, query, where, onSnapshot, runTransaction
 } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
 import { firebaseConfig } from "./firebase-config.js";
@@ -291,13 +291,23 @@ $("startClassicButton").onclick=async()=>{
   prepareClassic();
   showScreen("gameScreen");
   await requestRealFullscreen();
-  setTimeout(()=>$("typingInput").focus(),150);
+  setTimeout(()=>$("typingInput").focus({preventScroll:true}),150);
 };
 
 async function requestRealFullscreen(){
+  document.body.classList.add("game-active");
+  updateDeviceUX();
+
+  // CSS 100dvh เป็นตัวหลักสำหรับมือถือ โดยเฉพาะ iOS Safari
+  // Fullscreen API ใช้เสริมเมื่อ Browser รองรับและอนุญาต
   try{
-    if(!document.fullscreenElement) await document.documentElement.requestFullscreen();
-  }catch{}
+    const canFullscreen = document.documentElement.requestFullscreen;
+    if (canFullscreen && !document.fullscreenElement && !isPhoneLayout()) {
+      await document.documentElement.requestFullscreen();
+    }
+  }catch(error){
+    console.warn("Fullscreen API unavailable:", error);
+  }
 }
 async function leaveRealFullscreen(){
   try{if(document.fullscreenElement)await document.exitFullscreen()}catch{}
@@ -331,6 +341,8 @@ function prepareClassic(){
   ["statWpm","statMistakes","statScore"].forEach(id=>$(id).textContent="0");
   $("statAccuracy").textContent="100%";
   renderStrictCode();
+  updateDeviceUX();
+  syncMobileStats();
 }
 
 async function startClassic(){
@@ -381,7 +393,7 @@ function keyToInput(e){
   return null;
 }
 
-$("typingStage").onclick=()=> $("typingInput").focus();
+$("typingStage").onclick=()=> $("typingInput").focus({preventScroll:true});
 
 $("typingInput").addEventListener("keydown",async e=>{
   if(state.finished){e.preventDefault();return;}
@@ -430,6 +442,7 @@ function updateClassicStats(){
   $("statAccuracy").textContent=`${accuracy().toFixed(0)}%`;
   $("statMistakes").textContent=state.mistakes;
   $("statScore").textContent=state.gameMode==="official"?"—":Number(state.lesson.rewardPoints||0);
+  syncMobileStats();
 }
 
 async function awardCompletion(){
@@ -527,7 +540,7 @@ $("nextLevelButton").onclick=async()=>{
   const next=languageLessons().find(x=>x.stage===state.lesson.stage+1);
   if(!next)return;
   state.lesson=next;state.difficulty=DIFFICULTIES.find(x=>x.id===next.difficulty);
-  prepareClassic();showScreen("gameScreen");await requestRealFullscreen();setTimeout(()=>$("typingInput").focus(),100);
+  prepareClassic();showScreen("gameScreen");await requestRealFullscreen();setTimeout(()=>$("typingInput").focus({preventScroll:true}),100);
 };
 $("portalButton").onclick=async()=>{await ensureProfileDefaults();await enterPortal()};
 
@@ -635,7 +648,7 @@ async function startOfficialStage(stageNo){
   $("saveState").textContent=`คะแนนเต็ม ${item.maxScore} · ส่งให้ Admin เมื่อส่งงานครบ`;
   showScreen("gameScreen");
   await requestRealFullscreen();
-  setTimeout(()=>$("typingInput").focus(),120);
+  setTimeout(()=>$("typingInput").focus({preventScroll:true}),120);
 }
 
 function calculateOfficialStageScore(item, acc, wp, elapsedSeconds){
@@ -728,43 +741,348 @@ async function updateMyRank(){
   renderUserRank();
 }
 
-/* PVP V1: โครงเดิมยังคงอยู่ เตรียมต่อยอด Strict Engine และ 2D Zone รอบถัดไป */
+/* PVP V2.1 — Auto Room Code + Random Matchmaking */
 function renderPvpConfig(){
-  if(!state.language){alert("เลือกภาษาก่อน");return;}
-  if(!state.difficulty)state.difficulty=DIFFICULTIES[0];
-  if(!state.lesson)state.lesson=languageLessons().find(x=>x.stage<=maxUnlocked(state.language.id))||languageLessons()[0];
+  if(!state.language){
+    setMatchmakingStatus("error","ยังไม่ได้เลือกภาษา","กรุณาเลือก HTML หรือ Python ก่อนเข้า PVP");
+    return false;
+  }
+
+  if(!state.difficulty) state.difficulty = DIFFICULTIES[0];
+
+  if(!state.lesson){
+    state.lesson =
+      languageLessons().find(x => x.stage <= maxUnlocked(state.language.id)) ||
+      languageLessons()[0];
+  }
+
+  return !!state.lesson;
 }
-const roomCode=()=>Math.random().toString(36).slice(2,8).toUpperCase();
-$("createRoomButton").onclick=async()=>{
-  renderPvpConfig();const code=roomCode();state.roomCode=code;
-  await setDoc(doc(db,"pvp_rooms",code),{
-    code,hostUid:state.uid,languageId:state.language.id,lessonId:state.lesson.id,
-    difficultyId:state.lesson.difficulty,status:"waiting",createdAt:serverTimestamp(),
-    players:{[state.uid]:{name:state.player.fullName,progress:0,finished:false}}
-  });
-  listenRoom(code);
+
+function setMatchmakingStatus(type, title, detail=""){
+  const box = $("matchmakingStatus");
+  if(!box) return;
+
+  box.dataset.state = type || "idle";
+  $("matchmakingStatusText").textContent = title;
+  $("matchmakingStatusDetail").textContent = detail;
+}
+
+function setMatchButtonsBusy(busy){
+  const create = $("createRoomButton");
+  const find = $("findRoomButton");
+
+  if(create) create.disabled = busy;
+  if(find) find.disabled = busy;
+}
+
+function systemRoomCode(length=6){
+  // ตัด I, O, 0, 1 ออก เพื่อไม่ให้ผู้เล่นอ่านสับสน
+  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+  const bytes = new Uint32Array(length);
+
+  if(window.crypto?.getRandomValues){
+    window.crypto.getRandomValues(bytes);
+    return Array.from(bytes, n => chars[n % chars.length]).join("");
+  }
+
+  // fallback เฉพาะ Browser เก่ามาก
+  let code = "";
+  for(let i=0;i<length;i++){
+    code += chars[Math.floor(Math.random()*chars.length)];
+  }
+  return code;
+}
+
+async function createUniqueRoomCode(){
+  for(let attempt=0; attempt<15; attempt++){
+    const code = systemRoomCode(6);
+    const snap = await getDoc(doc(db,"pvp_rooms",code));
+    if(!snap.exists()) return code;
+  }
+
+  throw new Error("ไม่สามารถสร้าง Room Code ที่ไม่ซ้ำได้ กรุณาลองอีกครั้ง");
+}
+
+function playerCount(room){
+  return Object.keys(room?.players || {}).length;
+}
+
+function isJoinableRoom(room){
+  if(!room) return false;
+  if(room.status !== "waiting") return false;
+  if(room.hostUid === state.uid) return false;
+  if(playerCount(room) >= 2) return false;
+
+  // ให้ค้นหาเฉพาะห้องภาษาเดียวกัน เพื่อเริ่มแข่งได้ทันที
+  if(state.language?.id && room.languageId !== state.language.id) return false;
+
+  return true;
+}
+
+async function leaveCurrentLobby({deleteEmptyHostRoom=true} = {}){
+  if(state.roomUnsub){
+    state.roomUnsub();
+    state.roomUnsub = null;
+  }
+
+  const code = state.roomCode;
+  const room = state.roomData;
+
+  if(code && room){
+    const ref = doc(db,"pvp_rooms",code);
+
+    try{
+      if(room.hostUid === state.uid && deleteEmptyHostRoom && room.status === "waiting"){
+        // ถ้า Host ออกตอนยังรอ ให้ลบห้อง เพื่อไม่ให้เหลือ Lobby ร้าง
+        await deleteDoc(ref);
+      } else if(room.status === "waiting" && room.players?.[state.uid]){
+        // Challenger ออกจาก Lobby: เอาตัวเองออกจาก players
+        await runTransaction(db, async tx => {
+          const snap = await tx.get(ref);
+          if(!snap.exists()) return;
+
+          const data = snap.data();
+          const players = {...(data.players || {})};
+          delete players[state.uid];
+
+          tx.update(ref,{players});
+        });
+      }
+    }catch(error){
+      console.warn("leaveCurrentLobby:", error);
+    }
+  }
+
+  state.roomCode = null;
+  state.roomData = null;
+
+  $("pvpLobby")?.classList.add("hidden");
+  $("startPvpButton")?.classList.add("hidden");
+  $("leaveLobbyButton")?.classList.add("hidden");
+
+  setMatchButtonsBusy(false);
+  setMatchmakingStatus("idle","พร้อมจับคู่","เลือก “สร้างห้อง” หรือ “ค้นหาห้อง”");
+}
+
+$("createRoomButton").onclick = async () => {
+  if(!renderPvpConfig()) return;
+
+  setMatchButtonsBusy(true);
+  setMatchmakingStatus("searching","กำลังสร้างห้อง...","ระบบกำลังสุ่ม Room Code ที่ไม่ซ้ำ");
+
+  try{
+    await leaveCurrentLobby();
+
+    const code = await createUniqueRoomCode();
+    state.roomCode = code;
+
+    await setDoc(doc(db,"pvp_rooms",code),{
+      code,
+      hostUid:state.uid,
+      languageId:state.language.id,
+      lessonId:state.lesson.id,
+      difficultyId:state.lesson.difficulty,
+      status:"waiting",
+      matchType:"private_auto_code",
+      createdAt:serverTimestamp(),
+      players:{
+        [state.uid]:{
+          uid:state.uid,
+          name:state.player.fullName,
+          studentId:state.player.studentId,
+          progress:0,
+          finished:false,
+          joinedAt:new Date().toISOString()
+        }
+      }
+    });
+
+    setMatchmakingStatus(
+      "waiting",
+      `สร้างห้อง ${code} แล้ว`,
+      "Room Code ถูกสุ่มโดยระบบ กำลังรอผู้เล่นคนที่ 2"
+    );
+
+    listenRoom(code);
+  }catch(error){
+    console.error(error);
+    setMatchButtonsBusy(false);
+    setMatchmakingStatus("error","สร้างห้องไม่สำเร็จ",error.message || "กรุณาลองใหม่");
+  }
 };
-$("joinRoomButton").onclick=async()=>{
-  const code=$("roomCodeInput").value.trim().toUpperCase();if(!code)return;
-  const ref=doc(db,"pvp_rooms",code),snap=await getDoc(ref);if(!snap.exists()){alert("ไม่พบห้อง");return;}
-  const d=snap.data(),players={...(d.players||{})};
-  if(Object.keys(players).length>=2&&!players[state.uid]){alert("ห้องเต็ม");return;}
-  players[state.uid]={name:state.player.fullName,progress:0,finished:false};
-  await updateDoc(ref,{players});state.roomCode=code;listenRoom(code);
+
+$("findRoomButton").onclick = async () => {
+  if(!renderPvpConfig()) return;
+
+  setMatchButtonsBusy(true);
+  setMatchmakingStatus(
+    "searching",
+    "กำลังค้นหาคู่แข่ง...",
+    `ค้นหา Lobby ${state.language.name} ที่กำลังรอผู้เล่น`
+  );
+
+  try{
+    await leaveCurrentLobby();
+
+    // ดึงห้อง waiting แล้วสุ่มลำดับ เพื่อไม่ให้ทุกคนเข้าห้องแรกเหมือนกัน
+    const waitingSnap = await getDocs(
+      query(collection(db,"pvp_rooms"), where("status","==","waiting"))
+    );
+
+    const candidates = waitingSnap.docs
+      .map(d => ({code:d.id, ...d.data()}))
+      .filter(isJoinableRoom)
+      .sort(() => Math.random() - 0.5);
+
+    if(!candidates.length){
+      setMatchButtonsBusy(false);
+      setMatchmakingStatus(
+        "empty",
+        "ยังไม่พบห้องว่าง",
+        `ตอนนี้ยังไม่มีผู้เล่น ${state.language.name} ที่กำลังรอ ลองค้นหาอีกครั้งหรือกดสร้างห้อง`
+      );
+      return;
+    }
+
+    let joinedCode = null;
+
+    // ลองทีละห้องด้วย Transaction ป้องกันผู้เล่นหลายคนแย่งช่องเดียวกัน
+    for(const candidate of candidates){
+      try{
+        const ref = doc(db,"pvp_rooms",candidate.code);
+
+        const joined = await runTransaction(db, async tx => {
+          const snap = await tx.get(ref);
+          if(!snap.exists()) return false;
+
+          const data = snap.data();
+          if(!isJoinableRoom(data)) return false;
+
+          const players = {...(data.players || {})};
+          players[state.uid] = {
+            uid:state.uid,
+            name:state.player.fullName,
+            studentId:state.player.studentId,
+            progress:0,
+            finished:false,
+            joinedAt:new Date().toISOString()
+          };
+
+          tx.update(ref,{
+            players,
+            matchedAt:serverTimestamp()
+          });
+
+          return true;
+        });
+
+        if(joined){
+          joinedCode = candidate.code;
+          break;
+        }
+      }catch(error){
+        console.warn("ข้ามห้องที่ถูกจับคู่ไปแล้ว:", candidate.code, error);
+      }
+    }
+
+    if(!joinedCode){
+      setMatchButtonsBusy(false);
+      setMatchmakingStatus(
+        "empty",
+        "ห้องที่พบถูกจับคู่ไปแล้ว",
+        "มีผู้เล่นอื่นเข้าห้องก่อนคุณ กดค้นหาห้องอีกครั้งได้ทันที"
+      );
+      return;
+    }
+
+    state.roomCode = joinedCode;
+    setMatchmakingStatus(
+      "matched",
+      `พบห้อง ${joinedCode}`,
+      "เข้าห้องสำเร็จแล้ว รอ Host เริ่มการแข่งขัน"
+    );
+
+    listenRoom(joinedCode);
+  }catch(error){
+    console.error(error);
+    setMatchButtonsBusy(false);
+    setMatchmakingStatus("error","ค้นหาห้องไม่สำเร็จ",error.message || "กรุณาลองอีกครั้ง");
+  }
 };
+
 function listenRoom(code){
-  if(state.roomUnsub)state.roomUnsub();
+  if(state.roomUnsub) state.roomUnsub();
+
+  state.roomCode = code;
   $("pvpLobby").classList.remove("hidden");
-  state.roomUnsub=onSnapshot(doc(db,"pvp_rooms",code),snap=>{
-    if(!snap.exists())return;
-    state.roomData=snap.data();const ps=Object.entries(state.roomData.players||{});
-    $("roomCodeLabel").textContent=code;$("pvpPlayer1").textContent=ps[0]?.[1]?.name||"รอผู้เล่น...";
-    $("pvpPlayer2").textContent=ps[1]?.[1]?.name||"รอผู้เล่น...";$("pvpStatus").textContent=state.roomData.status;
-    $("startPvpButton").classList.toggle("hidden",!(state.roomData.hostUid===state.uid&&ps.length===2&&state.roomData.status==="waiting"));
+  $("leaveLobbyButton").classList.remove("hidden");
+
+  state.roomUnsub = onSnapshot(doc(db,"pvp_rooms",code), snap => {
+    if(!snap.exists()){
+      state.roomCode = null;
+      state.roomData = null;
+      $("pvpLobby").classList.add("hidden");
+      $("startPvpButton").classList.add("hidden");
+      $("leaveLobbyButton").classList.add("hidden");
+      setMatchButtonsBusy(false);
+      setMatchmakingStatus("closed","ห้องถูกปิดแล้ว","สร้างห้องหรือค้นหาห้องใหม่ได้ทันที");
+      return;
+    }
+
+    state.roomData = snap.data();
+    const ps = Object.entries(state.roomData.players || {});
+
+    $("roomCodeLabel").textContent = code;
+    $("pvpPlayer1").textContent = ps[0]?.[1]?.name || "รอผู้เล่น...";
+    $("pvpPlayer2").textContent = ps[1]?.[1]?.name || "รอผู้เล่น...";
+    $("pvpStatus").textContent = String(state.roomData.status || "waiting").toUpperCase();
+
+    const count = ps.length;
+    const meIsHost = state.roomData.hostUid === state.uid;
+
+    if(count < 2){
+      $("pvpLobbyHint").textContent = "รอผู้เล่นอีก 1 คน";
+      setMatchmakingStatus("waiting",`ห้อง ${code} กำลังรอคู่แข่ง`,`มีผู้เล่น ${count}/2 คน`);
+    } else if(state.roomData.status === "waiting"){
+      $("pvpLobbyHint").textContent = meIsHost ? "ผู้เล่นครบแล้ว กดเริ่มการแข่งขัน" : "ผู้เล่นครบแล้ว รอ Host เริ่ม";
+      setMatchmakingStatus("matched","จับคู่สำเร็จแล้ว",meIsHost ? "กดเริ่มการแข่งขันได้เลย" : "กำลังรอ Host เริ่มเกม");
+    } else if(state.roomData.status === "playing"){
+      $("pvpLobbyHint").textContent = "การแข่งขันกำลังเริ่ม";
+      setMatchmakingStatus("playing","เริ่มการแข่งขันแล้ว","กำลังเข้าสู่เกม PVP");
+    }
+
+    $("startPvpButton").classList.toggle(
+      "hidden",
+      !(meIsHost && count === 2 && state.roomData.status === "waiting")
+    );
+
+    // เมื่ออยู่ใน Lobby แล้ว ปิดปุ่มสร้าง/ค้นหา ป้องกันสร้างหลายห้องซ้อน
+    setMatchButtonsBusy(true);
+  }, error => {
+    console.error(error);
+    setMatchButtonsBusy(false);
+    setMatchmakingStatus("error","การเชื่อมต่อ Lobby มีปัญหา",error.message || "");
   });
 }
-$("startPvpButton").onclick=async()=>{if(state.roomCode)await updateDoc(doc(db,"pvp_rooms",state.roomCode),{status:"playing",startedAt:serverTimestamp()})};
-$("leavePvpButton").onclick=()=>{if(state.roomUnsub)state.roomUnsub();showScreen("userPortal")};
+
+$("startPvpButton").onclick = async () => {
+  if(!state.roomCode) return;
+
+  await updateDoc(doc(db,"pvp_rooms",state.roomCode),{
+    status:"playing",
+    startedAt:serverTimestamp()
+  });
+};
+
+$("leaveLobbyButton").onclick = async () => {
+  await leaveCurrentLobby();
+};
+
+$("leavePvpButton").onclick = async () => {
+  await leaveCurrentLobby({deleteEmptyHostRoom:false});
+  showScreen("userPortal");
+};
 
 function buildKeyboard(){
   const keyboard=$("keyboard"); if(!keyboard)return;
@@ -785,6 +1103,100 @@ function buildKeyboard(){
   window.addEventListener("keydown",e=>(map.get(mk(e.key))||[]).forEach(x=>x.classList.add("active")));
   window.addEventListener("keyup",e=>(map.get(mk(e.key))||[]).forEach(x=>x.classList.remove("active")));
 }
+
+
+/* ===== Responsive Device UX ===== */
+function isTouchDevice() {
+  return window.matchMedia("(pointer: coarse)").matches || navigator.maxTouchPoints > 0;
+}
+
+function isPhoneLayout() {
+  return window.matchMedia("(max-width: 700px)").matches;
+}
+
+function isLandscape() {
+  return window.innerWidth > window.innerHeight;
+}
+
+function updateDeviceUX() {
+  const hint = $("deviceHint");
+  if (!hint) return;
+
+  const touch = isTouchDevice();
+  const phone = isPhoneLayout();
+
+  document.documentElement.classList.toggle("touch-device", touch);
+  document.documentElement.classList.toggle("phone-layout", phone);
+  document.documentElement.classList.toggle("landscape-layout", isLandscape());
+
+  if (phone) {
+    hint.textContent = isLandscape() ? "มือถือ · แนวนอน" : "มือถือ · แนวตั้ง";
+  } else if (touch) {
+    hint.textContent = "Tablet / Touch";
+  } else {
+    hint.textContent = "Desktop";
+  }
+}
+
+function syncMobileStats() {
+  const map = [
+    ["mobileStatLevel", "statLevel"],
+    ["mobileStatTime", "statTime"],
+    ["mobileStatWpm", "statWpm"],
+    ["mobileStatAccuracy", "statAccuracy"],
+    ["mobileStatMistakes", "statMistakes"],
+    ["mobileStatToken", "statScore"]
+  ];
+  map.forEach(([mobileId, sourceId]) => {
+    const mobile = $(mobileId);
+    const source = $(sourceId);
+    if (mobile && source) mobile.textContent = source.textContent;
+  });
+}
+
+window.addEventListener("resize", updateDeviceUX);
+window.addEventListener("orientationchange", () => {
+  setTimeout(() => {
+    updateDeviceUX();
+    $("typingInput")?.focus({preventScroll:true});
+  }, 250);
+});
+
+if ($("mobileFocusButton")) {
+  $("mobileFocusButton").onclick = () => {
+    $("typingInput")?.focus({preventScroll:true});
+    $("typingStage")?.scrollIntoView({block:"nearest"});
+  };
+}
+
+if ($("mobileStatsButton")) {
+  $("mobileStatsButton").onclick = () => {
+    syncMobileStats();
+    $("mobileStatsSheet")?.classList.remove("hidden");
+  };
+}
+
+if ($("closeMobileStats")) {
+  $("closeMobileStats").onclick = () => {
+    $("mobileStatsSheet")?.classList.add("hidden");
+    $("typingInput")?.focus({preventScroll:true});
+  };
+}
+
+if ($("mobileStatsSheet")) {
+  $("mobileStatsSheet").addEventListener("click", (e) => {
+    if (e.target === $("mobileStatsSheet")) {
+      $("mobileStatsSheet").classList.add("hidden");
+      $("typingInput")?.focus({preventScroll:true});
+    }
+  });
+}
+
+if ($("mobileExitButton")) {
+  $("mobileExitButton").onclick = () => $("quitButton")?.click();
+}
+
+updateDeviceUX();
 
 onAuthStateChanged(auth,async user=>{
   if(!user){state.uid=null;state.player=null;showScreen("authScreen");return;}
