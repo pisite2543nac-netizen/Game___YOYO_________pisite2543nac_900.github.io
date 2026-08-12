@@ -1,0 +1,12 @@
+{
+  "user_chat_button": true,
+  "admin_gm_button": true,
+  "chat_html": true,
+  "chat_js": true,
+  "student_id_name": true,
+  "admin_gm_name": true,
+  "global_collection": true,
+  "rules_verify_student_id": true,
+  "rules_gm": true,
+  "responsive_chat": true
+}

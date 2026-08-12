@@ -769,6 +769,7 @@ async function syncPublicProfile(){
     await setDoc(doc(db,"public_profiles",state.uid),{
       uid:state.uid,
       fullName:state.player.fullName,
+      studentId:state.player.studentId,
       rank:state.player.rank||{tierId:"bronze",tierName:"Bronze",rating:0},
       avatarId:state.player.character?.avatarId||"default_student",
       character:{
@@ -783,7 +784,7 @@ async function writePresence(area="portal"){
   if(!state.uid||!state.player)return;
   try{
     await setDoc(doc(db,"presence",state.uid),{
-      uid:state.uid,fullName:state.player.fullName,
+      uid:state.uid,fullName:state.player.fullName,studentId:state.player.studentId,
       rank:state.player.rank||null,area,online:true,lastSeenAt:serverTimestamp()
     },{merge:true});
   }catch(error){console.warn("presence:",error)}

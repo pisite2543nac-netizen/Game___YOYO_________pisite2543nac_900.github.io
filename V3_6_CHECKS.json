@@ -1,0 +1,11 @@
+{
+  "desktop_first_css": true,
+  "tablet_css": true,
+  "mobile_css": true,
+  "mobile_landscape": true,
+  "safe_area": true,
+  "100dvh": true,
+  "visual_viewport": true,
+  "mobile_online_chip": true,
+  "pointer_touch": true
+}

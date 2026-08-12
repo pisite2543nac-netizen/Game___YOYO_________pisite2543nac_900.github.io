@@ -2,7 +2,7 @@
 <html lang="th">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Thai Night Social Zone · Code Typing Academy</title>
   <link rel="stylesheet" href="style.css">
 </head>
@@ -19,6 +19,7 @@
   <main id="socialZoneApp" class="social-zone-app hidden">
     <header class="social-zone-topbar">
       <div class="social-zone-brand">
+        <span id="zoneDeviceHint" class="zone-device-hint">DESKTOP</span>
         <span class="social-zone-logo">🌙</span>
         <div>
           <strong>THAI NIGHT · SOCIAL ZONE</strong>
@@ -34,6 +35,11 @@
         </div>
       </div>
 
+      <div id="mobileZoneOnline" class="mobile-zone-online">
+        <span class="online-dot"></span>
+        <strong id="mobileZoneOnlineCount">1</strong>
+      </div>
+      <a href="chat.html" class="btn zone-global-chat-btn small-btn">💬 แชตรวม</a>
       <a id="leaveZoneButton" href="index.html" class="btn danger small-btn">ออกจาก Zone</a>
     </header>
 
@@ -64,7 +70,7 @@
                type="text"
                maxlength="120"
                autocomplete="off"
-               placeholder="พิมพ์ข้อความที่จะพูด..."
+               placeholder="พิมพ์ข้อความแล้วกด พูด..."
                aria-label="ข้อความพูดคุย">
         <button id="zoneChatSend" type="submit">พูด</button>
       </form>

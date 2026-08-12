@@ -185,6 +185,7 @@ function listenPlayers(){
       players.set(d.id,p);
     });
     $("zoneOnlineCount").textContent=Math.max(1,players.size);
+    if($("mobileZoneOnlineCount")) $("mobileZoneOnlineCount").textContent=Math.max(1,players.size);
   });
 }
 
@@ -224,7 +225,7 @@ $("zoneChatForm").addEventListener("submit",async e=>{
   const text=input.value;
   input.value="";
   try{await sendMessage(text)}catch(error){console.warn(error)}
-  input.focus();
+  input.focus({preventScroll:true});
 });
 
 $("chooseMale").onclick=()=>chooseGender("male");
@@ -241,14 +242,17 @@ function stopMove(dir){
 }
 
 function bindHold(button,dir){
+  button.style.touchAction="none";
   button.addEventListener("pointerdown",e=>{
     e.preventDefault();
     button.setPointerCapture?.(e.pointerId);
     startMove(dir);
   });
-  button.addEventListener("pointerup",()=>stopMove(dir));
-  button.addEventListener("pointercancel",()=>stopMove(dir));
-  button.addEventListener("pointerleave",()=>stopMove(dir));
+  const stop=()=>stopMove(dir);
+  button.addEventListener("pointerup",stop);
+  button.addEventListener("pointercancel",stop);
+  button.addEventListener("pointerleave",stop);
+  button.addEventListener("lostpointercapture",stop);
 }
 bindHold($("moveLeftButton"),"left");
 bindHold($("moveRightButton"),"right");
@@ -258,7 +262,7 @@ window.addEventListener("keydown",e=>{
   const k=e.key.toLowerCase();
   if(k==="a"||k==="arrowleft"){e.preventDefault();startMove("left")}
   if(k==="d"||k==="arrowright"){e.preventDefault();startMove("right")}
-  if(k==="enter"){$("zoneChatInput").focus()}
+  if(k==="enter"){$("zoneChatInput").focus({preventScroll:true})}
 });
 window.addEventListener("keyup",e=>{
   const k=e.key.toLowerCase();
@@ -650,6 +654,52 @@ window.addEventListener("pagehide",leaveZone);
 $("leaveZoneButton").addEventListener("click",()=>leaveZone());
 setInterval(()=>publish(true),30000);
 
+
+/* ===== V3.6 DEVICE UX: Desktop-first / Tablet / Mobile ===== */
+function detectZoneDevice(){
+  const width = window.innerWidth;
+  const coarse = window.matchMedia("(pointer: coarse)").matches || navigator.maxTouchPoints > 0;
+
+  let mode = "desktop";
+  if(width <= 700) mode = "mobile";
+  else if(width <= 1100 || coarse) mode = "tablet";
+
+  document.documentElement.dataset.zoneDevice = mode;
+  document.documentElement.classList.toggle("zone-mobile", mode === "mobile");
+  document.documentElement.classList.toggle("zone-tablet", mode === "tablet");
+  document.documentElement.classList.toggle("zone-desktop", mode === "desktop");
+
+  if($("zoneDeviceHint")){
+    $("zoneDeviceHint").textContent =
+      mode === "desktop" ? "DESKTOP FULL" :
+      mode === "tablet" ? "TABLET" : "MOBILE";
+  }
+
+  resizeCanvas();
+}
+
+function updateVisualViewport(){
+  const vv = window.visualViewport;
+  const h = vv ? vv.height : window.innerHeight;
+  document.documentElement.style.setProperty("--zone-visible-height", `${Math.max(320,h)}px`);
+  resizeCanvas();
+}
+
+window.addEventListener("resize", ()=>{
+  detectZoneDevice();
+  updateVisualViewport();
+});
+window.addEventListener("orientationchange", ()=>{
+  setTimeout(()=>{
+    detectZoneDevice();
+    updateVisualViewport();
+  },250);
+});
+if(window.visualViewport){
+  window.visualViewport.addEventListener("resize", updateVisualViewport);
+  window.visualViewport.addEventListener("scroll", updateVisualViewport);
+}
+
 onAuthStateChanged(auth,async user=>{
   if(!user){
     $("zoneGate").innerHTML=`<div class="social-gate-card">
@@ -662,5 +712,7 @@ onAuthStateChanged(auth,async user=>{
   }
   if(user.email==="pisit_2000@thc-nr.local"){location.href="admin.html";return}
   uid=user.uid;
+  detectZoneDevice();
+  updateVisualViewport();
   await enterZone();
 });

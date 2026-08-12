@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>ห้องแชตรวม · Code Typing Academy</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="global-chat-page">
+  <div id="chatGate" class="global-chat-gate">
+    <div class="global-chat-gate-card">
+      <div class="global-chat-gate-icon">💬</div>
+      <h1>ห้องแชตรวม</h1>
+      <p>กำลังตรวจสอบบัญชี...</p>
+      <a href="index.html" class="btn ghost">กลับหน้า User</a>
+    </div>
+  </div>
+
+  <main id="globalChatApp" class="global-chat-app hidden">
+    <header class="global-chat-topbar">
+      <div class="global-chat-title">
+        <span class="global-chat-logo">💬</span>
+        <div>
+          <strong>ห้องแชตรวมทั้งหมด</strong>
+          <small>ผู้ลงทะเบียนทุกคนสามารถเข้าร่วมได้ · ชื่อ User แสดงเป็นรหัสนักศึกษา</small>
+        </div>
+      </div>
+
+      <div class="global-chat-self">
+        <span id="chatSelfBadge" class="chat-self-badge student">USER</span>
+        <div>
+          <strong id="chatSelfName">-</strong>
+          <small><span class="online-dot"></span> ONLINE · <span id="chatOnlineCount">1</span> คน</small>
+        </div>
+      </div>
+
+      <div class="global-chat-top-actions">
+        <a id="chatZoneLink" href="zone.html" class="btn ghost small-btn">🌙 2D Zone</a>
+        <a id="chatBackLink" href="index.html" class="btn secondary small-btn">กลับ</a>
+      </div>
+    </header>
+
+    <section class="global-chat-layout">
+      <aside class="global-chat-members">
+        <div class="global-chat-panel-head">
+          <div>
+            <span>MEMBERS</span>
+            <strong>สมาชิกออนไลน์</strong>
+          </div>
+          <b id="chatMemberCount">0</b>
+        </div>
+        <div id="chatMemberList" class="global-chat-member-list"></div>
+
+        <div class="global-chat-rule-card">
+          <strong>กติกาห้อง</strong>
+          <p>ชื่อผู้เรียนแสดงเป็นรหัสนักศึกษาเท่านั้น</p>
+          <p>Admin จะแสดงชื่อว่า <b>GM</b></p>
+          <p>ข้อความจำกัด 300 ตัวอักษร</p>
+        </div>
+      </aside>
+
+      <section class="global-chat-main">
+        <div id="globalChatMessages" class="global-chat-messages">
+          <div class="global-chat-empty">ยังไม่มีข้อความในห้องแชต</div>
+        </div>
+
+        <form id="globalChatForm" class="global-chat-compose">
+          <div class="global-chat-compose-meta">
+            <span>ส่งในชื่อ</span>
+            <strong id="chatComposeName">-</strong>
+          </div>
+          <textarea id="globalChatInput"
+                    maxlength="300"
+                    rows="2"
+                    placeholder="พิมพ์ข้อความถึงทุกคน..."
+                    autocomplete="off"></textarea>
+          <button id="globalChatSend" type="submit">ส่งข้อความ</button>
+        </form>
+      </section>
+    </section>
+  </main>
+
+  <script type="module" src="chat.js"></script>
+</body>
+</html>

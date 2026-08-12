@@ -94,5 +94,42 @@ service cloud.firestore {
         || (signedIn() && resource.data.uid == request.auth.uid);
     }
 
+
+    // =============================
+    // GLOBAL CHAT — ALL REGISTERED USERS + GM
+    // =============================
+    match /global_messages/{messageId} {
+      allow read: if signedIn();
+
+      allow create: if signedIn()
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.roomId == "global"
+        && request.resource.data.text is string
+        && request.resource.data.text.size() > 0
+        && request.resource.data.text.size() <= 300
+        && (
+          (
+            isAdmin()
+            && request.resource.data.senderType == "gm"
+            && request.resource.data.senderLabel == "GM"
+          )
+          ||
+          (
+            !isAdmin()
+            && request.resource.data.senderType == "student"
+            && request.resource.data.senderLabel
+              == get(/databases/$(database)/documents/users/$(request.auth.uid)).data.studentId
+          )
+        );
+
+      allow update: if false;
+
+      allow delete: if isAdmin()
+        || (
+          signedIn()
+          && resource.data.uid == request.auth.uid
+        );
+    }
+
   }
 }
