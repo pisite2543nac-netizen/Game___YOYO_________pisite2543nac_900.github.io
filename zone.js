@@ -5,18 +5,18 @@ import {
   collection, onSnapshot, serverTimestamp, query, orderBy, limit, where,
   runTransaction, Timestamp
 } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
-import { firebaseConfig, ADMIN_UID } from "./firebase-config.js?v=4.1.0";
-import { REWARD_ITEMS, RARITY_META } from "./reward-data.js?v=4.1.0";
-import { DEFAULT_CHARACTER } from "./character-system.js?v=4.1.0";
+import { firebaseConfig, ADMIN_UID } from "./firebase-config.js?v=4.2.0";
+import { REWARD_ITEMS, RARITY_META } from "./reward-data.js?v=4.2.0";
+import { DEFAULT_CHARACTER } from "./character-system.js?v=4.2.0";
 
-window.__ZONE_V41_BOOTED__ = true;
+window.__ZONE_V42_BOOTED__ = true;
 
 const firebaseApp=initializeApp(firebaseConfig);
 const auth=getAuth(firebaseApp);
 const db=getFirestore(firebaseApp);
 const $=id=>document.getElementById(id);
 
-const ZONE_VERSION="4.1.0";
+const ZONE_VERSION="4.2.0";
 const ZONE_ID="thai_social_zone_v4_1";
 const WORLD={width:3000,height:900};
 const WALK_Y=700;
@@ -168,7 +168,7 @@ async function loadProfile(){
     if(isGM()){
       let savedX=520,savedDirection="right";
       try{const pos=await getDoc(doc(db,"zone_positions",uid));if(pos.exists()){savedX=Number(pos.data().x)||520;savedDirection=pos.data().direction==="left"?"left":"right";}}catch{}
-      profile={uid,studentId:"GM",fullName:"Game Master",tokenBalance:0,inventory:[],role:"GM",isAdmin:true,rank:GM_RANK,character:{gender:"male",equipped:{}}};
+      profile={uid,studentId:"GM",fullName:"GM",tokenBalance:0,inventory:[],role:"GM",isAdmin:true,rank:GM_RANK,character:{gender:"male",equipped:{}}};
       me.x=Math.max(90,Math.min(WORLD.width-90,savedX));me.direction=savedDirection;
       setBootStep("profile","ok","GM · Exclusive");return true;
     }
@@ -186,7 +186,7 @@ async function syncPublicProfile(){
   try{
     const gm=isGM();
     await setDoc(doc(db,"public_profiles",uid),{
-      uid,studentId:gm?"GM":profile.studentId,fullName:gm?"Game Master":profile.fullName,
+      uid,studentId:gm?"GM":profile.studentId,fullName:gm?"GM":profile.fullName,
       role:gm?"GM":"USER",isAdmin:gm,rank:gm?GM_RANK:(profile.rank||null),
       character:gm?{gender:"male",equipped:{},exclusive:"gm_v1"}:{gender:profile.character?.gender||"male",equipped:equipped(profile.character)},
       updatedAt:serverTimestamp()
@@ -198,7 +198,7 @@ async function publishPresence(){
   try{
     const gm=isGM();
     await setDoc(doc(db,"presence",uid),{
-      uid,studentId:gm?"GM":profile.studentId,fullName:gm?"Game Master":profile.fullName,
+      uid,studentId:gm?"GM":profile.studentId,fullName:gm?"GM":profile.fullName,
       role:gm?"GM":"USER",isAdmin:gm,rank:gm?GM_RANK:(profile.rank||null),area:"zone",online:true,lastSeenAt:serverTimestamp()
     },{merge:true});
   }catch(error){console.warn("presence:",error)}
@@ -352,7 +352,7 @@ function drawGMCharacter(c,p,x,y,scale=1,drawName=true){
   c.strokeStyle="#e9bf46";c.lineWidth=6;c.beginPath();c.moveTo(38,-31);c.lineTo(55,35);c.stroke();c.fillStyle="#5de7ff";c.shadowColor="#5de7ff";c.shadowBlur=13;c.beginPath();c.arc(37,-38,11,0,Math.PI*2);c.fill();c.shadowBlur=0;c.strokeStyle="#ffd650";c.lineWidth=3;c.beginPath();c.arc(37,-38,17,0,Math.PI*2);c.stroke();
   c.restore();
   if(drawName){
-    c.font="900 14px system-ui";const label="GM • GAME MASTER",w=Math.max(150,c.measureText(label).width+42);c.fillStyle="rgba(92,12,28,.96)";rr(c,-w/2,-164,w,35,11);c.fill();c.strokeStyle="#f0c64d";c.lineWidth=2;c.stroke();c.fillStyle="#ffe8a5";c.textAlign="center";c.fillText(label,0,-141);
+    c.font="900 14px system-ui";const label="GM",w=Math.max(88,c.measureText(label).width+42);c.fillStyle="rgba(92,12,28,.96)";rr(c,-w/2,-164,w,35,11);c.fill();c.strokeStyle="#f0c64d";c.lineWidth=2;c.stroke();c.fillStyle="#ffe8a5";c.textAlign="center";c.fillText(label,0,-141);
     c.fillStyle="rgba(28,15,42,.9)";rr(c,-64,-125,128,28,8);c.fill();c.font="16px system-ui";["👑","🪄","🛡️","🔥"].forEach((it,i)=>c.fillText(it,-42+i*28,-105));drawBubble(c,p);
   }
   c.restore();
@@ -378,7 +378,7 @@ function render(){drawWorld()}function loop(now){const dt=Math.min(.04,(now-last
 function canvasToWorld(clientX,clientY){const rect=canvas.getBoundingClientRect(),scale=rect.height/WORLD.height;return {x:(clientX-rect.left)/scale+cameraX(),y:(clientY-rect.top)/scale}}
 canvas.addEventListener("click",e=>{const pt=canvasToWorld(e.clientX,e.clientY);if(pt.x>=620&&pt.x<=1010&&pt.y>=430&&pt.y<=650){if(!isGM())openShop();return}let selected=null,best=9999;for(const p of players.values()){const d=Math.hypot(Number(p.x||0)-pt.x,WALK_Y-pt.y);if(d<70&&d<best){selected=p;best=d}}if(selected)openPlayerCard(selected)});
 function openPlayerCard(p){
-  const gm=isGMPlayer(p);$("zonePlayerCardId").textContent=gm?"GM · GAME MASTER":(p.studentId||"USER");$("zonePlayerCardShield").innerHTML=rankShieldHTML(gm?GM_RANK:p.rank);$("zonePlayerCardRank").textContent=gm?"ผู้ดูแลระบบ 2D Zone · Exclusive Character":`${p.rank?.tierName||"Bronze"} · ${Number(p.rank?.rating||0)} Rating`;$("zonePlayerCardItemTitle").textContent=gm?"GM EXCLUSIVE · User ไม่สามารถครอบครอง":"ไอเท็มที่กำลังสวม";
+  const gm=isGMPlayer(p);$("zonePlayerCardId").textContent=gm?"GM":(p.studentId||"USER");$("zonePlayerCardShield").innerHTML=rankShieldHTML(gm?GM_RANK:p.rank);$("zonePlayerCardRank").textContent=gm?"ผู้ดูแลระบบ 2D Zone · Exclusive Character":`${p.rank?.tierName||"Bronze"} · ${Number(p.rank?.rating||0)} Rating`;$("zonePlayerCardItemTitle").textContent=gm?"GM EXCLUSIVE · User ไม่สามารถครอบครอง":"ไอเท็มที่กำลังสวม";
   if(gm)$("zonePlayerCardItems").innerHTML=GM_EXCLUSIVE_ITEMS.map(x=>`<div class="gm-exclusive-mini"><span>${x.icon}</span><small>${esc(x.name)}</small></div>`).join("");else{const list=equippedItems(p.character);$("zonePlayerCardItems").innerHTML=list.length?list.map(({item})=>`<div><span>${item.icon}</span><small>${esc(item.name)}</small></div>`).join(""):`<div class="empty-mini">ยังไม่ได้สวมไอเท็ม</div>`}$("zonePlayerCard").classList.remove("hidden");
 }
 $("closeZonePlayerCard").onclick=()=>$("zonePlayerCard").classList.add("hidden");
@@ -393,7 +393,7 @@ async function handleShopItem(itemId){
 }
 function openShop(){if(isGM())return;renderShop();$("zoneShopModal").classList.remove("hidden")}$("openZoneShop").onclick=openShop;$("closeZoneShop").onclick=()=>$("zoneShopModal").classList.add("hidden");
 function drawOwnProfile(){if(!profile)return;profileCtx.clearRect(0,0,profileCanvas.width,profileCanvas.height);const time=worldTimeState(),bg=profileCtx.createLinearGradient(0,0,0,430);if(time.isDay){bg.addColorStop(0,"#7fcdf0");bg.addColorStop(1,"#6e9b59")}else{bg.addColorStop(0,"#102f47");bg.addColorStop(1,"#315e52")}profileCtx.fillStyle=bg;profileCtx.fillRect(0,0,420,430);const p={uid,studentId:isGM()?"GM":profile.studentId,rank:isGM()?GM_RANK:profile.rank,character:isGM()?{gender:"male",exclusive:"gm_v1"}:{gender:profile.character?.gender,equipped:equipped(profile.character)},direction:"right",isAdmin:isGM()};drawCharacter(profileCtx,p,210,345,1.65,false)}
-$("openMyZoneProfile").onclick=()=>{$("zoneProfileStudentId").textContent=isGM()?"GM · GAME MASTER":(profile?.studentId||"-");$("zoneProfileKicker").textContent=isGM()?"GM EXCLUSIVE CHARACTER":"MY CHARACTER";$("zoneProfileHelp").textContent=isGM()?"ตัวละครและไอเท็มชุดนี้ผูกกับ ADMIN_UID เท่านั้น User ไม่สามารถซื้อหรือสวมตามได้":"ซื้อและสวมใส่ไอเท็มได้จาก Token Shop ภายใน Zone";drawOwnProfile();$("zoneMyProfileModal").classList.remove("hidden")};$("closeMyZoneProfile").onclick=()=>$("zoneMyProfileModal").classList.add("hidden");
+$("openMyZoneProfile").onclick=()=>{$("zoneProfileStudentId").textContent=isGM()?"GM":(profile?.studentId||"-");$("zoneProfileKicker").textContent=isGM()?"GM EXCLUSIVE CHARACTER":"MY CHARACTER";$("zoneProfileHelp").textContent=isGM()?"ตัวละครและไอเท็มชุดนี้ผูกกับ ADMIN_UID เท่านั้น User ไม่สามารถซื้อหรือสวมตามได้":"ซื้อและสวมใส่ไอเท็มได้จาก Token Shop ภายใน Zone";drawOwnProfile();$("zoneMyProfileModal").classList.remove("hidden")};$("closeMyZoneProfile").onclick=()=>$("zoneMyProfileModal").classList.add("hidden");
 async function leaveZone(){clearInterval(heartbeat);clearInterval(clockTimer);try{await updateDoc(doc(db,"zone_positions",uid),{online:false,updatedAt:serverTimestamp()})}catch{}try{await setDoc(doc(db,"presence",uid),{online:false,lastSeenAt:serverTimestamp()},{merge:true})}catch{}if(!isGM()){try{await updateDoc(doc(db,"users",uid),{zone:{zoneId:ZONE_ID,x:Math.round(me.x),y:WALK_Y,direction:me.direction,lastSeenAt:new Date().toISOString()}})}catch{}}}
 window.addEventListener("resize",resizeCanvas);window.addEventListener("pagehide",leaveZone);$("leaveZoneButton").addEventListener("click",()=>leaveZone());
 

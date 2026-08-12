@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1">
   <title>ระบบเกมพิมพ์ Code | วิทยาลัยเทคนิคนางรอง</title>
-  <link rel="stylesheet" href="./style.css?v=4.1.0">
+  <link rel="stylesheet" href="./style.css?v=4.2.0">
 </head>
 <body>
 <header class="site-header">
@@ -64,7 +64,7 @@
 
         <label>
           <span>ชื่อ-นามสกุล</span>
-          <input id="fullName" required placeholder="เช่น นายสมชาย ใจดี">
+          <input id="fullName" required placeholder="ชื่อ มิงกาลาบา เมียงปร่ะ">
         </label>
 
         <label>
@@ -145,7 +145,17 @@
       <div class="card portal-stat rank-stat"><span>Rank Season</span><strong id="userRank">-</strong><small id="rankSeasonLabel">60 DAYS</small></div>
     </div>
 
-    <section class="card">
+    <section id="mobileZoneOnlyNotice" class="card hidden mobile-zone-only-card">
+      <div class="mobile-zone-only-badge">📱 MOBILE / TABLET MODE</div>
+      <h3>มือถือและแท็บเล็ตเข้าใช้งานเฉพาะ 2D Zone</h3>
+      <p>อุปกรณ์แบบสัมผัสจะเปิดให้ใช้งานเฉพาะ 2D Zone เพื่อให้เล่นได้ลื่นและเสถียรกว่าเดิม ส่วนคอมพิวเตอร์ยังใช้งานระบบเรียนพิมพ์โค้ดได้ครบทั้งหมด</p>
+      <div class="mobile-zone-only-actions">
+        <a id="mobileZoneOnlyEnter" href="zone.html" class="btn primary">🌙 เข้า 2D Zone</a>
+      </div>
+      <small>บน 2D Zone: Admin แสดงชื่อเหนือหัวเป็น GM และผู้เล่นทั่วไปแสดงเป็นรหัสนักศึกษา</small>
+    </section>
+
+    <section id="languageSection" class="card">
       <div class="section-title">
         <div>
           <span class="section-kicker">STEP 1 · LANGUAGE</span>
@@ -522,7 +532,7 @@
 </main>
 
 <footer><div class="wrap">ระบบเกมพิมพ์ Code · วิทยาลัยเทคนิคนางรอง</div></footer>
-<script type="module" src="./app.js?v=4.1.0"></script>
+<script type="module" src="./app.js?v=4.2.0"></script>
 
   <div id="characterSetupModal" class="character-modal hidden">
     <div class="character-modal-card character-setup-card">

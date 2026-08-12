@@ -7,12 +7,12 @@ import {
   getFirestore, collection, doc, getDoc, getDocs, setDoc, addDoc, updateDoc, deleteDoc,
   serverTimestamp, query, where, orderBy, limit, onSnapshot, runTransaction
 } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
-import { firebaseConfig } from "./firebase-config.js?v=4.1.0";
-import { LANGUAGES, LESSONS, DIFFICULTIES } from "./lessons.js?v=4.1.0";
-import { REWARD_ITEMS, RARITY_META } from "./reward-data.js?v=4.1.0";
-import { DEFAULT_CHARACTER, DEFAULT_ZONE_STATE } from "./character-system.js?v=4.1.0";
-import { OFFICIAL_STAGES, OFFICIAL_TOTAL_SCORE } from "./official-data.js?v=4.1.0";
-import { RANKING_CONFIG, seasonIdFromDate, seasonRange, calculateRankMetrics } from "./ranking-system.js?v=4.1.0";
+import { firebaseConfig } from "./firebase-config.js?v=4.2.0";
+import { LANGUAGES, LESSONS, DIFFICULTIES } from "./lessons.js?v=4.2.0";
+import { REWARD_ITEMS, RARITY_META } from "./reward-data.js?v=4.2.0";
+import { DEFAULT_CHARACTER, DEFAULT_ZONE_STATE } from "./character-system.js?v=4.2.0";
+import { OFFICIAL_STAGES, OFFICIAL_TOTAL_SCORE } from "./official-data.js?v=4.2.0";
+import { RANKING_CONFIG, seasonIdFromDate, seasonRange, calculateRankMetrics } from "./ranking-system.js?v=4.2.0";
 
 const firebaseApp = initializeApp(firebaseConfig);
 const auth = getAuth(firebaseApp);
@@ -1384,6 +1384,26 @@ function isPhoneLayout() {
   return window.matchMedia("(max-width: 700px)").matches;
 }
 
+function isZoneOnlyDevice() {
+  return isTouchDevice() && window.matchMedia("(max-width: 1180px)").matches;
+}
+
+function applyZoneOnlyPortalMode() {
+  const zoneOnly = isZoneOnlyDevice();
+  document.documentElement.classList.toggle("zone-only-device", zoneOnly);
+  document.body?.classList.toggle("zone-only-device", zoneOnly);
+
+  const notice = $("mobileZoneOnlyNotice");
+  if (notice) notice.classList.toggle("hidden", !zoneOnly);
+
+  const zoneOnlyButton = $("mobileZoneOnlyEnter");
+  if (zoneOnlyButton) zoneOnlyButton.setAttribute("href", "zone.html");
+
+  const headTitle = document.querySelector("#userPortal .user-portal-head h2");
+  if (headTitle && zoneOnly) headTitle.textContent = "เข้าใช้งาน 2D Zone";
+  if (headTitle && !zoneOnly) headTitle.textContent = "เลือกภาษาและโหมดการเรียนรู้";
+}
+
 function isLandscape() {
   return window.innerWidth > window.innerHeight;
 }
@@ -1394,18 +1414,23 @@ function updateDeviceUX() {
 
   const touch = isTouchDevice();
   const phone = isPhoneLayout();
+  const zoneOnly = isZoneOnlyDevice();
 
   document.documentElement.classList.toggle("touch-device", touch);
   document.documentElement.classList.toggle("phone-layout", phone);
   document.documentElement.classList.toggle("landscape-layout", isLandscape());
 
-  if (phone) {
+  if (zoneOnly) {
+    hint.textContent = phone ? (isLandscape() ? "มือถือ · เข้า 2D Zone เท่านั้น" : "มือถือ · เข้า 2D Zone เท่านั้น") : "แท็บเล็ต · เข้า 2D Zone เท่านั้น";
+  } else if (phone) {
     hint.textContent = isLandscape() ? "มือถือ · แนวนอน" : "มือถือ · แนวตั้ง";
   } else if (touch) {
     hint.textContent = "Tablet / Touch";
   } else {
     hint.textContent = "Desktop";
   }
+
+  applyZoneOnlyPortalMode();
 }
 
 function syncMobileStats() {

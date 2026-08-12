@@ -2959,3 +2959,31 @@ html,body.social-zone-page{
 .btn.warning{background:#c7892e!important;color:#fff!important;border-color:#ad721f!important}
 
 @media(max-width:900px){.zone-chat-history-head{display:block}.zone-chat-history-legend{margin-top:8px}.admin-zone-chat-message{grid-template-columns:42px minmax(0,1fr)}.admin-zone-chat-message>.mini-delete{grid-column:1/-1}.admin-zone-chat-meta time{margin-left:0}}
+
+
+/* ===== V4.2 — MOBILE/TABLET ZONE ONLY + GM LABEL ===== */
+.mobile-zone-only-card{border:1px solid #d2deea;background:linear-gradient(180deg,#ffffff 0%,#f3f8fc 100%)}
+.mobile-zone-only-card h3{margin:6px 0 10px;font-size:24px;color:#193a5d}
+.mobile-zone-only-card p{margin:0 0 14px;color:#536171;line-height:1.75}
+.mobile-zone-only-card small{display:block;margin-top:12px;color:#6a7685}
+.mobile-zone-only-badge{display:inline-flex;align-items:center;gap:8px;padding:8px 12px;border-radius:999px;background:#e8f1fb;color:#1f4f7b;font-size:11px;font-weight:800;letter-spacing:.08em}
+.mobile-zone-only-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
+.mobile-zone-only-actions .btn{min-height:48px;padding:0 22px;font-size:16px}
+.zone-only-device #userPortal>.portal-stat-grid,
+.zone-only-device #userPortal>#languageSection,
+.zone-only-device #userPortal>#learningSection,
+.zone-only-device #userPortal>#modeSection,
+.zone-only-device #userPortal>#classicConfig,
+.zone-only-device #userPortal>#officialConfig,
+.zone-only-device #userPortal>#pvpConfig,
+.zone-only-device #userPortal>.social-hub-grid,
+.zone-only-device #userPortal>.zone-entry-card,
+.zone-only-device #userPortal>.character-placeholder,
+.zone-only-device #userPortal>section.card:not(#mobileZoneOnlyNotice){display:none!important}
+.zone-only-device #openCharacterProfileButton{display:none!important}
+.zone-only-device .user-portal-head{align-items:flex-start}
+.zone-only-device .user-portal-head h2{font-size:28px}
+.zone-only-device .portal-head-actions{display:flex;flex-wrap:wrap;gap:10px}
+.zone-only-device .zone-entry-main{min-height:48px;padding:0 20px}
+@media(max-width:900px){.mobile-zone-only-card h3{font-size:21px}}
+@media(max-width:650px){.mobile-zone-only-card{padding:18px}.mobile-zone-only-card h3{font-size:20px}.mobile-zone-only-actions .btn{width:100%;justify-content:center}}
