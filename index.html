@@ -125,8 +125,8 @@
   <section id="userPortal" class="hidden">
     <div class="user-portal-head card">
       <div>
-        <span class="section-kicker">USER PANEL</span>
-        <h2>เลือกโหมดเกมพิมพ์ Code</h2>
+        <span class="section-kicker">CODE LEARNING HUB</span>
+        <h2>เลือกภาษาและโหมดการเรียนรู้</h2>
         <p id="portalWelcome">-</p>
       </div>
       <button id="logoutUserButton" class="btn ghost">ออกจากระบบ</button>
@@ -137,77 +137,235 @@
       <div class="card portal-stat"><span>เล่นสำเร็จ</span><strong id="userCompleted">0</strong></div>
       <div class="card portal-stat"><span>คะแนนสูงสุด</span><strong id="userBestScore">0</strong></div>
       <div class="card portal-stat"><span>WPM สูงสุด</span><strong id="userBestWpm">0</strong></div>
+      <div class="card portal-stat points-stat"><span>แต้มสะสม</span><strong id="userPoints">0</strong><small>POINTS</small></div>
     </div>
 
     <section class="card">
       <div class="section-title">
-        <div><span class="section-kicker">SELECT GAME MODE</span><h2>เลือกโหมดเกม</h2></div>
+        <div>
+          <span class="section-kicker">STEP 1 · LANGUAGE</span>
+          <h2>เลือกภาษาเขียนโปรแกรม</h2>
+          <p class="muted-line">แต่ละภาษามีบทเรียน คำอธิบาย ตัวอย่าง Preview และผลลัพธ์แยกจากกัน</p>
+        </div>
       </div>
-      <div id="modeCards" class="mode-card-grid"></div>
+      <div id="languageCards" class="language-grid"></div>
+    </section>
+
+    <section id="learningSection" class="card hidden">
+      <div class="section-title">
+        <div>
+          <span class="section-kicker">LEARN BEFORE PLAY</span>
+          <h2 id="learningTitle">บทเรียน</h2>
+          <p id="learningTagline" class="muted-line"></p>
+        </div>
+      </div>
+
+      <div id="lessonTabs" class="lesson-tabs"></div>
+      <div id="stageSelector" class="stage-selector"></div>
+      <div id="lessonDetail"></div>
+    </section>
+
+    <section id="modeSection" class="card hidden">
+      <div class="section-title">
+        <div>
+          <span class="section-kicker">STEP 2 · GAME MODE</span>
+          <h2>เลือกโหมดเกม</h2>
+        </div>
+      </div>
+      <div class="mode-card-grid two-col">
+        <button class="mode-choice selected" data-game-mode="classic">
+          <span class="mode-choice-icon">⌨️</span>
+          <strong>Classic Solo</strong>
+          <small>เล่นคนเดียว จับเวลา วัด WPM / Accuracy / Mistakes และคะแนน</small>
+          <div><span>Solo</span><span>Timer</span><span>3 Difficulties</span></div>
+        </button>
+        <button class="mode-choice" data-game-mode="pvp">
+          <span class="mode-choice-icon">⚔️</span>
+          <strong>PVP Realtime</strong>
+          <small>สร้างหรือเข้าห้อง แข่งพิมพ์ Code เดียวกัน 2 คน และดู Progress แบบเรียลไทม์</small>
+          <div><span>2 Players</span><span>Firebase</span><span>Realtime</span></div>
+        </button>
+      </div>
+    </section>
+
+    <section id="classicConfig" class="card hidden">
+      <div class="section-title">
+        <div>
+          <span class="section-kicker">CLASSIC SOLO</span>
+          <h2>เลือกระดับความยาก</h2>
+          <p class="muted-line">ระบบจะเลือกโจทย์ของภาษาที่เลือกตามระดับ และเริ่มจับเวลาเมื่อเริ่มพิมพ์</p>
+        </div>
+      </div>
+      <div id="difficultyCards" class="difficulty-grid"></div>
+      <div class="stage-panel">
+        <h3>เลือกด่าน</h3>
+        <div id="classicStageGrid" class="classic-stage-grid"></div>
+      </div>
+      <div class="config-footer">
+        <div id="classicLessonSummary" class="selected-summary">ยังไม่ได้เลือกภาษา/ระดับ</div>
+        <button id="startClassicButton" class="btn primary" disabled>เริ่ม Classic</button>
+      </div>
+    </section>
+
+    <section id="pvpConfig" class="card hidden">
+      <div class="section-title">
+        <div>
+          <span class="section-kicker">PVP REALTIME</span>
+          <h2>สร้างห้องหรือเข้าร่วมห้อง</h2>
+          <p class="muted-line">เบื้องต้นรองรับ 2 คน ใช้ภาษาและโจทย์เดียวกัน ผู้ที่พิมพ์ครบก่อนเป็นผู้ชนะ</p>
+        </div>
+      </div>
+
+      <div class="pvp-grid">
+        <div class="pvp-box">
+          <h3>สร้างห้อง</h3>
+          <p>ระบบจะสร้างรหัสห้อง 6 ตัวเพื่อส่งให้เพื่อน</p>
+          <button id="createRoomButton" class="btn primary">สร้างห้อง PVP</button>
+        </div>
+        <div class="pvp-box">
+          <h3>เข้าร่วมห้อง</h3>
+          <div class="join-row">
+            <input id="roomCodeInput" maxlength="6" placeholder="ROOM CODE">
+            <button id="joinRoomButton" class="btn secondary">เข้าห้อง</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="pvpLobby" class="pvp-lobby hidden">
+        <div><span>Room</span><strong id="roomCodeLabel">------</strong></div>
+        <div><span>ผู้เล่น 1</span><strong id="pvpPlayer1">รอผู้เล่น...</strong></div>
+        <div><span>ผู้เล่น 2</span><strong id="pvpPlayer2">รอผู้เล่น...</strong></div>
+        <div><span>สถานะ</span><strong id="pvpStatus">Waiting</strong></div>
+      </div>
+      <button id="startPvpButton" class="btn primary hidden">เริ่มการแข่งขัน</button>
     </section>
 
     <section class="card">
       <div class="section-title">
         <div>
-          <span class="section-kicker">SELECT LEVEL</span>
-          <h2 id="selectedModeTitle">เลือก Level</h2>
-          <p id="selectedModeDescription" class="muted-line">กรุณาเลือกโหมดก่อน</p>
+          <span class="section-kicker">POINT SHOP</span>
+          <h2>ร้านแลกของด้วยแต้ม</h2>
+          <p class="muted-line">ผ่านด่านเพื่อสะสมแต้ม แล้วนำมาแลกไอเทมสำหรับโปรไฟล์และระบบตัวละครในอนาคต</p>
         </div>
       </div>
-      <div id="levelCards" class="level-card-grid"></div>
+      <div id="rewardShop" class="reward-grid"></div>
+    </section>
+
+    <section class="card character-placeholder">
+      <div>
+        <span class="section-kicker">CHARACTER & 2D ZONE · READY FOR NEXT PHASE</span>
+        <h2>ระบบตัวละครของ User เตรียมโครงสร้างไว้แล้ว</h2>
+        <p>บัญชีแต่ละ User มีข้อมูล avatar, outfit, inventory และตำแหน่ง Zone รองรับการสร้างพื้นที่ 2D ที่ผู้เล่นพบกันและโชว์ตัวละครแบบ Realtime ในรอบถัดไป</p>
+      </div>
+      <div class="character-silhouette">🧍</div>
     </section>
 
     <section class="card">
-      <div class="section-title"><div><span class="section-kicker">YOUR HISTORY</span><h2>ประวัติการเล่นล่าสุด</h2></div></div>
+      <div class="section-title">
+        <div><span class="section-kicker">YOUR HISTORY</span><h2>ประวัติการเล่นล่าสุด</h2></div>
+      </div>
       <div class="table-wrap">
         <table>
-          <thead><tr><th>วันเวลา</th><th>โหมด</th><th>Level</th><th>สถานะ</th><th>คะแนน</th><th>WPM</th><th>Accuracy</th></tr></thead>
+          <thead><tr><th>วันเวลา</th><th>ภาษา</th><th>โหมด</th><th>ระดับ</th><th>สถานะ</th><th>คะแนน</th><th>WPM</th><th>Accuracy</th></tr></thead>
           <tbody id="userHistoryBody"></tbody>
         </table>
       </div>
     </section>
   </section>
 
-  <section id="gameScreen" class="card hidden">
+  <section id="pvpGameScreen" class="card hidden">
     <div class="game-head">
-      <div>
-        <span id="modeBadge" class="badge">CLASSIC</span>
-        <h2 id="challengeTitle">Level 1</h2>
-        <p id="challengeDescription"></p>
-      </div>
-      <div class="player-box"><strong id="playerName">-</strong><span id="playerMeta">-</span></div>
+      <div><span class="badge">⚔️ PVP</span><h2 id="pvpChallengeTitle">PVP Challenge</h2><p id="pvpChallengeDescription"></p></div>
+      <div class="player-box"><strong id="pvpRoomGame">Room ------</strong><span id="pvpOpponentName">คู่แข่ง: -</span></div>
+    </div>
+
+    <div class="pvp-progress-board">
+      <div><span id="myPvpName">YOU</span><div class="pvp-track"><div id="myPvpBar"></div></div><strong id="myPvpPct">0%</strong></div>
+      <div><span id="oppPvpName">OPPONENT</span><div class="pvp-track"><div id="oppPvpBar"></div></div><strong id="oppPvpPct">0%</strong></div>
     </div>
 
     <div class="game-stats">
-      <div><span>LEVEL</span><strong id="statLevel">01</strong></div>
-      <div><span>เวลา</span><strong id="statTime">00:00</strong></div>
-      <div><span>WPM</span><strong id="statWpm">0</strong></div>
-      <div><span>Accuracy</span><strong id="statAccuracy">100%</strong></div>
-      <div><span>Mistakes</span><strong id="statMistakes">0</strong></div>
-      <div><span>คะแนน</span><strong id="statScore">0</strong></div>
+      <div><span>เวลา</span><strong id="pvpTime">00:00</strong></div>
+      <div><span>WPM</span><strong id="pvpWpm">0</strong></div>
+      <div><span>Accuracy</span><strong id="pvpAccuracy">100%</strong></div>
+      <div><span>Mistakes</span><strong id="pvpMistakes">0</strong></div>
+      <div><span>Progress</span><strong id="pvpProgress">0%</strong></div>
+      <div><span>Status</span><strong id="pvpGameStatus">READY</strong></div>
     </div>
 
-    <div class="code-info">
-      <span id="languageLabel">HTML</span><span id="difficultyLabel">ง่าย</span><span id="timeRuleLabel">จับเวลา</span>
+    <div id="pvpTypingStage" class="typing-stage" tabindex="0">
+      <div class="editor-bar"><div class="editor-dots"><i></i><i></i><i></i></div><span>PVP CHALLENGE</span><span>Realtime</span></div>
+      <pre id="pvpTypingDisplay" class="typing-display"></pre>
+      <textarea id="pvpTypingInput" class="hidden-input" spellcheck="false"></textarea>
     </div>
+    <div class="game-bottom"><button id="leavePvpButton" class="btn danger">ออกจาก PVP</button><span id="pvpSaveState">กำลังเชื่อม...</span></div>
+  </section>
 
-    <div id="typingStage" class="typing-stage" tabindex="0">
-      <div class="editor-bar">
-        <div class="editor-dots"><i></i><i></i><i></i></div>
-        <span id="fileName">challenge_01</span>
-        <span id="typingStatus">คลิกที่ Code แล้วเริ่มพิมพ์</span>
+  <section id="gameScreen" class="game-fullscreen hidden">
+    <div id="gameShell" class="game-shell">
+      <div class="fullscreen-topbar">
+        <div class="game-identity">
+          <span id="modeBadge" class="badge">⌨️ CLASSIC</span>
+          <div>
+            <strong id="challengeTitle">Level</strong>
+            <small id="challengeDescription"></small>
+          </div>
+        </div>
+
+        <div class="game-top-actions">
+          <span id="playerName">-</span>
+          <button id="fullscreenButton" class="btn ghost small-btn" type="button">⛶ เต็มหน้าจอ</button>
+          <button id="quitButton" class="btn danger small-btn" type="button">ออก</button>
+        </div>
       </div>
-      <pre id="typingDisplay" class="typing-display"></pre>
-      <textarea id="typingInput" class="hidden-input" spellcheck="false" autocorrect="off" autocapitalize="off" autocomplete="off"></textarea>
-    </div>
 
-    <div class="progress-line"><div class="progress-track"><div id="progressBar"></div></div><span id="progressText">0 / 0</span></div>
-    <div class="keyboard-area"><p>คีย์บอร์ดจำลอง</p><div id="keyboard" class="keyboard"></div></div>
+      <div class="game-stats fullscreen-stats">
+        <div><span>ด่าน</span><strong id="statLevel">01</strong></div>
+        <div><span>เวลา</span><strong id="statTime">00:00</strong></div>
+        <div><span>WPM</span><strong id="statWpm">0</strong></div>
+        <div><span>Accuracy</span><strong id="statAccuracy">100%</strong></div>
+        <div><span>Mistakes</span><strong id="statMistakes">0</strong></div>
+        <div><span>แต้มด่าน</span><strong id="statScore">0</strong></div>
+      </div>
 
-    <div class="game-bottom">
-      <button id="quitButton" class="btn danger">ยุติการเล่น</button>
-      <button id="backPortalButton" class="btn ghost">กลับหน้าเลือกโหมด</button>
-      <span id="saveState">ยังไม่บันทึกผล</span>
+      <div class="game-main-area">
+        <div class="code-side">
+          <div class="code-info fullscreen-tags">
+            <span id="languageLabel">HTML</span>
+            <span id="difficultyLabel">ง่าย</span>
+            <span id="timeRuleLabel">จับเวลา</span>
+            <span id="saveState">พร้อมเล่น</span>
+          </div>
+
+          <div id="typingStage" class="typing-stage strict-stage" tabindex="0">
+            <div class="editor-bar">
+              <div class="editor-dots"><i></i><i></i><i></i></div>
+              <span id="fileName">challenge_01</span>
+              <span id="typingStatus">พิมพ์ตัวแรกเพื่อเริ่ม</span>
+            </div>
+            <pre id="typingDisplay" class="typing-display fullscreen-code"></pre>
+            <textarea id="typingInput" class="hidden-input" spellcheck="false" autocomplete="off"></textarea>
+          </div>
+
+          <div class="progress-line compact-progress">
+            <div class="progress-track"><div id="progressBar"></div></div>
+            <span id="progressText">0 / 0</span>
+          </div>
+        </div>
+
+        <aside class="game-help-side">
+          <div class="strict-guide">
+            <h3>STRICT TYPING</h3>
+            <p><b>สีเขียว</b> = พิมพ์ถูก</p>
+            <p><b>พิมพ์ผิด</b> = จอสั่นและตำแหน่งจะไม่เดินต่อ</p>
+            <p>ไม่ต้อง Backspace — พิมพ์ตัวเดิมใหม่ให้ถูกแล้วไปต่อได้ทันที</p>
+          </div>
+          <div class="keyboard-area compact-keyboard">
+            <p>คีย์บอร์ดจำลอง</p>
+            <div id="keyboard" class="keyboard"></div>
+          </div>
+        </aside>
+      </div>
     </div>
   </section>
 

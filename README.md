@@ -1,75 +1,62 @@
-# Code Typing Game — Realtime User + Admin
+# Code Typing Game V1 — Multi-language + Classic + PVP
 
-## สิ่งที่เพิ่มในเวอร์ชันนี้
+## โครงสร้างการเรียนรู้
 
-### ระบบ User แบบบัญชีจริง
-- หน้าเข้าสู่ระบบ
-- หน้าลงทะเบียนผู้ใช้ใหม่
-- ใช้เลขประจำตัวนักศึกษา + Password
-- เลือกระดับชั้น
-- เลือกห้อง / กลุ่ม
-- แผนกวิชา
-- Password + Confirm Password
-- ข้อมูลสมาชิกเก็บใน Firestore collection `users`
-- Firebase Authentication ใช้ Email/Password ภายใน
-- ระบบแปลงเลขนักศึกษาเป็น Email ภายในอัตโนมัติ เช่น `12345@student.thc-nr.local`
-  ผู้ใช้ไม่ต้องรู้หรือกรอก Email นี้
+ผู้ใช้ Login แล้วเลือกภาษา:
+- HTML
+- CSS
+- JavaScript
+- Python
 
-### หลัง Login
-- เข้า User Panel
-- เลือก Game Mode
-- เลือก Level
-- ดูสถิติของตัวเอง
-- ประวัติผลเกมแบบ Realtime
-- เล่น Classic / Speed / Accuracy / Hardcore
+แต่ละภาษามี 3 ระดับเบื้องต้น:
+- ง่าย
+- ปานกลาง
+- ยาก
 
-### Admin Realtime
-Admin ใช้ Firestore `onSnapshot()` กับ
-- users
-- attempts
-- levels
-- game_modes
+แต่ละบทแสดง:
+1. คำอธิบาย
+2. วิธีการใช้งาน
+3. ประโยชน์
+4. ตัวอย่าง Code
+5. Preview / Result
+6. คำอธิบายผลลัพธ์
 
-เมื่อ User สมัครใหม่:
-1. Firebase Authentication สร้าง Account
-2. Firestore สร้าง `users/{uid}`
-3. Admin ที่เปิดอยู่ได้รับข้อมูลใหม่ทันที
-4. ตัวเลขสมาชิกและตาราง User อัปเดตโดยไม่ต้อง Refresh
+HTML / CSS / JavaScript ใช้ iframe Preview
+Python แสดง Expected Terminal Output ในเวอร์ชันแรก
 
-เมื่อผู้เล่นเริ่ม/จบเกม:
-- attempts อัปเดต
-- ตารางผลและ Dashboard Admin เปลี่ยนทันที
+## Classic Solo
 
-## Firebase Authentication ที่ต้องเปิด
+- เล่นคนเดียว
+- เลือกภาษา
+- เลือกง่าย / ปานกลาง / ยาก
+- Timer เริ่มเมื่อพิมพ์ตัวแรก
+- WPM
+- Accuracy
+- Mistakes
+- Score
+- บันทึก Firestore attempts
 
-Firebase Console > Authentication > Sign-in method
+## PVP Realtime (Basic V1)
 
-เปิด:
-- Email/Password
+- สร้างห้อง
+- Room Code 6 ตัว
+- ผู้เล่นอีกคนเข้าห้อง
+- จำกัด 2 คน
+- Host กดเริ่ม
+- พิมพ์ Code เดียวกัน
+- Progress ของทั้งสองฝ่ายอัปเดตผ่าน Firestore Realtime
+- คนพิมพ์ครบก่อนถูกบันทึกเป็น winnerUid
+- เก็บผล PVP ใน attempts
 
-Anonymous Authentication ไม่จำเป็นสำหรับ User รุ่นนี้แล้ว
+## Firebase
 
-Admin ยังคงใช้ Email/Password เดิม
+เพิ่ม collection:
+- pvp_rooms
 
-## Firestore Rules
+ต้อง Publish `firestore.rules` เวอร์ชันนี้ใหม่
 
-Copy ไฟล์ `firestore.rules` ไปที่:
-Firestore Database > Rules > Publish
+## ไฟล์ใหม่
 
-Admin UID:
-`TWUrLjOh3BTa1cBNwDXKk4X2IAg1`
+- `lessons.js` เก็บข้อมูลบทเรียนแยกภาษา
 
-## Firestore Collections
-
-- `users` สมาชิก
-- `attempts` ผลการเล่น
-- `levels` โจทย์
-- `game_modes` โหมดเกม
-
-## หมายเหตุการลบ User จาก Admin
-
-หน้า Admin สามารถลบข้อมูลสมาชิกใน Firestore ได้ทันที
-แต่การลบบัญชี Firebase Authentication ของ User รายอื่นจาก Browser ทำไม่ได้อย่างปลอดภัยด้วย Client SDK
-
-หากต้องการ "ลบบัญชี Authentication" ด้วยปุ่มเดียวใน Admin จริง ๆ
-ควรเพิ่ม Backend/Cloud Function ด้วย Firebase Admin SDK ในขั้นต่อไป
+ต่อไปสามารถเพิ่มภาษา C, C++, Java, C#, PHP, SQL ได้โดยเพิ่มข้อมูลใน `lessons.js`

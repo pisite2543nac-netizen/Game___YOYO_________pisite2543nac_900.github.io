@@ -49,7 +49,7 @@ function renderResults(){
   document.querySelectorAll("[data-delete-attempt]").forEach(b=>b.onclick=async()=>{if(confirm("ลบผลรายการนี้?"))await deleteDoc(doc(db,"attempts",b.dataset.deleteAttempt))});
 }
 function renderUsers(){
-  $("usersBody").innerHTML=cache.users.map(x=>`<tr><td>${formatDate(x.createdAt)}</td><td>${esc(x.studentId)}</td><td><strong>${esc(x.fullName)}</strong></td><td>${esc(x.educationLevel||"")}${esc(x.classroom||"")}</td><td>${esc(x.department)}</td><td><span class="status status-active">${esc(x.status||"active")}</span></td><td><button class="mini-delete" data-delete-user="${x.id}">ลบข้อมูล</button></td></tr>`).join("")||`<tr><td colspan="7" class="empty">ยังไม่มีสมาชิก</td></tr>`;
+  $("usersBody").innerHTML=cache.users.map(x=>`<tr><td>${formatDate(x.createdAt)}</td><td>${esc(x.studentId)}</td><td><strong>${esc(x.fullName)}</strong></td><td>${esc(x.educationLevel||"")}${esc(x.classroom||"")}</td><td>${esc(x.department)}</td><td><strong>${Number(x.pointsBalance||0).toLocaleString()}</strong></td><td><span class="status status-active">${esc(x.status||"active")}</span></td><td><button class="mini-delete" data-delete-user="${x.id}">ลบข้อมูล</button></td></tr>`).join("")||`<tr><td colspan="8" class="empty">ยังไม่มีสมาชิก</td></tr>`;
   document.querySelectorAll("[data-delete-user]").forEach(b=>b.onclick=async()=>{if(confirm("ลบข้อมูลสมาชิกจาก Firestore? หมายเหตุ: บัญชี Authentication ต้องลบใน Firebase Console แยกต่างหาก"))await deleteDoc(doc(db,"users",b.dataset.deleteUser))});
 }
 function renderLevels(){
