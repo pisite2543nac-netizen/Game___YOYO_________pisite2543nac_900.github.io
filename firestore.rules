@@ -12,23 +12,25 @@ service cloud.firestore {
         && request.auth.uid == "TWUrLjOh3BTa1cBNwDXKk4X2IAg1";
     }
 
-    function zoneAccessAllowed() {
+    function hasZoneModeration() {
       return signedIn()
-        && (
-          !exists(/databases/$(database)/documents/zone_moderation/$(request.auth.uid))
-          ||
-          (
-            (
-              !('bannedUntil' in get(/databases/$(database)/documents/zone_moderation/$(request.auth.uid)).data)
-              || get(/databases/$(database)/documents/zone_moderation/$(request.auth.uid)).data.bannedUntil <= request.time
-            )
-            &&
-            (
-              !('kickedUntil' in get(/databases/$(database)/documents/zone_moderation/$(request.auth.uid)).data)
-              || get(/databases/$(database)/documents/zone_moderation/$(request.auth.uid)).data.kickedUntil <= request.time
-            )
-          )
-        );
+        && exists(/databases/$(database)/documents/zone_moderation/$(request.auth.uid));
+    }
+
+    function activeZoneBan() {
+      return hasZoneModeration()
+        && ('bannedUntil' in get(/databases/$(database)/documents/zone_moderation/$(request.auth.uid)).data)
+        && get(/databases/$(database)/documents/zone_moderation/$(request.auth.uid)).data.bannedUntil > request.time;
+    }
+
+    function activeZoneKick() {
+      return hasZoneModeration()
+        && ('kickedUntil' in get(/databases/$(database)/documents/zone_moderation/$(request.auth.uid)).data)
+        && get(/databases/$(database)/documents/zone_moderation/$(request.auth.uid)).data.kickedUntil > request.time;
+    }
+
+    function zoneAccessAllowed() {
+      return signedIn() && !activeZoneBan() && !activeZoneKick();
     }
 
     match /game_modes/{modeId} {
@@ -47,16 +49,16 @@ service cloud.firestore {
       allow read, write: if isAdmin();
     }
 
-
     match /pvp_rooms/{roomCode} {
       allow read, create: if signedIn();
       allow update: if signedIn()
-        && (request.auth.uid in resource.data.players
-            || request.auth.uid == resource.data.hostUid
-            || request.auth.uid in request.resource.data.players);
+        && (
+          request.auth.uid in resource.data.players
+          || request.auth.uid == resource.data.hostUid
+          || request.auth.uid in request.resource.data.players
+        );
       allow delete: if isAdmin();
     }
-
 
     match /official_submissions/{uid} {
       allow create, update: if signedIn() && request.auth.uid == uid;
@@ -70,51 +72,63 @@ service cloud.firestore {
     }
 
     match /attempts/{attemptId} {
-      allow create: if signedIn() && request.resource.data.uid == request.auth.uid;
-      allow read, update: if signedIn() && resource.data.uid == request.auth.uid;
+      allow create: if signedIn()
+        && request.resource.data.uid == request.auth.uid;
+      allow read, update: if signedIn()
+        && resource.data.uid == request.auth.uid;
       allow read, write: if isAdmin();
     }
 
-    // Public profile for signed-in community / leaderboard (no password or private profile fields)
     match /public_profiles/{uid} {
       allow read: if signedIn();
-      allow create, update: if signedIn() && request.auth.uid == uid;
-      allow delete: if signedIn() && request.auth.uid == uid;
+      allow create, update, delete: if signedIn()
+        && request.auth.uid == uid;
       allow read, write: if isAdmin();
     }
 
-    // Realtime online presence
     match /presence/{uid} {
       allow read: if signedIn();
-      allow create, update: if signedIn() && request.auth.uid == uid;
-      allow delete: if signedIn() && request.auth.uid == uid;
+      allow create, update, delete: if signedIn()
+        && request.auth.uid == uid;
       allow read, write: if isAdmin();
     }
-    // Realtime 2D Zone positions
+
+    // 2D Zone positions
     match /zone_positions/{uid} {
       allow read: if isAdmin() || zoneAccessAllowed();
-      allow create, update: if zoneAccessAllowed() && request.auth.uid == uid;
-      allow delete: if isAdmin() || (zoneAccessAllowed() && request.auth.uid == uid);
+      allow create, update: if zoneAccessAllowed()
+        && request.auth.uid == uid
+        && request.resource.data.uid == request.auth.uid;
+      allow delete: if isAdmin()
+        || (zoneAccessAllowed() && request.auth.uid == uid);
     }
-    // Speech Bubble chat inside 2D Zone
+
+    // Speech Bubble messages
     match /zone_messages/{messageId} {
       allow read: if isAdmin() || zoneAccessAllowed();
+
       allow create: if zoneAccessAllowed()
         && request.resource.data.uid == request.auth.uid
         && request.resource.data.studentId
           == get(/databases/$(database)/documents/users/$(request.auth.uid)).data.studentId
+        && request.resource.data.zoneId is string
         && request.resource.data.text is string
         && request.resource.data.text.size() > 0
         && request.resource.data.text.size() <= 120;
+
       allow update: if false;
+
       allow delete: if isAdmin()
-        || (zoneAccessAllowed() && resource.data.uid == request.auth.uid);
+        || (
+          zoneAccessAllowed()
+          && resource.data.uid == request.auth.uid
+        );
     }
 
-
-    // Admin moderation for the 2D Zone
+    // GM moderation
     match /zone_moderation/{uid} {
-      allow read: if isAdmin() || (signedIn() && request.auth.uid == uid);
+      allow read: if isAdmin()
+        || (signedIn() && request.auth.uid == uid);
       allow create, update, delete: if isAdmin();
     }
 

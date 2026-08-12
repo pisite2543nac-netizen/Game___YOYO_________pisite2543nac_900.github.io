@@ -1,0 +1,16 @@
+{
+  "zone_exists": true,
+  "chat_redirect": true,
+  "cache_bust_zone": true,
+  "day_night_3h": true,
+  "day_mode": true,
+  "bootstrap_diagnostics": true,
+  "permission_diagnostics": true,
+  "optimized_position": true,
+  "presence_30s": true,
+  "zone_query": true,
+  "moderation_rules": true,
+  "admin_zone_v4": true,
+  "app_shop_guard": true,
+  "zone_missing_ids": []
+}

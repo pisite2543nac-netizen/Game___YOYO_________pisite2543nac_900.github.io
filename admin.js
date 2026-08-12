@@ -144,10 +144,11 @@ if($("exportOfficialCsv"))$("exportOfficialCsv").onclick=()=>{
 };
 
 
-const ZONE_ONLINE_STALE_MS=100000;
+const ZONE_ONLINE_STALE_MS=95000;
+const ACTIVE_ZONE_ID="thai_social_zone_v4";
 
 function zonePositionOnline(p){
-  if(!p?.online)return false;
+  if(!p?.online || p.zoneId!==ACTIVE_ZONE_ID)return false;
   const dt=p.updatedAt?.toDate?.();
   return !dt || Date.now()-dt.getTime()<=ZONE_ONLINE_STALE_MS;
 }
@@ -243,6 +244,7 @@ function renderZoneControl(){
 async function setZoneOffline(uid){
   try{
     await setDoc(doc(db,"zone_positions",uid),{
+      zoneId:"thai_social_zone_v4",
       online:false,
       updatedAt:serverTimestamp()
     },{merge:true});
