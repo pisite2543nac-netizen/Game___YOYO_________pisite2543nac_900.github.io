@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin | ระบบเกมพิมพ์ Code</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="admin-page">
+  <main class="wrap admin-wrap">
+    <section id="adminLogin" class="card admin-login">
+      <div class="kicker">ADMINISTRATOR</div>
+      <h1>ผู้ดูแลระบบเกมพิมพ์ Code</h1>
+      <p>วิทยาลัยเทคนิคนางรอง</p>
+
+      <form id="adminLoginForm" class="stack-form">
+        <label>
+          <span>Email</span>
+          <input id="adminEmail" type="email" required>
+        </label>
+        <label>
+          <span>Password</span>
+          <input id="adminPassword" type="password" required>
+        </label>
+        <div class="login-actions">
+          <a href="index.html">← กลับหน้าผู้เล่น</a>
+          <button class="btn primary" type="submit">เข้าสู่ระบบ</button>
+        </div>
+        <p id="adminLoginError" class="error-text"></p>
+      </form>
+    </section>
+
+    <section id="adminDashboard" class="hidden">
+      <div class="admin-titlebar">
+        <div>
+          <div class="kicker">NANGRONG TECHNICAL COLLEGE</div>
+          <h1>แผงควบคุมเกมพิมพ์ Code</h1>
+          <p>ผู้จัดทำ: นายพิสิษฐ์ หุนตระนี ครูพิเศษสอน</p>
+        </div>
+        <div>
+          <a class="btn ghost" href="index.html">หน้าผู้เล่น</a>
+          <button id="logoutAdmin" class="btn secondary">ออกจากระบบ</button>
+        </div>
+      </div>
+
+      <div class="admin-metrics">
+        <div><span>โจทย์ในคลัง</span><strong id="metricLevels">0</strong></div>
+        <div><span>ลงทะเบียน</span><strong id="metricUsers">0</strong></div>
+        <div><span>เล่นสำเร็จ</span><strong id="metricCompleted">0</strong></div>
+        <div><span>คะแนนเฉลี่ย</span><strong id="metricAverage">0</strong></div>
+      </div>
+
+      <div class="admin-tabs">
+        <button class="tab active" data-tab="resultsTab">ผลการเล่น</button>
+        <button class="tab" data-tab="usersTab">ผู้ลงทะเบียน</button>
+        <button class="tab" data-tab="levelsTab">จัดการโจทย์ Code</button>
+        <button class="tab" data-tab="backupTab">สำรองข้อมูล</button>
+      </div>
+
+      <section id="resultsTab" class="admin-tab-panel">
+        <div class="panel-title">
+          <div>
+            <h2>ผลการเล่น</h2>
+            <p>คะแนน WPM Accuracy Mistakes เวลา และโหมดของผู้เล่น</p>
+          </div>
+          <div class="button-row">
+            <button id="exportCsv" class="btn secondary">ดาวน์โหลด CSV</button>
+            <button id="deleteResults" class="btn danger">ลบผลทั้งหมด</button>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>วันเวลา</th><th>เลขนักศึกษา</th><th>ชื่อ</th><th>ชั้น</th>
+                <th>แผนก</th><th>โหมด</th><th>Level</th><th>สถานะ</th>
+                <th>Score</th><th>WPM</th><th>Accuracy</th><th>จัดการ</th>
+              </tr>
+            </thead>
+            <tbody id="resultsBody"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section id="usersTab" class="admin-tab-panel hidden">
+        <div class="panel-title">
+          <div>
+            <h2>ข้อมูลผู้ลงทะเบียน</h2>
+            <p>รายชื่อผู้เล่นที่เคยลงทะเบียนเข้าเกม</p>
+          </div>
+          <button id="deleteUsers" class="btn danger">ลบข้อมูลทั้งหมด</button>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>วันเวลา</th><th>เลขนักศึกษา</th><th>ชื่อ</th>
+                <th>ชั้น</th><th>แผนก</th><th>จัดการ</th>
+              </tr>
+            </thead>
+            <tbody id="usersBody"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section id="levelsTab" class="admin-tab-panel hidden">
+        <div class="panel-title">
+          <div>
+            <h2>จัดการคลังโจทย์ Code</h2>
+            <p>แก้ไขหรือเพิ่มโจทย์ได้จากหน้านี้ และสามารถคืนค่า 12 Level เริ่มต้นได้</p>
+          </div>
+          <button id="seedDefaults" class="btn secondary">คืนค่า 12 Level เริ่มต้น</button>
+        </div>
+
+        <form id="levelForm" class="form-grid admin-level-form">
+          <label><span>Level</span><input id="editLevelNo" type="number" min="1" required></label>
+          <label><span>ชื่อโจทย์</span><input id="editTitle" required></label>
+          <label><span>ภาษา</span><input id="editLanguage" placeholder="HTML / CSS / JavaScript / Python" required></label>
+          <label><span>ระดับ</span>
+            <select id="editDifficulty">
+              <option>ง่าย</option><option>ปานกลาง</option><option>ยาก</option><option>Expert</option>
+            </select>
+          </label>
+          <label><span>คะแนนฐาน</span><input id="editBasePoints" type="number" min="1" value="100" required></label>
+          <label><span>เวลาเป้าหมาย (วินาที)</span><input id="editTimeLimit" type="number" min="10" value="90" required></label>
+          <label><span>ตัวคูณความยาก</span><input id="editMultiplier" type="number" step="0.05" min="1" value="1" required></label>
+          <label><span>คำอธิบาย</span><input id="editDescription"></label>
+          <label class="full"><span>Code</span><textarea id="editCode" rows="12" required></textarea></label>
+          <button class="btn primary full" type="submit">บันทึกโจทย์</button>
+        </form>
+
+        <div id="levelCards" class="level-admin-cards"></div>
+      </section>
+
+      <section id="backupTab" class="admin-tab-panel hidden">
+        <div class="panel-title">
+          <div>
+            <h2>สำรอง / ย้ายข้อมูล</h2>
+            <p>ส่งออกข้อมูล Firestore เป็น JSON สำหรับสำรอง หรือ Import กลับเข้าสู่ระบบ</p>
+          </div>
+        </div>
+        <div class="backup-actions">
+          <button id="exportJson" class="btn primary">ดาวน์โหลดข้อมูล JSON</button>
+          <label class="file-label">
+            นำเข้า JSON
+            <input id="importJson" type="file" accept=".json,application/json">
+          </label>
+        </div>
+      </section>
+    </section>
+  </main>
+
+  <script type="module" src="admin.js"></script>
+</body>
+</html>
