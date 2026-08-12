@@ -130,7 +130,8 @@
         <p id="portalWelcome">-</p>
       </div>
       <div class="portal-head-actions">
-        <a href="chat.html" class="btn global-chat-entry">💬 ห้องแชตรวม</a>
+        <button id="openCharacterProfileButton" class="btn character-profile-entry" type="button">🧍 ดูตัวละคร</button>
+        <a href="zone.html" class="btn zone-entry-main">🌙 2D Zone</a>
         <button id="logoutUserButton" class="btn ghost">ออกจากระบบ</button>
       </div>
     </div>
@@ -350,26 +351,16 @@
     <section class="card zone-entry-card">
       <div class="zone-entry-copy">
         <span class="section-kicker">2D SOCIAL ZONE</span>
-        <h2>พบปะผู้เล่นในโลก 2D</h2>
+        <h2>พบปะผู้เล่นใน 2D Zone</h2>
         <p>เดินด้วย WASD หรือปุ่มลูกศร พบตัวละคร User คนอื่นแบบ Realtime และเห็นชื่อกับโล่ Rank เหนือตัวละคร</p>
         <div class="zone-feature-pills">
-          <span>Realtime Players</span><span>Rank Shield</span><span>WASD</span><span>Character Ready</span>
+          <span>Realtime Players</span><span>Rank Shield</span><span>WASD</span><span>Character Profile</span>
         </div>
       </div>
       <div class="zone-entry-actions">
         <div class="zone-preview-mini"><span class="mini-avatar a">A</span><span class="mini-avatar b">B</span><span class="mini-avatar c">C</span></div>
         <a href="zone.html" class="btn primary zone-enter-btn">เข้า 2D Zone →</a>
       </div>
-    </section>
-
-    <section class="card">
-      <div class="section-title">
-        <div><span class="section-kicker">POINT SHOP</span>
-          <h2>Token Shop</h2>
-          <p class="muted-line">ผ่านด่านทั่วไปเพื่อสะสม Token แล้วนำมาแลกไอเทมสำหรับโปรไฟล์และระบบตัวละครในอนาคต</p>
-        </div>
-      </div>
-      <div id="rewardShop" class="reward-grid"></div>
     </section>
 
     <section class="card character-placeholder">
@@ -532,5 +523,92 @@
 
 <footer><div class="wrap">ระบบเกมพิมพ์ Code · วิทยาลัยเทคนิคนางรอง</div></footer>
 <script type="module" src="app.js"></script>
+
+  <div id="characterSetupModal" class="character-modal hidden">
+    <div class="character-modal-card character-setup-card">
+      <span class="section-kicker">CHARACTER SETUP</span>
+      <h2>เลือกตัวละครของคุณ</h2>
+      <p>หลังลงทะเบียนต้องเลือกตัวละครชายหรือหญิงก่อนใช้งาน จากนั้นใช้ Token แลกไอเท็มมาแต่งตัวได้</p>
+
+      <div class="character-gender-grid">
+        <button id="selectMaleCharacter" class="character-gender-option" type="button">
+          <div class="character-stage preview-stage">
+            <div class="game-character male">
+              <div class="char-hair"></div><div class="char-head"></div>
+              <div class="char-body"></div><div class="char-arm left"></div><div class="char-arm right"></div>
+              <div class="char-shorts"></div><div class="char-leg left"></div><div class="char-leg right"></div>
+              <div class="char-shoe left"></div><div class="char-shoe right"></div>
+            </div>
+          </div>
+          <strong>ชาย</strong><small>ตัวละครพื้นฐาน</small>
+        </button>
+
+        <button id="selectFemaleCharacter" class="character-gender-option" type="button">
+          <div class="character-stage preview-stage">
+            <div class="game-character female">
+              <div class="char-hair"></div><div class="char-head"></div>
+              <div class="char-body"></div><div class="char-arm left"></div><div class="char-arm right"></div>
+              <div class="char-shorts"></div><div class="char-leg left"></div><div class="char-leg right"></div>
+              <div class="char-shoe left"></div><div class="char-shoe right"></div>
+            </div>
+          </div>
+          <strong>หญิง</strong><small>ตัวละครพื้นฐาน</small>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div id="characterProfileModal" class="character-modal hidden">
+    <div class="character-modal-card profile-character-card">
+      <button id="closeCharacterProfileButton" class="character-modal-close" type="button">✕</button>
+
+      <div class="character-profile-layout">
+        <section class="character-display-panel">
+          <span class="section-kicker">MY CHARACTER</span>
+          <h2 id="characterProfileStudentId">-</h2>
+
+          <div class="character-stage large-stage">
+            <div id="profileCharacter" class="game-character male">
+              <div class="char-aura"></div>
+              <div class="char-back-item"></div>
+              <div class="char-hair"></div><div class="char-head"></div>
+              <div class="char-face-item"></div>
+              <div class="char-body"></div><div class="char-top-item"></div>
+              <div class="char-arm left"></div><div class="char-arm right"></div>
+              <div class="char-hand-item"></div>
+              <div class="char-shorts"></div><div class="char-bottom-item"></div>
+              <div class="char-leg left"></div><div class="char-leg right"></div>
+              <div class="char-shoe left"></div><div class="char-shoe right"></div>
+              <div class="char-head-item"></div>
+              <div class="char-pet-item"></div>
+            </div>
+          </div>
+
+          <div class="character-profile-stats">
+            <div><span>Token</span><strong id="characterTokenBalance">0</strong></div>
+            <div><span>Rank</span><strong id="characterRankName">Bronze</strong></div>
+            <div><span>ไอเท็ม</span><strong id="characterOwnedCount">0</strong></div>
+          </div>
+
+          <div class="character-profile-actions">
+            <a href="zone.html" class="btn zone-entry-main">🛒 ไป Token Shop ใน 2D Zone</a>
+            <button id="unequipAllButton" class="btn ghost" type="button">ถอดไอเท็มทั้งหมด</button>
+          </div>
+        </section>
+
+        <section class="character-inventory-panel">
+          <div class="character-inventory-head">
+            <div>
+              <span class="section-kicker">WARDROBE</span>
+              <h3>ไอเท็มที่เป็นเจ้าของ</h3>
+            </div>
+            <small>ไอเท็มแพงขึ้นจะยิ่งมีเอฟเฟกต์อลังการ</small>
+          </div>
+          <div id="characterInventoryList" class="character-inventory-list"></div>
+        </section>
+      </div>
+    </div>
+  </div>
+
 </body>
 </html>

@@ -1,0 +1,16 @@
+{
+  "zone_html": true,
+  "zone_js": true,
+  "chat_removed": true,
+  "zone_link_user": true,
+  "portal_shop_removed": true,
+  "zone_shop": true,
+  "speech_bubble": true,
+  "moderation_listener": true,
+  "admin_zone_tab": true,
+  "admin_kick": true,
+  "admin_ban": true,
+  "timed_ban": true,
+  "rules_moderation": true,
+  "rules_enforce_zone": true
+}

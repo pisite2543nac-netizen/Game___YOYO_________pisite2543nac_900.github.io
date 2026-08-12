@@ -9,7 +9,7 @@ import {
 } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
 import { firebaseConfig } from "./firebase-config.js";
 import { LANGUAGES, LESSONS, DIFFICULTIES } from "./lessons.js";
-import { REWARD_ITEMS } from "./reward-data.js";
+import { REWARD_ITEMS, RARITY_META } from "./reward-data.js";
 import { DEFAULT_CHARACTER, DEFAULT_ZONE_STATE } from "./character-system.js";
 import { OFFICIAL_STAGES, OFFICIAL_TOTAL_SCORE } from "./official-data.js";
 import { RANKING_CONFIG, seasonIdFromDate, seasonRange, calculateRankMetrics } from "./ranking-system.js";
@@ -70,7 +70,16 @@ async function ensureProfileDefaults(){
       python:{maxUnlockedStage:Number(d.progress?.python?.maxUnlockedStage || 1)}
     };
   }
-  if(!d.character) patch.character = {...DEFAULT_CHARACTER,displayName:d.fullName||""};
+  if(!d.character) {
+    patch.character = {...DEFAULT_CHARACTER,displayName:d.fullName||""};
+  } else {
+    patch.character = {
+      ...DEFAULT_CHARACTER,
+      ...d.character,
+      displayName:d.character.displayName||d.fullName||"",
+      equipped:{...DEFAULT_CHARACTER.equipped,...(d.character.equipped||{})}
+    };
+  }
   if(!d.zone) patch.zone = {...DEFAULT_ZONE_STATE};
   if(Object.keys(patch).length) await updateDoc(ref,patch);
   const refreshed = await getDoc(ref);
@@ -139,6 +148,11 @@ async function enterPortal(){
   renderRewardShop();
   listenHistory();
   startSocialHub();
+  setupCharacterUi();
+
+  if(!["male","female"].includes(state.player?.character?.gender)){
+    $("characterSetupModal")?.classList.remove("hidden");
+  }
 
   // คำนวณ Rank ของ Season ปัจจุบันเมื่อ User เข้าใช้งาน
   // ถ้าครบรอบ 60 วัน seasonId จะเปลี่ยนโดยอัตโนมัติ
@@ -554,21 +568,31 @@ $("nextLevelButton").onclick=async()=>{
 $("portalButton").onclick=async()=>{await ensureProfileDefaults();await enterPortal()};
 
 function renderRewardShop(){
+  if(!$("rewardShop"))return;
   const balance=Number(state.player?.tokenBalance||0);
   const owned=new Set(state.player?.inventory||[]);
-  $("rewardShop").innerHTML=REWARD_ITEMS.map(item=>`
-    <article class="reward-card ${owned.has(item.id)?"owned":""}">
+
+  const items=[...REWARD_ITEMS].sort((a,b)=>
+    (RARITY_META[a.rarity]?.order||0)-(RARITY_META[b.rarity]?.order||0) || a.cost-b.cost
+  );
+
+  $("rewardShop").innerHTML=items.map(item=>`
+    <article class="reward-card rarity-${item.rarity} ${owned.has(item.id)?"owned":""}">
+      <div class="reward-rarity">${RARITY_META[item.rarity]?.name||item.rarity}</div>
       <div class="reward-icon">${item.icon}</div>
       <h3>${esc(item.name)}</h3>
       <p>${esc(item.description)}</p>
+      <div class="reward-slot">SLOT · ${item.slot.toUpperCase()}</div>
       <div class="reward-cost">${item.cost.toLocaleString()} Token</div>
       <button class="btn ${owned.has(item.id)?"ghost":"secondary"}" data-redeem="${item.id}" ${owned.has(item.id)||balance<item.cost?"disabled":""}>
-        ${owned.has(item.id)?"มีแล้ว":balance<item.cost?"แต้มไม่พอ":"แลกของ"}
+        ${owned.has(item.id)?"มีแล้ว":balance<item.cost?"Token ไม่พอ":"แลกไอเท็ม"}
       </button>
     </article>`).join("");
-  document.querySelectorAll("[data-redeem]:not([disabled])").forEach(b=>b.onclick=()=>redeemReward(b.dataset.redeem));
-}
 
+  document.querySelectorAll("[data-redeem]:not([disabled])").forEach(b=>{
+    b.onclick=()=>redeemReward(b.dataset.redeem);
+  });
+}
 async function redeemReward(id){
   const item=REWARD_ITEMS.find(x=>x.id===id);
   if(!item)return;
@@ -587,6 +611,7 @@ async function redeemReward(id){
     $("userTokens").textContent=Number(state.player.tokenBalance||0).toLocaleString();
   renderUserRank();
     renderRewardShop();
+    if(!$("characterProfileModal")?.classList.contains("hidden")) renderCharacterProfile();
   }catch(err){alert(err.message)}
 }
 
@@ -751,6 +776,139 @@ async function updateMyRank(){
 }
 
 
+
+/* ===== V3.8 CHARACTER PROFILE + TOKEN FASHION ===== */
+function setupCharacterUi(){
+  if($("openCharacterProfileButton")) $("openCharacterProfileButton").onclick=openCharacterProfile;
+  if($("closeCharacterProfileButton")) $("closeCharacterProfileButton").onclick=()=>$("characterProfileModal").classList.add("hidden");
+  if($("selectMaleCharacter")) $("selectMaleCharacter").onclick=()=>saveCharacterGender("male");
+  if($("selectFemaleCharacter")) $("selectFemaleCharacter").onclick=()=>saveCharacterGender("female");
+  if($("unequipAllButton")) $("unequipAllButton").onclick=unequipAllItems;
+}
+
+async function saveCharacterGender(gender){
+  if(!state.uid||!["male","female"].includes(gender))return;
+
+  const character={
+    ...DEFAULT_CHARACTER,
+    ...(state.player.character||{}),
+    gender,
+    displayName:state.player.fullName||"",
+    equipped:{...DEFAULT_CHARACTER.equipped,...(state.player.character?.equipped||{})}
+  };
+
+  await updateDoc(doc(db,"users",state.uid),{character,updatedAt:serverTimestamp()});
+  state.player.character=character;
+  $("characterSetupModal").classList.add("hidden");
+  await syncPublicProfile();
+}
+
+function characterEquippedItem(slot){
+  const id=state.player?.character?.equipped?.[slot];
+  return REWARD_ITEMS.find(x=>x.id===id)||null;
+}
+
+function applyCharacterVisual(){
+  const el=$("profileCharacter");
+  if(!el)return;
+
+  el.className=`game-character ${state.player?.character?.gender||"male"}`;
+
+  ["head","face","top","bottom","back","hand","pet"].forEach(slot=>{
+    const node=el.querySelector(`.char-${slot}-item`);
+    const item=characterEquippedItem(slot);
+    if(node){
+      node.dataset.visual=item?.visual||"";
+      node.dataset.rarity=item?.rarity||"";
+      node.title=item?.name||"";
+    }
+  });
+
+  const aura=characterEquippedItem("aura");
+  const auraNode=el.querySelector(".char-aura");
+  if(auraNode){
+    auraNode.dataset.visual=aura?.visual||"";
+    auraNode.dataset.rarity=aura?.rarity||"";
+  }
+
+  const shoes=characterEquippedItem("shoes");
+  el.querySelectorAll(".char-shoe").forEach(node=>{
+    node.dataset.equipped=shoes?.visual||"";
+  });
+}
+
+function renderCharacterProfile(){
+  if(!state.player)return;
+
+  $("characterProfileStudentId").textContent=state.player.studentId||"-";
+  $("characterTokenBalance").textContent=Number(state.player.tokenBalance||0).toLocaleString();
+  $("characterRankName").textContent=state.player.rank?.tierName||"Bronze";
+  $("characterOwnedCount").textContent=(state.player.inventory||[]).length;
+
+  applyCharacterVisual();
+
+  const owned=new Set(state.player.inventory||[]);
+  const equippedIds=new Set(Object.values(state.player.character?.equipped||{}).filter(Boolean));
+
+  const items=REWARD_ITEMS
+    .filter(item=>owned.has(item.id))
+    .sort((a,b)=>(RARITY_META[b.rarity]?.order||0)-(RARITY_META[a.rarity]?.order||0)||b.cost-a.cost);
+
+  $("characterInventoryList").innerHTML=items.length?items.map(item=>`
+    <article class="wardrobe-item rarity-${item.rarity} ${equippedIds.has(item.id)?"equipped":""}">
+      <div class="wardrobe-icon">${item.icon}</div>
+      <div class="wardrobe-info">
+        <span>${RARITY_META[item.rarity]?.name||item.rarity}</span>
+        <strong>${esc(item.name)}</strong>
+        <small>${esc(item.description)}</small>
+      </div>
+      <div class="wardrobe-action">
+        <small>${item.slot.toUpperCase()}</small>
+        <button data-equip-item="${item.id}" class="btn ${equippedIds.has(item.id)?"ghost":"secondary"}" type="button">
+          ${equippedIds.has(item.id)?"ถอด":"สวมใส่"}
+        </button>
+      </div>
+    </article>
+  `).join(""):`<div class="empty-card">ยังไม่มีไอเท็มแต่งตัว ไปที่ Token Shop เพื่อแลกไอเท็ม</div>`;
+
+  document.querySelectorAll("[data-equip-item]").forEach(btn=>{
+    btn.onclick=()=>toggleEquipItem(btn.dataset.equipItem);
+  });
+}
+
+async function openCharacterProfile(){
+  await ensureProfileDefaults();
+  renderCharacterProfile();
+  $("characterProfileModal").classList.remove("hidden");
+}
+
+async function toggleEquipItem(itemId){
+  const item=REWARD_ITEMS.find(x=>x.id===itemId);
+  if(!item||!(state.player.inventory||[]).includes(itemId))return;
+
+  const equipped={...DEFAULT_CHARACTER.equipped,...(state.player.character?.equipped||{})};
+  equipped[item.slot]=equipped[item.slot]===item.id?null:item.id;
+
+  const character={...DEFAULT_CHARACTER,...state.player.character,equipped};
+  await updateDoc(doc(db,"users",state.uid),{character,updatedAt:serverTimestamp()});
+  state.player.character=character;
+
+  renderCharacterProfile();
+  await syncPublicProfile();
+}
+
+async function unequipAllItems(){
+  const character={
+    ...DEFAULT_CHARACTER,
+    ...state.player.character,
+    equipped:{...DEFAULT_CHARACTER.equipped}
+  };
+  await updateDoc(doc(db,"users",state.uid),{character,updatedAt:serverTimestamp()});
+  state.player.character=character;
+  renderCharacterProfile();
+  await syncPublicProfile();
+}
+
 /* ===== V3.4 SOCIAL HUB: Community + Presence + Top 10 ===== */
 const ONLINE_STALE_MS = 90 * 1000;
 
@@ -774,6 +932,7 @@ async function syncPublicProfile(){
       avatarId:state.player.character?.avatarId||"default_student",
       character:{
         gender:state.player.character?.gender||null,
+        equipped:{...DEFAULT_CHARACTER.equipped,...(state.player.character?.equipped||{})},
         showcaseItemIds:(Array.isArray(state.player.inventory)?state.player.inventory:[]).slice(0,3)
       },
       updatedAt:serverTimestamp()

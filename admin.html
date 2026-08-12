@@ -38,7 +38,6 @@
           <p>ผู้จัดทำ: นายพิสิษฐ์ หุนตระนี ครูพิเศษสอน</p>
         </div>
         <div>
-          <a class="btn gm-chat-entry" href="chat.html">💬 ห้องแชตรวม · GM</a>
           <a class="btn ghost" href="index.html">หน้าผู้เล่น</a>
           <button id="logoutAdmin" class="btn secondary">ออกจากระบบ</button>
         </div>
@@ -57,6 +56,7 @@
         <button class="tab" data-tab="levelsTab">จัดการโจทย์ Code</button>
         <button class="tab" data-tab="officialTab">คะแนนทางการ</button>
         <button class="tab" data-tab="rankingTab">Ranking</button>
+        <button class="tab zone-admin-tab" data-tab="zoneControlTab">🌙 ควบคุม 2D Zone</button>
         <button class="tab" data-tab="backupTab">สำรองข้อมูล</button>
       </div>
 
@@ -175,6 +175,44 @@
               </tr>
             </thead>
             <tbody id="rankingBody"></tbody>
+          </table>
+        </div>
+      </section>
+
+
+      <section id="zoneControlTab" class="admin-tab-panel hidden">
+        <div class="panel-title">
+          <div>
+            <h2>ควบคุม 2D Zone</h2>
+            <p>ดูผู้เล่นใน Zone แบบ Realtime · เตะออก · แบนตามระยะเวลา · ปลดแบน</p>
+          </div>
+          <div class="zone-admin-summary">
+            <span><b id="zoneOnlineMetric">0</b> ONLINE</span>
+            <span><b id="zoneBannedMetric">0</b> BANNED</span>
+          </div>
+        </div>
+
+        <div class="zone-admin-help">
+          <strong>เตะ:</strong> ออกจาก Zone ชั่วคราว และสามารถกลับเข้าใหม่ได้หลังช่วงเตะหมด
+          <strong>แบน:</strong> ไม่สามารถอ่าน/เขียนข้อมูล 2D Zone ได้จนกว่าจะครบเวลาหรือ GM ปลดแบน
+        </div>
+
+        <div class="table-wrap">
+          <table class="zone-control-table">
+            <thead>
+              <tr>
+                <th>รหัสนักศึกษา</th>
+                <th>ชื่อ</th>
+                <th>Rank</th>
+                <th>สถานะ Zone</th>
+                <th>ล่าสุด</th>
+                <th>แบนถึง</th>
+                <th>เหตุผล</th>
+                <th>ระยะเวลา</th>
+                <th>จัดการ</th>
+              </tr>
+            </thead>
+            <tbody id="zoneControlBody"></tbody>
           </table>
         </div>
       </section>

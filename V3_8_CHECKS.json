@@ -1,0 +1,11 @@
+{
+  "zone_removed": true,
+  "setup_modal": true,
+  "male_female": true,
+  "profile_button": true,
+  "equip_logic": true,
+  "tiered_shop": true,
+  "public_profile_equipped": true,
+  "chat_profile_click": true,
+  "chat_still_exists": true
+}

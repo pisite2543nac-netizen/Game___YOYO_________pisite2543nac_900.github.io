@@ -3,101 +3,108 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <title>Thai Night Social Zone · Code Typing Academy</title>
+  <title>2D Zone · Code Typing Academy</title>
   <link rel="stylesheet" href="style.css">
 </head>
-<body class="social-zone-page">
-  <div id="zoneGate" class="social-zone-gate">
-    <div class="social-gate-card">
-      <div class="social-gate-icon">🌙</div>
-      <h1>Thai Night Social Zone</h1>
-      <p>กำลังตรวจสอบบัญชีผู้เล่น...</p>
-      <a href="index.html" class="btn ghost">กลับหน้า User</a>
+<body class="zone-v39-page">
+  <div id="zoneGate" class="zone-v39-gate">
+    <div class="zone-v39-gate-card">
+      <div class="zone-v39-gate-icon">🌙</div>
+      <h1>2D Social Zone</h1>
+      <p id="zoneGateText">กำลังตรวจสอบบัญชีและสถานะการเข้า Zone...</p>
+      <a id="zoneGateBack" href="index.html" class="btn ghost">กลับหน้า User</a>
     </div>
   </div>
 
-  <main id="socialZoneApp" class="social-zone-app hidden">
-    <header class="social-zone-topbar">
-      <div class="social-zone-brand">
-        <span id="zoneDeviceHint" class="zone-device-hint">DESKTOP</span>
-        <span class="social-zone-logo">🌙</span>
+  <main id="zoneApp" class="zone-v39-app hidden">
+    <header class="zone-v39-topbar">
+      <div class="zone-v39-brand">
+        <span class="zone-v39-logo">🌙</span>
         <div>
-          <strong>THAI NIGHT · SOCIAL ZONE</strong>
-          <small>พื้นที่พบปะและพูดคุยของผู้เล่นออนไลน์</small>
+          <strong>THAI NIGHT · 2D SOCIAL ZONE</strong>
+          <small>เดินพบผู้เล่น · พูดคุย · อวดตัวละคร · Token Shop</small>
         </div>
       </div>
 
-      <div class="social-zone-me">
+      <div class="zone-v39-self">
         <div id="zoneMyShield"></div>
         <div>
-          <strong id="zoneMyName">Player</strong>
+          <strong id="zoneMyStudentId">-</strong>
           <small><span class="online-dot"></span> ONLINE · <span id="zoneOnlineCount">1</span> คน</small>
         </div>
       </div>
 
-      <div id="mobileZoneOnline" class="mobile-zone-online">
-        <span class="online-dot"></span>
-        <strong id="mobileZoneOnlineCount">1</strong>
+      <div class="zone-v39-wallet">
+        <span>🪙 TOKEN</span>
+        <strong id="zoneTokenBalance">0</strong>
       </div>
-      <a href="chat.html" class="btn zone-global-chat-btn small-btn">💬 แชตรวม</a>
-      <a id="leaveZoneButton" href="index.html" class="btn danger small-btn">ออกจาก Zone</a>
+
+      <div class="zone-v39-actions">
+        <button id="openZoneShop" class="btn zone-shop-button" type="button">🛒 ร้านค้า</button>
+        <button id="openMyZoneProfile" class="btn ghost" type="button">🧍 ตัวละคร</button>
+        <a id="leaveZoneButton" href="index.html" class="btn danger">ออก</a>
+      </div>
     </header>
 
-    <section class="social-world-shell">
-      <canvas id="socialCanvas" width="1600" height="900"></canvas>
+    <section class="zone-v39-world">
+      <canvas id="zoneCanvas"></canvas>
 
-      <div class="social-help-chip">
-        <span>เดินด้วยปุ่มด้านล่าง</span>
-        <b>ซ้าย / ขวา</b>
-        <span>แล้วพิมพ์คุยกันผ่านตัวละคร</span>
+      <div class="zone-v39-help">
+        <span>เดิน</span><b>◀ / ▶</b>
+        <span>หรือ A / D</span>
+        <span>คลิกร้าน TOKEN SHOP เพื่อเปิดร้าน</span>
       </div>
 
-      <div id="playerProfileCard" class="player-profile-card hidden">
-        <button id="closeProfileCard" type="button">✕</button>
-        <div id="profileRankShield"></div>
-        <h3 id="profilePlayerName">Player</h3>
-        <p id="profileRankText">Bronze · 0 Rating</p>
-        <span class="profile-items-title">ของสะสมที่นำมาโชว์</span>
-        <div id="profileShowcaseItems" class="profile-showcase-items"></div>
+      <div id="zonePlayerCard" class="zone-v39-player-card hidden">
+        <button id="closeZonePlayerCard" type="button">✕</button>
+        <div id="zonePlayerCardShield"></div>
+        <h3 id="zonePlayerCardId">-</h3>
+        <p id="zonePlayerCardRank">Bronze</p>
+        <span>ไอเท็มที่กำลังสวม</span>
+        <div id="zonePlayerCardItems" class="zone-player-equipped-list"></div>
       </div>
     </section>
 
-    <footer class="social-zone-controls">
-      <button id="moveLeftButton" class="move-button" type="button" aria-label="เดินซ้าย">◀</button>
+    <footer class="zone-v39-controls">
+      <button id="moveLeftButton" class="zone-move-button" type="button">◀</button>
 
-      <form id="zoneChatForm" class="zone-chat-form">
-        <input id="zoneChatInput"
-               type="text"
-               maxlength="120"
-               autocomplete="off"
-               placeholder="พิมพ์ข้อความแล้วกด พูด..."
-               aria-label="ข้อความพูดคุย">
-        <button id="zoneChatSend" type="submit">พูด</button>
+      <form id="zoneChatForm" class="zone-v39-chat-form">
+        <input id="zoneChatInput" maxlength="120" autocomplete="off"
+               placeholder="พิมพ์ข้อความที่จะพูดเหนือหัวตัวละคร...">
+        <button type="submit">พูด</button>
       </form>
 
-      <button id="moveRightButton" class="move-button" type="button" aria-label="เดินขวา">▶</button>
+      <button id="moveRightButton" class="zone-move-button" type="button">▶</button>
     </footer>
   </main>
 
-  <div id="genderSetup" class="gender-setup hidden">
-    <div class="gender-card">
-      <span class="section-kicker">FIRST CHARACTER SETUP</span>
-      <h2>เลือกตัวละครพื้นฐาน</h2>
-      <p>เลือกเพียงครั้งแรก ตัวละครฐานใช้ชุดเรียบง่ายสุภาพ และไอเท็ม Token จะแสดงเป็นของสะสมเท่านั้น</p>
-      <div class="gender-options">
-        <button id="chooseMale" type="button">
-          <div class="gender-preview male-preview">
-            <span class="head"></span><span class="body"></span><span class="legs"></span>
-          </div>
-          <strong>ชาย</strong>
-        </button>
-        <button id="chooseFemale" type="button">
-          <div class="gender-preview female-preview">
-            <span class="head"></span><span class="body"></span><span class="legs"></span>
-          </div>
-          <strong>หญิง</strong>
-        </button>
+  <div id="zoneShopModal" class="zone-v39-modal hidden">
+    <div class="zone-v39-modal-card shop-modal-card">
+      <button id="closeZoneShop" class="zone-v39-modal-close" type="button">✕</button>
+      <div class="zone-shop-head">
+        <div>
+          <span class="section-kicker">TOKEN SHOP · IN ZONE</span>
+          <h2>ร้านค้า 2D Zone</h2>
+          <p>ยิ่งราคาแพง เอฟเฟกต์บนตัวละครยิ่งโดดเด่นและอลังการ</p>
+        </div>
+        <div class="zone-shop-wallet">
+          <span>Token ของคุณ</span>
+          <strong id="zoneShopBalance">0</strong>
+        </div>
       </div>
+      <div id="zoneShopGrid" class="zone-shop-grid"></div>
+    </div>
+  </div>
+
+  <div id="zoneMyProfileModal" class="zone-v39-modal hidden">
+    <div class="zone-v39-modal-card zone-own-profile-card">
+      <button id="closeMyZoneProfile" class="zone-v39-modal-close" type="button">✕</button>
+      <span class="section-kicker">MY CHARACTER</span>
+      <h2 id="zoneProfileStudentId">-</h2>
+      <div class="zone-profile-preview">
+        <canvas id="zoneProfileCanvas" width="420" height="430"></canvas>
+      </div>
+      <p>สวม/ถอดไอเท็มได้จากร้านค้าใน Zone</p>
     </div>
   </div>
 

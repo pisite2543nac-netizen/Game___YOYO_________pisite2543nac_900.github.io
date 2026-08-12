@@ -12,6 +12,25 @@ service cloud.firestore {
         && request.auth.uid == "TWUrLjOh3BTa1cBNwDXKk4X2IAg1";
     }
 
+    function zoneAccessAllowed() {
+      return signedIn()
+        && (
+          !exists(/databases/$(database)/documents/zone_moderation/$(request.auth.uid))
+          ||
+          (
+            (
+              !('bannedUntil' in get(/databases/$(database)/documents/zone_moderation/$(request.auth.uid)).data)
+              || get(/databases/$(database)/documents/zone_moderation/$(request.auth.uid)).data.bannedUntil <= request.time
+            )
+            &&
+            (
+              !('kickedUntil' in get(/databases/$(database)/documents/zone_moderation/$(request.auth.uid)).data)
+              || get(/databases/$(database)/documents/zone_moderation/$(request.auth.uid)).data.kickedUntil <= request.time
+            )
+          )
+        );
+    }
+
     match /game_modes/{modeId} {
       allow read: if signedIn();
       allow write: if isAdmin();
@@ -71,64 +90,32 @@ service cloud.firestore {
       allow delete: if signedIn() && request.auth.uid == uid;
       allow read, write: if isAdmin();
     }
-
     // Realtime 2D Zone positions
     match /zone_positions/{uid} {
-      allow read: if signedIn();
-      allow create, update: if signedIn() && request.auth.uid == uid;
-      allow delete: if signedIn() && request.auth.uid == uid;
-      allow read, write: if isAdmin();
+      allow read: if isAdmin() || zoneAccessAllowed();
+      allow create, update: if zoneAccessAllowed() && request.auth.uid == uid;
+      allow delete: if isAdmin() || (zoneAccessAllowed() && request.auth.uid == uid);
     }
-
-
-    // Realtime text chat for 2D Social Zone
+    // Speech Bubble chat inside 2D Zone
     match /zone_messages/{messageId} {
-      allow read: if signedIn();
-      allow create: if signedIn()
+      allow read: if isAdmin() || zoneAccessAllowed();
+      allow create: if zoneAccessAllowed()
         && request.resource.data.uid == request.auth.uid
+        && request.resource.data.studentId
+          == get(/databases/$(database)/documents/users/$(request.auth.uid)).data.studentId
         && request.resource.data.text is string
         && request.resource.data.text.size() > 0
         && request.resource.data.text.size() <= 120;
       allow update: if false;
       allow delete: if isAdmin()
-        || (signedIn() && resource.data.uid == request.auth.uid);
+        || (zoneAccessAllowed() && resource.data.uid == request.auth.uid);
     }
 
 
-    // =============================
-    // GLOBAL CHAT — ALL REGISTERED USERS + GM
-    // =============================
-    match /global_messages/{messageId} {
-      allow read: if signedIn();
-
-      allow create: if signedIn()
-        && request.resource.data.uid == request.auth.uid
-        && request.resource.data.roomId == "global"
-        && request.resource.data.text is string
-        && request.resource.data.text.size() > 0
-        && request.resource.data.text.size() <= 300
-        && (
-          (
-            isAdmin()
-            && request.resource.data.senderType == "gm"
-            && request.resource.data.senderLabel == "GM"
-          )
-          ||
-          (
-            !isAdmin()
-            && request.resource.data.senderType == "student"
-            && request.resource.data.senderLabel
-              == get(/databases/$(database)/documents/users/$(request.auth.uid)).data.studentId
-          )
-        );
-
-      allow update: if false;
-
-      allow delete: if isAdmin()
-        || (
-          signedIn()
-          && resource.data.uid == request.auth.uid
-        );
+    // Admin moderation for the 2D Zone
+    match /zone_moderation/{uid} {
+      allow read: if isAdmin() || (signedIn() && request.auth.uid == uid);
+      allow create, update, delete: if isAdmin();
     }
 
   }
