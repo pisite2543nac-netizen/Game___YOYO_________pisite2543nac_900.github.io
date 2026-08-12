@@ -5,7 +5,7 @@ import {
 } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-auth.js";
 import {
   getFirestore, collection, doc, getDoc, getDocs, setDoc, addDoc, updateDoc, deleteDoc,
-  serverTimestamp, query, where, onSnapshot, runTransaction
+  serverTimestamp, query, where, orderBy, limit, onSnapshot, runTransaction
 } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
 import { firebaseConfig } from "./firebase-config.js";
 import { LANGUAGES, LESSONS, DIFFICULTIES } from "./lessons.js";
@@ -26,6 +26,7 @@ const state = {
   historyUnsub:null,
   roomUnsub:null, roomCode:null, roomData:null,
   officialProgress:{}, officialSelected:null, officialUnsub:null,
+  presenceUnsub:null, leaderboardUnsub:null, presenceTimer:null, communityUnsub:null, presenceCache:new Map(),
   pvpStartTime:0, pvpTimer:null, pvpMistakes:0, pvpKeys:0, pvpCorrectText:""
 };
 
@@ -137,6 +138,7 @@ async function enterPortal(){
   renderLanguages();
   renderRewardShop();
   listenHistory();
+  startSocialHub();
 
   // คำนวณ Rank ของ Season ปัจจุบันเมื่อ User เข้าใช้งาน
   // ถ้าครบรอบ 60 วัน seasonId จะเปลี่ยนโดยอัตโนมัติ
@@ -144,13 +146,20 @@ async function enterPortal(){
     await updateMyRank();
     await ensureProfileDefaults();
     renderUserRank();
+    await syncPublicProfile();
+    await writePresence("portal");
   } catch (error) {
     console.warn("Ranking update skipped:", error);
   }
 }
 
 $("logoutUserButton").onclick=async()=>{
+  await markOffline();
   if(state.historyUnsub) state.historyUnsub();
+  if(state.presenceUnsub) state.presenceUnsub();
+  if(state.communityUnsub) state.communityUnsub();
+  if(state.leaderboardUnsub) state.leaderboardUnsub();
+  clearInterval(state.presenceTimer);
   await signOut(auth);
 };
 
@@ -600,7 +609,7 @@ function renderUserRank(){
   const tierIcon=rank.tierIcon || "🥉";
   const tierName=rank.tierName || "Bronze";
   const rating=Number(rank.rating||0);
-  $("userRank").textContent=`${tierIcon} ${tierName} ${rating}`;
+  $("userRank").innerHTML=`${rankShieldHTML(rank,"small")} <span>${tierName} ${rating}</span>`;
   const range=seasonRange(new Date());
   $("rankSeasonLabel").textContent=`${seasonIdFromDate(new Date())} · ${range.end.toLocaleDateString("th-TH")}`;
 }
@@ -740,6 +749,107 @@ async function updateMyRank(){
   state.player.rank=rank;
   renderUserRank();
 }
+
+
+/* ===== V3.4 SOCIAL HUB: Community + Presence + Top 10 ===== */
+const ONLINE_STALE_MS = 90 * 1000;
+
+function rankTierMeta(rank={}){
+  const id=String(rank.tierId||"bronze").toLowerCase();
+  const map={bronze:{name:"Bronze",letter:"B"},silver:{name:"Silver",letter:"S"},gold:{name:"Gold",letter:"G"},platinum:{name:"Platinum",letter:"P"},diamond:{name:"Diamond",letter:"D"},master:{name:"Master",letter:"M"}};
+  return {id,...(map[id]||map.bronze)};
+}
+function rankShieldHTML(rank,size="normal"){
+  const t=rankTierMeta(rank);
+  return `<span class="rank-shield rank-${t.id} ${size}" title="${t.name} · ${Number(rank?.rating||0)} Rating"><span class="rank-shield-letter">${t.letter}</span></span>`;
+}
+async function syncPublicProfile(){
+  if(!state.uid||!state.player)return;
+  try{
+    await setDoc(doc(db,"public_profiles",state.uid),{
+      uid:state.uid,
+      fullName:state.player.fullName,
+      rank:state.player.rank||{tierId:"bronze",tierName:"Bronze",rating:0},
+      avatarId:state.player.character?.avatarId||"default_student",
+      character:{
+        gender:state.player.character?.gender||null,
+        showcaseItemIds:(Array.isArray(state.player.inventory)?state.player.inventory:[]).slice(0,3)
+      },
+      updatedAt:serverTimestamp()
+    },{merge:true});
+  }catch(error){console.warn("public profile:",error)}
+}
+async function writePresence(area="portal"){
+  if(!state.uid||!state.player)return;
+  try{
+    await setDoc(doc(db,"presence",state.uid),{
+      uid:state.uid,fullName:state.player.fullName,
+      rank:state.player.rank||null,area,online:true,lastSeenAt:serverTimestamp()
+    },{merge:true});
+  }catch(error){console.warn("presence:",error)}
+}
+async function markOffline(){
+  if(!state.uid)return;
+  try{await setDoc(doc(db,"presence",state.uid),{online:false,lastSeenAt:serverTimestamp()},{merge:true})}catch{}
+}
+function presenceOnline(p){
+  if(!p?.online)return false;
+  const d=p.lastSeenAt?.toDate?.();
+  return !d || Date.now()-d.getTime()<=ONLINE_STALE_MS;
+}
+function renderCommunity(profiles){
+  if(!$('communityPlayersList'))return;
+  const list=[...profiles].sort((a,b)=>{
+    const ao=presenceOnline(state.presenceCache.get(a.uid));
+    const bo=presenceOnline(state.presenceCache.get(b.uid));
+    if(ao!==bo)return bo-ao;
+    return Number(b.rank?.rating||0)-Number(a.rank?.rating||0);
+  });
+  $('communityPlayersList').innerHTML=list.length?list.map(p=>{
+    const pr=state.presenceCache.get(p.uid)||{};
+    const online=presenceOnline(pr), me=p.uid===state.uid;
+    return `<div class="community-player-row ${online?'online':'offline'} ${me?'me':''}">
+      <div class="community-avatar">${esc(String(p.fullName||'?').trim().slice(0,1).toUpperCase())}</div>
+      <div class="community-player-info"><strong>${esc(p.fullName||'-')} ${me?'<em>YOU</em>':''}</strong><small>${esc(p.rank?.tierName||'Bronze')} · ${Number(p.rank?.rating||0)} Rating${online?` · ${pr.area==='zone'?'อยู่ใน 2D Zone':'Online'}`:' · Offline'}</small></div>
+      ${rankShieldHTML(p.rank,'small')}
+      <span class="community-status ${online?'on':'off'}">${online?'ONLINE':'OFFLINE'}</span>
+    </div>`;
+  }).join(''):`<div class="empty-card">ยังไม่มีผู้เล่นในระบบ</div>`;
+}
+function listenCommunityPlayers(){
+  if(state.communityUnsub)state.communityUnsub();
+  let profiles=[];
+  state.communityUnsub=onSnapshot(collection(db,"public_profiles"),snap=>{
+    profiles=snap.docs.map(d=>({uid:d.id,...d.data()}));renderCommunity(profiles);
+  });
+  if(state.presenceUnsub)state.presenceUnsub();
+  state.presenceUnsub=onSnapshot(collection(db,"presence"),snap=>{
+    state.presenceCache=new Map(snap.docs.map(d=>[d.id,{uid:d.id,...d.data()}]));
+    const online=[...state.presenceCache.values()].filter(presenceOnline).length;
+    if($('onlinePlayerCount'))$('onlinePlayerCount').textContent=online;
+    renderCommunity(profiles);
+  });
+}
+function listenTopRanking(){
+  if(state.leaderboardUnsub)state.leaderboardUnsub();
+  const q=query(collection(db,"public_profiles"),orderBy("rank.rating","desc"),limit(10));
+  state.leaderboardUnsub=onSnapshot(q,snap=>{
+    const rows=snap.docs.map(d=>({uid:d.id,...d.data()}));
+    if($('leaderboardSeason'))$('leaderboardSeason').textContent=seasonIdFromDate(new Date());
+    if($('topRankingList'))$('topRankingList').innerHTML=rows.length?rows.map((u,i)=>`<div class="ranking-row ${i<3?`podium-${i+1}`:''}">
+      <div class="ranking-position">${i+1}</div>${rankShieldHTML(u.rank)}
+      <div class="ranking-player"><strong>${esc(u.fullName||'-')}</strong><small>${esc(u.rank?.tierName||'Bronze')} · Season Rating</small></div>
+      <div class="ranking-rating"><strong>${Number(u.rank?.rating||0)}</strong><small>RATING</small></div>
+    </div>`).join(''):`<div class="empty-card">ยังไม่มีข้อมูล Ranking</div>`;
+  },error=>{console.warn('top ranking:',error)});
+}
+function startSocialHub(){
+  clearInterval(state.presenceTimer);
+  syncPublicProfile();writePresence('portal');listenCommunityPlayers();listenTopRanking();
+  state.presenceTimer=setInterval(()=>writePresence(document.body.classList.contains('game-active')?'game':'portal'),30000);
+}
+window.addEventListener('pagehide',()=>markOffline());
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')writePresence(document.body.classList.contains('game-active')?'game':'portal')});
 
 /* PVP V2.1 — Auto Room Code + Random Matchmaking */
 function renderPvpConfig(){

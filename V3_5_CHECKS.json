@@ -1,0 +1,10 @@
+{
+  "male_female": true,
+  "horizontal_controls": true,
+  "chat_form": true,
+  "chat_collection": true,
+  "chat_rules": true,
+  "thai_theme": true,
+  "token_showcase": true,
+  "no_full_rpg_menu": true
+}

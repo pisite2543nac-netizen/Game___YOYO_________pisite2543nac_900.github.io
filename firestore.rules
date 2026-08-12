@@ -55,5 +55,44 @@ service cloud.firestore {
       allow read, update: if signedIn() && resource.data.uid == request.auth.uid;
       allow read, write: if isAdmin();
     }
+
+    // Public profile for signed-in community / leaderboard (no password or private profile fields)
+    match /public_profiles/{uid} {
+      allow read: if signedIn();
+      allow create, update: if signedIn() && request.auth.uid == uid;
+      allow delete: if signedIn() && request.auth.uid == uid;
+      allow read, write: if isAdmin();
+    }
+
+    // Realtime online presence
+    match /presence/{uid} {
+      allow read: if signedIn();
+      allow create, update: if signedIn() && request.auth.uid == uid;
+      allow delete: if signedIn() && request.auth.uid == uid;
+      allow read, write: if isAdmin();
+    }
+
+    // Realtime 2D Zone positions
+    match /zone_positions/{uid} {
+      allow read: if signedIn();
+      allow create, update: if signedIn() && request.auth.uid == uid;
+      allow delete: if signedIn() && request.auth.uid == uid;
+      allow read, write: if isAdmin();
+    }
+
+
+    // Realtime text chat for 2D Social Zone
+    match /zone_messages/{messageId} {
+      allow read: if signedIn();
+      allow create: if signedIn()
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.text is string
+        && request.resource.data.text.size() > 0
+        && request.resource.data.text.size() <= 120;
+      allow update: if false;
+      allow delete: if isAdmin()
+        || (signedIn() && resource.data.uid == request.auth.uid);
+    }
+
   }
 }

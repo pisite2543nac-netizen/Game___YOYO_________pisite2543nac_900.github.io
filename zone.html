@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Thai Night Social Zone · Code Typing Academy</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="social-zone-page">
+  <div id="zoneGate" class="social-zone-gate">
+    <div class="social-gate-card">
+      <div class="social-gate-icon">🌙</div>
+      <h1>Thai Night Social Zone</h1>
+      <p>กำลังตรวจสอบบัญชีผู้เล่น...</p>
+      <a href="index.html" class="btn ghost">กลับหน้า User</a>
+    </div>
+  </div>
+
+  <main id="socialZoneApp" class="social-zone-app hidden">
+    <header class="social-zone-topbar">
+      <div class="social-zone-brand">
+        <span class="social-zone-logo">🌙</span>
+        <div>
+          <strong>THAI NIGHT · SOCIAL ZONE</strong>
+          <small>พื้นที่พบปะและพูดคุยของผู้เล่นออนไลน์</small>
+        </div>
+      </div>
+
+      <div class="social-zone-me">
+        <div id="zoneMyShield"></div>
+        <div>
+          <strong id="zoneMyName">Player</strong>
+          <small><span class="online-dot"></span> ONLINE · <span id="zoneOnlineCount">1</span> คน</small>
+        </div>
+      </div>
+
+      <a id="leaveZoneButton" href="index.html" class="btn danger small-btn">ออกจาก Zone</a>
+    </header>
+
+    <section class="social-world-shell">
+      <canvas id="socialCanvas" width="1600" height="900"></canvas>
+
+      <div class="social-help-chip">
+        <span>เดินด้วยปุ่มด้านล่าง</span>
+        <b>ซ้าย / ขวา</b>
+        <span>แล้วพิมพ์คุยกันผ่านตัวละคร</span>
+      </div>
+
+      <div id="playerProfileCard" class="player-profile-card hidden">
+        <button id="closeProfileCard" type="button">✕</button>
+        <div id="profileRankShield"></div>
+        <h3 id="profilePlayerName">Player</h3>
+        <p id="profileRankText">Bronze · 0 Rating</p>
+        <span class="profile-items-title">ของสะสมที่นำมาโชว์</span>
+        <div id="profileShowcaseItems" class="profile-showcase-items"></div>
+      </div>
+    </section>
+
+    <footer class="social-zone-controls">
+      <button id="moveLeftButton" class="move-button" type="button" aria-label="เดินซ้าย">◀</button>
+
+      <form id="zoneChatForm" class="zone-chat-form">
+        <input id="zoneChatInput"
+               type="text"
+               maxlength="120"
+               autocomplete="off"
+               placeholder="พิมพ์ข้อความที่จะพูด..."
+               aria-label="ข้อความพูดคุย">
+        <button id="zoneChatSend" type="submit">พูด</button>
+      </form>
+
+      <button id="moveRightButton" class="move-button" type="button" aria-label="เดินขวา">▶</button>
+    </footer>
+  </main>
+
+  <div id="genderSetup" class="gender-setup hidden">
+    <div class="gender-card">
+      <span class="section-kicker">FIRST CHARACTER SETUP</span>
+      <h2>เลือกตัวละครพื้นฐาน</h2>
+      <p>เลือกเพียงครั้งแรก ตัวละครฐานใช้ชุดเรียบง่ายสุภาพ และไอเท็ม Token จะแสดงเป็นของสะสมเท่านั้น</p>
+      <div class="gender-options">
+        <button id="chooseMale" type="button">
+          <div class="gender-preview male-preview">
+            <span class="head"></span><span class="body"></span><span class="legs"></span>
+          </div>
+          <strong>ชาย</strong>
+        </button>
+        <button id="chooseFemale" type="button">
+          <div class="gender-preview female-preview">
+            <span class="head"></span><span class="body"></span><span class="legs"></span>
+          </div>
+          <strong>หญิง</strong>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="zone.js"></script>
+</body>
+</html>

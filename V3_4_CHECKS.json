@@ -1,0 +1,14 @@
+{
+  "community": true,
+  "top10": true,
+  "zone_link": true,
+  "public_profiles": true,
+  "top10_query": true,
+  "presence": true,
+  "zone_html": true,
+  "zone_js": true,
+  "zone_positions": true,
+  "rules_public": true,
+  "rules_presence": true,
+  "rules_zone": true
+}
