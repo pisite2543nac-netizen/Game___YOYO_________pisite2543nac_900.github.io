@@ -4,17 +4,26 @@ import {
   getFirestore, collection, doc, getDocs, setDoc, deleteDoc, updateDoc,
   writeBatch, serverTimestamp, onSnapshot, Timestamp, query, orderBy, limit
 } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
-import { firebaseConfig, ADMIN_USERNAME, ADMIN_EMAIL, ADMIN_UID } from "./firebase-config.js?v=4.1.0";
-import { DEFAULT_MODES, DEFAULT_LEVELS } from "./default-data.js?v=4.1.0";
-import { seasonIdFromDate, seasonRange, calculateRankMetrics } from "./ranking-system.js?v=4.1.0";
+import { firebaseConfig, ADMIN_USERNAME, ADMIN_EMAIL, ADMIN_UID } from "./firebase-config.js?v=4.3.0";
+import { DEFAULT_MODES, DEFAULT_LEVELS } from "./default-data.js?v=4.3.0";
+import { seasonIdFromDate, seasonRange, calculateRankMetrics } from "./ranking-system.js?v=4.3.0";
 
 const app=initializeApp(firebaseConfig),auth=getAuth(app),db=getFirestore(app),$=id=>document.getElementById(id);
-let cache={users:[],attempts:[],levels:[],modes:[],official:[],zonePositions:[],zoneModeration:[],zoneMessages:[]},unsubs=[];
+let cache={users:[],attempts:[],levels:[],modes:[],official:[],zonePositions:[],zoneModeration:[],zoneMessages:[],zoneArchive:[]},unsubs=[];
+let knownUserIds=null;
 
 const isAdmin=user=>!!user&&user.uid===ADMIN_UID;
 const dateValue=v=>{try{return v?.toDate?.()?.getTime?.()||0}catch{return 0}};
 const formatDate=v=>{try{return v?.toDate?.().toLocaleString("th-TH")||"-"}catch{return "-"}};
 const esc=v=>String(v??"").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;");
+
+function showAdminToast(title,message="",isError=false){
+  const box=$("adminToast");if(!box)return;
+  box.classList.remove("hidden","error");if(isError)box.classList.add("error");
+  box.innerHTML=`<strong>${esc(title)}</strong><span>${esc(message)}</span>`;
+  clearTimeout(showAdminToast.timer);
+  showAdminToast.timer=setTimeout(()=>box.classList.add("hidden"),4500);
+}
 
 $("adminLoginForm").addEventListener("submit",async e=>{
   e.preventDefault();$("adminLoginError").textContent="";
@@ -33,7 +42,12 @@ onAuthStateChanged(auth,user=>{
 });
 
 function startRealtime(){
-  unsubs.push(onSnapshot(collection(db,"users"),snap=>{cache.users=snap.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>dateValue(b.createdAt)-dateValue(a.createdAt));renderAll()}));
+  unsubs.push(onSnapshot(collection(db,"users"),snap=>{
+    const next=snap.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>dateValue(b.createdAt)-dateValue(a.createdAt));
+    const nextIds=new Set(next.map(x=>x.id));
+    if(knownUserIds){next.filter(x=>!knownUserIds.has(x.id)).forEach(x=>showAdminToast(`สมาชิกใหม่ ${x.studentId||""}`,x.fullName||"ลงทะเบียนเรียบร้อย"));}
+    knownUserIds=nextIds;cache.users=next;renderAll();
+  },error=>showAdminToast("Users Realtime ขัดข้อง",error.message||String(error),true)));
   unsubs.push(onSnapshot(collection(db,"attempts"),snap=>{cache.attempts=snap.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>dateValue(b.createdAt)-dateValue(a.createdAt));renderAll()}));
   unsubs.push(onSnapshot(collection(db,"levels"),snap=>{cache.levels=snap.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>Number(a.levelNo)-Number(b.levelNo));renderAll()}));
   unsubs.push(onSnapshot(collection(db,"game_modes"),snap=>{cache.modes=snap.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>Number(a.sortOrder||0)-Number(b.sortOrder||0));renderAll()}));
@@ -41,7 +55,9 @@ function startRealtime(){
   unsubs.push(onSnapshot(collection(db,"zone_positions"),snap=>{cache.zonePositions=snap.docs.map(d=>({id:d.id,...d.data()}));renderAll()}));
   unsubs.push(onSnapshot(collection(db,"zone_moderation"),snap=>{cache.zoneModeration=snap.docs.map(d=>({id:d.id,...d.data()}));renderAll()}));
   const chatQuery=query(collection(db,"zone_messages"),orderBy("createdAt","desc"),limit(500));
-  unsubs.push(onSnapshot(chatQuery,snap=>{cache.zoneMessages=snap.docs.map(d=>({id:d.id,...d.data()})).filter(x=>x.zoneId===ACTIVE_ZONE_ID);renderAll()}));
+  unsubs.push(onSnapshot(chatQuery,snap=>{cache.zoneMessages=snap.docs.map(d=>({id:d.id,...d.data()})).filter(x=>x.zoneId===ACTIVE_ZONE_ID);renderAll()},error=>console.warn("live zone chat:",error)));
+  const archiveQuery=query(collection(db,"zone_chat_archive"),orderBy("createdAt","desc"),limit(1000));
+  unsubs.push(onSnapshot(archiveQuery,snap=>{cache.zoneArchive=snap.docs.map(d=>({id:d.id,...d.data()})).filter(x=>x.zoneId===ACTIVE_ZONE_ID);renderAll()},error=>{cache.zoneArchive=[];console.warn("zone archive:",error)}));
 }
 function renderAll(){renderMetrics();renderResults();renderUsers();renderLevels();renderOfficial();renderRanking();renderZoneControl();renderZoneChatLog()}
 function renderMetrics(){
@@ -51,7 +67,12 @@ function renderMetrics(){
   $("metricCompleted").textContent=completed.length;$("metricAverage").textContent=avg.toLocaleString();
 }
 function renderResults(){
-  $("resultsBody").innerHTML=cache.attempts.map(x=>`<tr><td>${formatDate(x.createdAt)}</td><td>${esc(x.studentId)}</td><td><strong>${esc(x.fullName)}</strong></td><td>${esc(x.educationLevel||"")}${esc(x.classroom||"")}</td><td>${esc(x.department)}</td><td>${esc(x.modeName)}</td><td>${esc(x.levelNo)}</td><td><span class="status status-${esc(x.status)}">${esc(x.status)}</span></td><td><strong>${Number(x.score||0).toLocaleString()}</strong></td><td>${esc(x.wpm??0)}</td><td>${esc(x.accuracy??0)}%</td><td><button class="mini-delete" data-delete-attempt="${x.id}">ลบ</button></td></tr>`).join("")||`<tr><td colspan="12" class="empty">ยังไม่มีผลการเล่น</td></tr>`;
+  $("resultsBody").innerHTML=cache.attempts.map(x=>{
+    const stage=x.stage??x.levelNo??"-";
+    const mode=x.modeName||x.mode||"-";
+    const pvp=x.pvpResult?` · ${String(x.pvpResult).toUpperCase()}`:"";
+    return `<tr><td>${formatDate(x.createdAt)}</td><td>${esc(x.studentId)}</td><td><strong>${esc(x.fullName)}</strong></td><td>${esc(x.educationLevel||"")}${esc(x.classroom||"")}</td><td>${esc(x.department)}</td><td>${esc(mode)}${esc(pvp)}</td><td>${esc(stage)}</td><td><span class="status status-${esc(x.status)}">${esc(x.status)}</span></td><td><strong>${Number(x.score||0).toLocaleString()}</strong></td><td>${esc(x.wpm??0)}</td><td>${esc(x.accuracy??0)}%</td><td><button class="mini-delete" data-delete-attempt="${x.id}">ลบ</button></td></tr>`;
+  }).join("")||`<tr><td colspan="12" class="empty">ยังไม่มีผลการเล่น</td></tr>`;
   document.querySelectorAll("[data-delete-attempt]").forEach(b=>b.onclick=async()=>{if(confirm("ลบผลรายการนี้?"))await deleteDoc(doc(db,"attempts",b.dataset.deleteAttempt))});
 }
 function renderUsers(){
@@ -334,25 +355,41 @@ function zoneChatExpiryLabel(m){
   const left=Math.max(0,until-Date.now()),h=Math.floor(left/3600000),min=Math.floor((left%3600000)/60000);
   return left>0?`${h}ชม. ${min}น.`:"หมดอายุ";
 }
+function combinedZoneChatArchive(){
+  const map=new Map();
+  cache.zoneMessages.forEach(m=>map.set(m.id,m));
+  cache.zoneArchive.forEach(m=>map.set(m.messageId||m.id,m));
+  return [...map.values()].sort((a,b)=>dateValue(b.createdAt)-dateValue(a.createdAt));
+}
+
 function renderZoneChatLog(){
   if(!$("zoneChatAdminList"))return;
-  const visible=cache.zoneMessages.filter(zoneChatVisible);
-  const user24=visible.filter(m=>!zoneChatIsGM(m)).length,gmCount=visible.filter(zoneChatIsGM).length;
-  $("zoneChat24hMetric").textContent=user24;$("zoneChatGmMetric").textContent=gmCount;$("zoneChatTotalMetric").textContent=visible.length;
-  $("zoneChatAdminList").innerHTML=visible.length?visible.map(m=>{
-    const gm=zoneChatIsGM(m),dt=m.createdAt?.toDate?.();
-    return `<article class="admin-zone-chat-message ${gm?"gm":"user"}">
+  const rows=combinedZoneChatArchive();
+  const user24=rows.filter(m=>!zoneChatIsGM(m)&&zoneChatVisible(m)).length;
+  const gmCount=rows.filter(zoneChatIsGM).length;
+  $("zoneChat24hMetric").textContent=user24;
+  $("zoneChatGmMetric").textContent=gmCount;
+  $("zoneChatTotalMetric").textContent=rows.length;
+  $("zoneChatAdminList").innerHTML=rows.length?rows.map(m=>{
+    const gm=zoneChatIsGM(m),dt=m.createdAt?.toDate?.(),expired=!gm&&!zoneChatVisible(m);
+    return `<article class="admin-zone-chat-message ${gm?"gm":expired?"expired":"user"}">
       <div class="admin-zone-chat-avatar">${gm?"GM":esc(String(m.studentId||"?").slice(-2))}</div>
       <div class="admin-zone-chat-content">
-        <div class="admin-zone-chat-meta"><strong>${gm?"GM · GAME MASTER":esc(m.studentId||"USER")}</strong><span>${esc(zoneChatUserName(m))}</span><time>${dt?dt.toLocaleString("th-TH"):"-"}</time></div>
+        <div class="admin-zone-chat-meta"><strong>${gm?"GM":esc(m.studentId||"USER")}</strong><span>${esc(zoneChatUserName(m))}</span><time>${dt?dt.toLocaleString("th-TH"):"-"}</time></div>
         <p>${esc(m.text||"")}</p>
-        <small>${gm?"ประกาศ GM · ไม่หมดอายุ":`ข้อความ User · เหลือ ${zoneChatExpiryLabel(m)}`}</small>
+        <small>${gm?"ประกาศ GM · ถาวร":expired?"หมดอายุจากหน้า User แล้ว · เก็บใน Admin Archive":`ข้อความ User · เหลือ ${zoneChatExpiryLabel(m)}`}</small>
       </div>
-      <button class="mini-delete" data-delete-zone-message="${m.id}">ลบ</button>
+      <button class="btn danger btn-small" data-delete-zone-message="${esc(m.messageId||m.id)}">ลบ Log</button>
     </article>`;
-  }).join(""):`<div class="empty">ยังไม่มีข้อความใน Zone</div>`;
-  document.querySelectorAll("[data-delete-zone-message]").forEach(btn=>btn.onclick=async()=>{if(confirm("ลบข้อความนี้?"))await deleteDoc(doc(db,"zone_messages",btn.dataset.deleteZoneMessage))});
+  }).join(""):`<div class="empty">ยังไม่มีประวัติแชต</div>`;
+  document.querySelectorAll("[data-delete-zone-message]").forEach(btn=>btn.onclick=async()=>{
+    if(!confirm("ลบข้อความและ Archive รายการนี้?"))return;
+    const id=btn.dataset.deleteZoneMessage,batch=writeBatch(db);
+    batch.delete(doc(db,"zone_messages",id));batch.delete(doc(db,"zone_chat_archive",id));
+    try{await batch.commit()}catch(error){console.warn("delete chat log:",error)}
+  });
 }
+
 async function cleanupExpiredZoneMessages(showAlert=true){
   const expired=cache.zoneMessages.filter(zoneChatExpired);
   if(!expired.length){if(showAlert)alert("ไม่มี User Chat ที่หมดอายุ");return 0}
@@ -362,9 +399,9 @@ async function cleanupExpiredZoneMessages(showAlert=true){
 }
 if($("cleanupExpiredZoneChat"))$("cleanupExpiredZoneChat").onclick=()=>cleanupExpiredZoneMessages(true);
 if($("exportZoneChatCsv"))$("exportZoneChatCsv").onclick=()=>{
-  const rows=cache.zoneMessages.filter(zoneChatVisible),q=v=>`"${String(v??"").replaceAll('"','""')}"`;
+  const rows=combinedZoneChatArchive(),q=v=>`"${String(v??"").replaceAll('"','""')}"`;
   const data=[["date","type","student_id","name","message","expires"].join(","),...rows.map(m=>[
-    formatDate(m.createdAt),zoneChatIsGM(m)?"GM":"USER",zoneChatIsGM(m)?"GM":m.studentId,zoneChatUserName(m),m.text,zoneChatIsGM(m)?"PERMANENT":zoneChatExpiryLabel(m)
+    formatDate(m.createdAt),zoneChatIsGM(m)?"GM":"USER",zoneChatIsGM(m)?"GM":m.studentId,zoneChatUserName(m),m.text,zoneChatIsGM(m)?"PERMANENT":(zoneChatVisible(m)?zoneChatExpiryLabel(m):"EXPIRED_ARCHIVED")
   ].map(q).join(","))].join("\n");
   downloadText(`zone_chat_${new Date().toISOString().slice(0,10)}.csv`,"\ufeff"+data,"text/csv;charset=utf-8");
 };
@@ -375,7 +412,13 @@ async function deleteCollectionDocs(name){const rows=await getDocs(collection(db
 $("deleteResults").onclick=async()=>{if(confirm("ยืนยันลบผลทั้งหมด?"))await deleteCollectionDocs("attempts")};
 $("deleteUsers").onclick=async()=>{if(confirm("ยืนยันลบข้อมูลสมาชิกทั้งหมดจาก Firestore? บัญชี Authentication จะไม่ถูกลบ"))await deleteCollectionDocs("users")};
 function downloadFile(name,text,type){const blob=new Blob([text],{type}),url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download=name;a.click();URL.revokeObjectURL(url)}
-$("exportCsv").onclick=()=>{const h=["date","student_id","name","level","classroom","department","mode","game_level","status","score","wpm","accuracy","mistakes","time_seconds"],q=v=>`"${String(v??"").replaceAll('"','""')}"`,rows=cache.attempts.map(x=>[formatDate(x.createdAt),x.studentId,x.fullName,x.educationLevel,x.classroom,x.department,x.modeName,x.levelNo,x.status,x.score,x.wpm,x.accuracy,x.mistakes,x.elapsedSeconds].map(q).join(","));downloadFile("code_typing_results.csv","\ufeff"+h.join(",")+"\n"+rows.join("\n"),"text/csv;charset=utf-8")};
-$("exportJson").onclick=()=>downloadFile("code_typing_backup.json",JSON.stringify({exportedAt:new Date().toISOString(),game_modes:cache.modes,levels:cache.levels,users:cache.users,attempts:cache.attempts},(k,v)=>v?.toDate?.()?v.toDate().toISOString():v,2),"application/json");
-$("importJson").addEventListener("change",async e=>{const f=e.target.files[0];if(!f||!confirm("นำเข้าข้อมูล JSON?"))return;const data=JSON.parse(await f.text());for(const [name,rows] of Object.entries({game_modes:data.game_modes||[],levels:data.levels||[],users:data.users||[],attempts:data.attempts||[]})){for(const row of rows){const id=row.id||doc(collection(db,name)).id,copy={...row};delete copy.id;await setDoc(doc(db,name,id),copy,{merge:true})}}alert("นำเข้าสำเร็จ")});
+$("exportCsv").onclick=()=>{const h=["date","student_id","name","level","classroom","department","mode","game_level","status","score","wpm","accuracy","mistakes","time_seconds"],q=v=>`"${String(v??"").replaceAll('"','""')}"`,rows=cache.attempts.map(x=>[formatDate(x.createdAt),x.studentId,x.fullName,x.educationLevel,x.classroom,x.department,x.modeName,(x.stage??x.levelNo),x.status,x.score,x.wpm,x.accuracy,x.mistakes,x.elapsedSeconds].map(q).join(","));downloadFile("code_typing_results.csv","\ufeff"+h.join(",")+"\n"+rows.join("\n"),"text/csv;charset=utf-8")};
+$("exportJson").onclick=()=>downloadFile("code_typing_backup.json",JSON.stringify({
+  exportedAt:new Date().toISOString(),game_modes:cache.modes,levels:cache.levels,users:cache.users,attempts:cache.attempts,
+  official_submissions:cache.official,zone_moderation:cache.zoneModeration,zone_chat_archive:combinedZoneChatArchive()
+},(k,v)=>v?.toDate?.()?v.toDate().toISOString():v,2),"application/json");
+$("importJson").addEventListener("change",async e=>{const f=e.target.files[0];if(!f||!confirm("นำเข้าข้อมูล JSON?"))return;const data=JSON.parse(await f.text());for(const [name,rows] of Object.entries({
+  game_modes:data.game_modes||[],levels:data.levels||[],users:data.users||[],attempts:data.attempts||[],
+  official_submissions:data.official_submissions||[],zone_moderation:data.zone_moderation||[],zone_chat_archive:data.zone_chat_archive||[]
+})){for(const row of rows){const id=row.id||doc(collection(db,name)).id,copy={...row};delete copy.id;await setDoc(doc(db,name,id),copy,{merge:true})}}alert("นำเข้าสำเร็จ")});
 document.querySelectorAll(".tab").forEach(btn=>btn.onclick=()=>{document.querySelectorAll(".tab").forEach(x=>x.classList.remove("active"));document.querySelectorAll(".admin-tab-panel").forEach(x=>x.classList.add("hidden"));btn.classList.add("active");$(btn.dataset.tab).classList.remove("hidden")});

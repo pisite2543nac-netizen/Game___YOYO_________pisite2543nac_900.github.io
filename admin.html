@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Admin | ระบบเกมพิมพ์ Code</title>
-  <link rel="stylesheet" href="./style.css?v=4.1.0">
+  <link rel="stylesheet" href="./style.css?v=4.3.0">
 </head>
 <body class="admin-page">
   <main class="wrap admin-wrap">
@@ -38,7 +38,7 @@
           <p>ผู้จัดทำ: นายพิสิษฐ์ หุนตระนี ครูพิเศษสอน</p>
         </div>
         <div>
-          <a class="btn gm-zone-entry" href="./zone.html?v=4.1.0">🌙 เข้า 2D Zone · GM</a>
+          <a class="btn gm-zone-entry" href="./zone.html?v=4.3.0">🌙 เข้า 2D Zone · GM</a>
           <a class="btn ghost" href="index.html">หน้าผู้เล่น</a>
           <button id="logoutAdmin" class="btn secondary">ออกจากระบบ</button>
         </div>
@@ -234,7 +234,7 @@
         <div class="admin-zone-chat-summary">
           <span><b id="zoneChat24hMetric">0</b> USER 24H</span>
           <span><b id="zoneChatGmMetric">0</b> GM PERMANENT</span>
-          <span><b id="zoneChatTotalMetric">0</b> แสดงทั้งหมด</span>
+          <span><b id="zoneChatTotalMetric">0</b> ADMIN ARCHIVE</span>
         </div>
         <div id="zoneChatAdminList" class="admin-zone-chat-list"></div>
       </section>
@@ -257,6 +257,7 @@
     </section>
   </main>
 
-  <script type="module" src="./admin.js?v=4.1.0"></script>
+  <div id="adminToast" class="admin-toast hidden" aria-live="polite"></div>
+  <script type="module" src="./admin.js?v=4.3.0"></script>
 </body>
 </html>

@@ -16,9 +16,9 @@ export const DEFAULT_CHARACTER = {
 };
 
 export const DEFAULT_ZONE_STATE = {
-  zoneId: "chat_only",
-  x: 0,
-  y: 0,
+  zoneId: "thai_social_zone_v4_1",
+  x: 520,
+  y: 700,
   direction: "right",
   lastSeenAt: null
 };

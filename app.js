@@ -7,12 +7,12 @@ import {
   getFirestore, collection, doc, getDoc, getDocs, setDoc, addDoc, updateDoc, deleteDoc,
   serverTimestamp, query, where, orderBy, limit, onSnapshot, runTransaction
 } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
-import { firebaseConfig } from "./firebase-config.js?v=4.2.0";
-import { LANGUAGES, LESSONS, DIFFICULTIES } from "./lessons.js?v=4.2.0";
-import { REWARD_ITEMS, RARITY_META } from "./reward-data.js?v=4.2.0";
-import { DEFAULT_CHARACTER, DEFAULT_ZONE_STATE } from "./character-system.js?v=4.2.0";
-import { OFFICIAL_STAGES, OFFICIAL_TOTAL_SCORE } from "./official-data.js?v=4.2.0";
-import { RANKING_CONFIG, seasonIdFromDate, seasonRange, calculateRankMetrics } from "./ranking-system.js?v=4.2.0";
+import { firebaseConfig } from "./firebase-config.js?v=4.3.0";
+import { LANGUAGES, LESSONS, DIFFICULTIES } from "./lessons.js?v=4.3.0";
+import { REWARD_ITEMS, RARITY_META } from "./reward-data.js?v=4.3.0";
+import { DEFAULT_CHARACTER, DEFAULT_ZONE_STATE } from "./character-system.js?v=4.3.0";
+import { OFFICIAL_STAGES, OFFICIAL_TOTAL_SCORE } from "./official-data.js?v=4.3.0";
+import { RANKING_CONFIG, seasonIdFromDate, seasonRange, calculateRankMetrics } from "./ranking-system.js?v=4.3.0";
 
 const firebaseApp = initializeApp(firebaseConfig);
 const auth = getAuth(firebaseApp);
@@ -27,7 +27,9 @@ const state = {
   roomUnsub:null, roomCode:null, roomData:null,
   officialProgress:{}, officialSelected:null, officialUnsub:null,
   presenceUnsub:null, leaderboardUnsub:null, presenceTimer:null, communityUnsub:null, presenceCache:new Map(),
-  pvpStartTime:0, pvpTimer:null, pvpMistakes:0, pvpKeys:0, pvpCorrectText:""
+  pvpStartTime:0, pvpTimer:null, pvpMistakes:0, pvpKeys:0, pvpCorrectText:"",
+  pvpLesson:null, pvpAttemptId:null, pvpFinished:false, pvpActiveRoom:null,
+  pvpProgressTimer:null, pvpProgressLastSent:0, pvpResultSaved:false
 };
 
 const studentEmail = id => `${String(id).trim()}@student.thc-nr.local`;
@@ -118,8 +120,7 @@ $("registerForm").addEventListener("submit",async e=>{
       createdAt:serverTimestamp(),updatedAt:serverTimestamp()
     };
     await setDoc(doc(db,"users",state.uid),p);
-    await ensureProfileDefaults();
-    enterPortal();
+    await routeAuthenticatedStudent();
   }catch(err){
     $("registerMessage").textContent = err.code==="auth/email-already-in-use" ? "เลขนักศึกษานี้ลงทะเบียนแล้ว" : "ลงทะเบียนไม่สำเร็จ: "+err.message;
   }
@@ -130,13 +131,35 @@ $("loginForm").addEventListener("submit",async e=>{
   try{
     const cred=await signInWithEmailAndPassword(auth,studentEmail($("loginStudentId").value.trim()),$("loginPassword").value);
     state.uid=cred.user.uid;
-    await ensureProfileDefaults();
-    if(!state.player) throw new Error("ไม่พบข้อมูลผู้ใช้");
-    enterPortal();
+    await routeAuthenticatedStudent();
   }catch{
     $("loginMessage").textContent="เลขนักศึกษาหรือรหัสผ่านไม่ถูกต้อง";
   }
 });
+
+async function routeAuthenticatedStudent(){
+  // createUserWithEmailAndPassword จะยิง onAuthStateChanged ก่อน setDoc(users/{uid}) ได้
+  // จึง retry สั้น ๆ เพื่อป้องกันหน้า Login กระพริบ/แจ้งไม่พบ User ตอนสมัครใหม่
+  for(let i=0;i<6&&!state.player;i++){
+    await ensureProfileDefaults();
+    if(!state.player) await new Promise(resolve=>setTimeout(resolve,250));
+  }
+  if(!state.player) throw new Error("ไม่พบข้อมูลผู้ใช้");
+
+  // มือถือ/แท็บเล็ต: Login/สมัครได้ที่หน้าแรก แต่หลังมีตัวละครแล้วเข้า Zone โดยตรง
+  if(isMobileOrTabletDevice() && ["male","female"].includes(state.player?.character?.gender)){
+    try{
+      await syncPublicProfile();
+      await writePresence("zone");
+    }catch(error){
+      console.warn("mobile route sync skipped:", error);
+    }
+    location.replace("./zone.html?v=4.3.0");
+    return;
+  }
+
+  await enterPortal();
+}
 
 async function enterPortal(){
   await ensureProfileDefaults();
@@ -759,8 +782,7 @@ async function updateMyRank(){
 
   const attempts=[];
   // ใช้ข้อมูลจาก history listener ผ่าน Firestore query ใหม่ให้ชัดเจน
-  const qs=await import("https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js");
-  const snap=await qs.getDocs(query(collection(db,"attempts"),where("uid","==",state.uid)));
+  const snap=await getDocs(query(collection(db,"attempts"),where("uid","==",state.uid)));
   snap.forEach(d=>{
     const a=d.data();
     const dt=a.createdAt?.toDate?.();
@@ -801,6 +823,11 @@ async function saveCharacterGender(gender){
   state.player.character=character;
   $("characterSetupModal").classList.add("hidden");
   await syncPublicProfile();
+
+  // มือถือ/แท็บเล็ตใช้เฉพาะ 2D Zone หลังเลือกตัวละครเสร็จ
+  if(isMobileOrTabletDevice()){
+    location.replace("./zone.html?v=4.3.0");
+  }
 }
 
 function characterEquippedItem(slot){
@@ -1083,6 +1110,8 @@ function isJoinableRoom(room){
   if(room.status !== "waiting") return false;
   if(room.hostUid === state.uid) return false;
   if(playerCount(room) >= 2) return false;
+  const created=room.createdAt?.toDate?.();
+  if(created && Date.now()-created.getTime()>10*60*1000) return false;
 
   // ให้ค้นหาเฉพาะห้องภาษาเดียวกัน เพื่อเริ่มแข่งได้ทันที
   if(state.language?.id && room.languageId !== state.language.id) return false;
@@ -1320,7 +1349,14 @@ function listenRoom(code){
     } else if(state.roomData.status === "playing"){
       $("pvpLobbyHint").textContent = "การแข่งขันกำลังเริ่ม";
       setMatchmakingStatus("playing","เริ่มการแข่งขันแล้ว","กำลังเข้าสู่เกม PVP");
+      enterPvpGame(state.roomData,code).catch(error=>console.error("enterPvpGame:",error));
+    } else if(state.roomData.status === "finished"){
+      $("pvpLobbyHint").textContent = "การแข่งขันจบแล้ว";
+      updatePvpRoomProgress(state.roomData);
+      handlePvpFinishedRoom(state.roomData).catch(error=>console.error("finish PVP:",error));
     }
+
+    if(state.roomData.status === "playing") updatePvpRoomProgress(state.roomData);
 
     $("startPvpButton").classList.toggle(
       "hidden",
@@ -1350,6 +1386,10 @@ $("leaveLobbyButton").onclick = async () => {
 };
 
 $("leavePvpButton").onclick = async () => {
+  await forfeitPvpIfPlaying();
+  clearInterval(state.pvpTimer);
+  clearTimeout(state.pvpProgressTimer);
+  state.pvpActiveRoom=null;state.pvpLesson=null;state.pvpFinished=false;state.pvpCorrectText="";
   await leaveCurrentLobby({deleteEmptyHostRoom:false});
   showScreen("userPortal");
 };
@@ -1375,6 +1415,238 @@ function buildKeyboard(){
 }
 
 
+/* ===== V4.3 COMPLETE PVP REALTIME GAME ===== */
+function pvpElapsed(){
+  if(!state.pvpStartTime)return 0;
+  return Math.max(0,(Date.now()-state.pvpStartTime)/1000);
+}
+function pvpAccuracy(){
+  return state.pvpKeys?Math.max(0,(state.pvpCorrectText.length/state.pvpKeys)*100):100;
+}
+function pvpWpm(){
+  const sec=Math.max(pvpElapsed(),0.1);
+  return state.pvpCorrectText.length?((state.pvpCorrectText.length/5)/(sec/60)):0;
+}
+function pvpProgressPct(){
+  const code=state.pvpLesson?.code||"";
+  return code.length?Math.min(100,(state.pvpCorrectText.length/code.length)*100):0;
+}
+function renderPvpStrictCode(){
+  const code=state.pvpLesson?.code||"";
+  let html="";
+  for(let i=0;i<code.length;i++){
+    const cls=i<state.pvpCorrectText.length?"correct":(i===state.pvpCorrectText.length?"current":"pending");
+    const ch=code[i];
+    html+=`<span class="${cls}">${ch==="\n"?"\n":ch===" "?" ":esc(ch)}</span>`;
+  }
+  $("pvpTypingDisplay").innerHTML=html;
+  $("pvpTypingDisplay").querySelector(".current")?.scrollIntoView({block:"nearest"});
+  const pct=pvpProgressPct();
+  $("myPvpBar").style.width=`${pct}%`;
+  $("myPvpPct").textContent=`${Math.floor(pct)}%`;
+  $("pvpProgress").textContent=`${Math.floor(pct)}%`;
+}
+function updatePvpStats(){
+  $("pvpTime").textContent=fmtTime(pvpElapsed());
+  $("pvpWpm").textContent=Math.round(pvpWpm());
+  $("pvpAccuracy").textContent=`${pvpAccuracy().toFixed(0)}%`;
+  $("pvpMistakes").textContent=state.pvpMistakes;
+  $("pvpProgress").textContent=`${Math.floor(pvpProgressPct())}%`;
+}
+function pvpWrong(expected){
+  const stage=$("pvpTypingStage");
+  stage.classList.remove("wrong-shake","wrong-flash");
+  void stage.offsetWidth;
+  stage.classList.add("wrong-shake","wrong-flash");
+  $("pvpGameStatus").textContent=`ผิด · ${expected==="\n"?"Enter":expected===" "?"Space":expected}`;
+  setTimeout(()=>{stage.classList.remove("wrong-shake","wrong-flash");if(!state.pvpFinished)$("pvpGameStatus").textContent="PLAYING";},260);
+}
+async function createPvpAttempt(){
+  if(state.pvpAttemptId||!state.pvpLesson)return;
+  try{
+    const r=await addDoc(collection(db,"attempts"),{
+      uid:state.uid,studentId:state.player.studentId,fullName:state.player.fullName,
+      educationLevel:state.player.educationLevel,classroom:state.player.classroom,department:state.player.department,
+      language:state.language?.name||state.pvpLesson.language,languageId:state.pvpLesson.language,
+      modeName:"PVP",difficulty:difficultyName(state.pvpLesson.difficulty),difficultyId:state.pvpLesson.difficulty,
+      stage:state.pvpLesson.stage,lessonId:state.pvpLesson.id,levelTitle:state.pvpLesson.title,
+      roomCode:state.roomCode,status:"playing",score:0,rewardPoints:0,wpm:0,accuracy:0,mistakes:0,
+      elapsedSeconds:0,createdAt:serverTimestamp()
+    });
+    state.pvpAttemptId=r.id;
+  }catch(error){console.warn("createPvpAttempt:",error)}
+}
+async function pushPvpProgress(force=false){
+  if(!state.roomCode||!state.roomData||state.pvpFinished)return;
+  const now=Date.now();
+  if(!force&&now-state.pvpProgressLastSent<160)return;
+  state.pvpProgressLastSent=now;
+  const pct=Math.round(pvpProgressPct()*10)/10;
+  try{
+    await updateDoc(doc(db,"pvp_rooms",state.roomCode),{
+      [`players.${state.uid}.progress`]:pct,
+      [`players.${state.uid}.wpm`]:Math.round(pvpWpm()*100)/100,
+      [`players.${state.uid}.accuracy`]:Math.round(pvpAccuracy()*100)/100,
+      [`players.${state.uid}.mistakes`]:state.pvpMistakes,
+      [`players.${state.uid}.lastUpdateAt`]:serverTimestamp()
+    });
+  }catch(error){console.warn("PVP progress:",error)}
+}
+function schedulePvpProgress(){
+  clearTimeout(state.pvpProgressTimer);
+  state.pvpProgressTimer=setTimeout(()=>pushPvpProgress(false),80);
+}
+async function savePvpAttempt(result){
+  if(state.pvpResultSaved)return;
+  state.pvpResultSaved=true;
+  if(!state.pvpAttemptId){await createPvpAttempt();}
+  if(!state.pvpAttemptId)return;
+  try{
+    await updateDoc(doc(db,"attempts",state.pvpAttemptId),{
+      status:"completed",pvpResult:result,score:result==="win"?100:0,rewardPoints:0,
+      wpm:Math.round(pvpWpm()*100)/100,accuracy:Math.round(pvpAccuracy()*100)/100,
+      mistakes:state.pvpMistakes,elapsedSeconds:Math.round(pvpElapsed()*100)/100,
+      finishedAt:serverTimestamp()
+    });
+  }catch(error){console.warn("savePvpAttempt:",error)}
+}
+async function declarePvpFinish(){
+  if(state.pvpFinished||!state.roomCode)return;
+  state.pvpFinished=true;
+  clearInterval(state.pvpTimer);
+  clearTimeout(state.pvpProgressTimer);
+  $("pvpGameStatus").textContent="FINISHING";
+  const ref=doc(db,"pvp_rooms",state.roomCode);
+  try{
+    await runTransaction(db,async tx=>{
+      const snap=await tx.get(ref);
+      if(!snap.exists())return;
+      const data=snap.data();
+      const players={...(data.players||{})};
+      players[state.uid]={...(players[state.uid]||{}),progress:100,finished:true,
+        wpm:Math.round(pvpWpm()*100)/100,accuracy:Math.round(pvpAccuracy()*100)/100,
+        mistakes:state.pvpMistakes,elapsedSeconds:Math.round(pvpElapsed()*100)/100};
+      const winner=data.winnerUid||state.uid;
+      tx.update(ref,{players,winnerUid:winner,status:"finished",finishedAt:serverTimestamp()});
+    });
+  }catch(error){
+    console.warn("declarePvpFinish:",error);
+    state.pvpFinished=false;
+    $("pvpGameStatus").textContent="ERROR";
+  }
+}
+async function handlePvpFinishedRoom(room){
+  if(state.pvpActiveRoom!==state.roomCode)return;
+  const won=room.winnerUid===state.uid;
+  if(!state.pvpFinished){
+    state.pvpFinished=true;
+    clearInterval(state.pvpTimer);
+    clearTimeout(state.pvpProgressTimer);
+  }
+  $("pvpTypingInput").disabled=true;
+  $("pvpGameStatus").textContent=won?"WIN 🏆":"LOSE";
+  $("pvpSaveState").textContent=won?"คุณชนะการแข่งขัน · บันทึกผลแล้ว":"คู่แข่งชนะ · บันทึกผลแล้ว";
+  await savePvpAttempt(won?"win":"loss");
+}
+async function enterPvpGame(room,code){
+  if(state.pvpActiveRoom===code)return;
+  const lesson=LESSONS.find(x=>x.id===room.lessonId);
+  if(!lesson){
+    setMatchmakingStatus("error","ไม่พบโจทย์ PVP","Room นี้ใช้โจทย์ที่ไม่มีในเวอร์ชันปัจจุบัน");
+    return;
+  }
+  state.pvpActiveRoom=code;
+  state.pvpLesson=lesson;
+  state.pvpAttemptId=null;
+  state.pvpFinished=false;
+  state.pvpResultSaved=false;
+  state.pvpCorrectText="";
+  state.pvpMistakes=0;
+  state.pvpKeys=0;
+  state.pvpProgressLastSent=0;
+  clearInterval(state.pvpTimer);
+  clearTimeout(state.pvpProgressTimer);
+  $("pvpTypingInput").disabled=false;
+  $("pvpTypingInput").value="";
+
+  const startMs=room.startedAt?.toMillis?.()||Date.now();
+  state.pvpStartTime=startMs;
+  const entries=Object.entries(room.players||{});
+  const opponent=entries.find(([id])=>id!==state.uid)?.[1]||null;
+  $("pvpChallengeTitle").textContent=`Stage ${lesson.stage} · ${lesson.title}`;
+  $("pvpChallengeDescription").textContent=lesson.description||"พิมพ์ Code ให้ครบก่อนคู่แข่ง";
+  $("pvpRoomGame").textContent=`Room ${code}`;
+  $("pvpOpponentName").textContent=`คู่แข่ง: ${opponent?.name||opponent?.studentId||"-"}`;
+  $("myPvpName").textContent=state.player.fullName||state.player.studentId;
+  $("oppPvpName").textContent=opponent?.name||opponent?.studentId||"OPPONENT";
+  $("myPvpBar").style.width="0%";$("oppPvpBar").style.width=`${Number(opponent?.progress||0)}%`;
+  $("myPvpPct").textContent="0%";$("oppPvpPct").textContent=`${Math.floor(Number(opponent?.progress||0))}%`;
+  $("pvpGameStatus").textContent="PLAYING";
+  $("pvpSaveState").textContent="Realtime · Strict Typing";
+  renderPvpStrictCode();updatePvpStats();
+  showScreen("pvpGameScreen");
+  await createPvpAttempt();
+  state.pvpTimer=setInterval(updatePvpStats,100);
+  setTimeout(()=>$("pvpTypingInput").focus({preventScroll:true}),100);
+}
+function updatePvpRoomProgress(room){
+  if(state.pvpActiveRoom!==state.roomCode)return;
+  const players=room.players||{};
+  const mine=players[state.uid]||{};
+  const oppEntry=Object.entries(players).find(([id])=>id!==state.uid);
+  const opp=oppEntry?.[1]||{};
+  const myPct=Math.max(Number(mine.progress||0),pvpProgressPct());
+  const oppPct=Number(opp.progress||0);
+  $("myPvpBar").style.width=`${Math.min(100,myPct)}%`;
+  $("myPvpPct").textContent=`${Math.floor(myPct)}%`;
+  $("oppPvpBar").style.width=`${Math.min(100,oppPct)}%`;
+  $("oppPvpPct").textContent=`${Math.floor(oppPct)}%`;
+}
+$("pvpTypingStage").onclick=()=>$("pvpTypingInput").focus({preventScroll:true});
+$("pvpTypingInput").addEventListener("keydown",async e=>{
+  if(state.pvpFinished){e.preventDefault();return;}
+  if(["Backspace","Delete","ArrowLeft","ArrowRight","ArrowUp","ArrowDown"].includes(e.key)){
+    e.preventDefault();$("pvpGameStatus").textContent="STRICT · พิมพ์ตัวเดิมใหม่";return;
+  }
+  const raw=keyToInput(e);
+  if(raw===null)return;
+  e.preventDefault();
+  const code=state.pvpLesson?.code||"";
+  const pos=state.pvpCorrectText.length;
+  const expected=code[pos];
+  if(expected===undefined)return;
+  state.pvpKeys++;
+  if(raw==="\t"){
+    if(expected===" "){
+      let count=0;while(code[pos+count]===" "&&count<4)count++;
+      state.pvpCorrectText+=code.slice(pos,pos+count);
+      renderPvpStrictCode();updatePvpStats();schedulePvpProgress();
+      if(state.pvpCorrectText===code)await declarePvpFinish();
+    }else{state.pvpMistakes++;pvpWrong(expected);updatePvpStats();schedulePvpProgress();}
+    return;
+  }
+  if(raw===expected){
+    state.pvpCorrectText+=raw;renderPvpStrictCode();updatePvpStats();schedulePvpProgress();
+    $("pvpGameStatus").textContent="PLAYING";
+    if(state.pvpCorrectText===code)await declarePvpFinish();
+  }else{
+    state.pvpMistakes++;pvpWrong(expected);updatePvpStats();schedulePvpProgress();
+  }
+});
+async function forfeitPvpIfPlaying(){
+  if(!state.roomCode||state.roomData?.status!=="playing"||state.pvpFinished)return;
+  const opponentUid=Object.keys(state.roomData.players||{}).find(id=>id!==state.uid);
+  if(!opponentUid)return;
+  state.pvpFinished=true;clearInterval(state.pvpTimer);clearTimeout(state.pvpProgressTimer);
+  try{
+    await updateDoc(doc(db,"pvp_rooms",state.roomCode),{
+      winnerUid:opponentUid,status:"finished",finishedAt:serverTimestamp(),forfeitUid:state.uid
+    });
+    await savePvpAttempt("forfeit");
+  }catch(error){console.warn("forfeit:",error)}
+}
+
+
 /* ===== Responsive Device UX ===== */
 function isTouchDevice() {
   return window.matchMedia("(pointer: coarse)").matches || navigator.maxTouchPoints > 0;
@@ -1384,8 +1656,17 @@ function isPhoneLayout() {
   return window.matchMedia("(max-width: 700px)").matches;
 }
 
+function isMobileOrTabletDevice() {
+  const ua = navigator.userAgent || "";
+  const mobileUa = /Android|iPhone|iPad|iPod|Mobile|Tablet|Silk|Kindle|PlayBook/i.test(ua);
+  const iPadDesktopMode = navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1;
+  const coarseTablet = window.matchMedia("(pointer: coarse)").matches
+    && Math.min(screen.width || innerWidth, screen.height || innerHeight) <= 1024;
+  return mobileUa || iPadDesktopMode || coarseTablet;
+}
+
 function isZoneOnlyDevice() {
-  return isTouchDevice() && window.matchMedia("(max-width: 1180px)").matches;
+  return isMobileOrTabletDevice();
 }
 
 function applyZoneOnlyPortalMode() {
@@ -1495,8 +1776,15 @@ updateDeviceUX();
 
 onAuthStateChanged(auth,async user=>{
   if(!user){state.uid=null;state.player=null;showScreen("authScreen");return;}
-  if(user.email==="pisit_2000@thc-nr.local")return;
-  state.uid=user.uid;await ensureProfileDefaults();if(state.player)enterPortal();
+  if(user.email==="pisit_2000@thc-nr.local"){location.replace("./admin.html?v=4.3.0");return;}
+  state.uid=user.uid;
+  try{
+    await routeAuthenticatedStudent();
+  }catch(error){
+    console.error("auth route:",error);
+    showScreen("authScreen");
+    $("loginMessage").textContent="เปิดบัญชีไม่สำเร็จ กรุณา Reload แล้วลองใหม่";
+  }
 });
 
 buildKeyboard();

@@ -3,20 +3,20 @@ import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/
 import {
   getFirestore, doc, getDoc, setDoc, updateDoc, addDoc,
   collection, onSnapshot, serverTimestamp, query, orderBy, limit, where,
-  runTransaction, Timestamp
+  runTransaction, Timestamp, writeBatch
 } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
-import { firebaseConfig, ADMIN_UID } from "./firebase-config.js?v=4.2.0";
-import { REWARD_ITEMS, RARITY_META } from "./reward-data.js?v=4.2.0";
-import { DEFAULT_CHARACTER } from "./character-system.js?v=4.2.0";
+import { firebaseConfig, ADMIN_UID } from "./firebase-config.js?v=4.3.0";
+import { REWARD_ITEMS, RARITY_META } from "./reward-data.js?v=4.3.0";
+import { DEFAULT_CHARACTER } from "./character-system.js?v=4.3.0";
 
-window.__ZONE_V42_BOOTED__ = true;
+window.__ZONE_V43_BOOTED__ = true;
 
 const firebaseApp=initializeApp(firebaseConfig);
 const auth=getAuth(firebaseApp);
 const db=getFirestore(firebaseApp);
 const $=id=>document.getElementById(id);
 
-const ZONE_VERSION="4.2.0";
+const ZONE_VERSION="4.3.0";
 const ZONE_ID="thai_social_zone_v4_1";
 const WORLD={width:3000,height:900};
 const WALK_Y=700;
@@ -52,7 +52,7 @@ let positionsUnsub=null;
 let messagesUnsub=null;
 let moderationUnsub=null;
 let heartbeat=null;
-let clockTimer=null;
+let clockTimer=null;let chatExpiryTimer=null;
 let blocked=false;
 let lastFrame=performance.now();
 let lastPositionSend=0;
@@ -257,23 +257,34 @@ function renderChatHistory(){
   }).join(""):`<div class="zone-chat-empty">ยังไม่มีข้อความในช่วง 24 ชั่วโมง</div>`;
   $("zoneChatHistoryList").scrollTop=$("zoneChatHistoryList").scrollHeight;
 }
+function refreshVisibleZoneMessages(){const latest=new Map();chatMessages.filter(m=>messageVisible(m)).forEach(m=>{if(!latest.has(m.uid))latest.set(m.uid,m)});messagesByUid=latest;if(!$('zoneChatHistoryModal').classList.contains('hidden'))renderChatHistory()}
 function listenMessages(){
   if(messagesUnsub)messagesUnsub();
   const q=query(collection(db,"zone_messages"),orderBy("createdAt","desc"),limit(MAX_CHAT_HISTORY));
   messagesUnsub=onSnapshot(q,snap=>{
     chatMessages=snap.docs.map(d=>({id:d.id,...d.data()})).filter(m=>m.zoneId===ZONE_ID);
-    const latest=new Map();
-    chatMessages.filter(m=>messageVisible(m)).forEach(m=>{if(!latest.has(m.uid))latest.set(m.uid,m)});
-    messagesByUid=latest;
-    if(!$("zoneChatHistoryModal").classList.contains("hidden"))renderChatHistory();
+    refreshVisibleZoneMessages();
   },error=>{if(error?.code==="permission-denied")showPermissionHelp(error);else console.warn("messages:",error)});
 }
 async function sendMessage(text){
-  const clean=String(text||"").trim().slice(0,120);if(blocked||!clean||!uid||!profile)return;if(Date.now()-lastChatAt<900)return;lastChatAt=Date.now();
+  const clean=String(text||"").trim().slice(0,120);
+  if(blocked||!clean||!uid||!profile)return;
+  if(Date.now()-lastChatAt<900)return;
+  lastChatAt=Date.now();
   const gm=isGM();
   const payload={uid,studentId:gm?"GM":String(profile.studentId||""),text:clean,zoneId:ZONE_ID,isGM:gm,createdAt:serverTimestamp()};
   if(!gm)payload.expiresAt=Timestamp.fromMillis(Date.now()+USER_CHAT_TTL_MS);
-  try{await addDoc(collection(db,"zone_messages"),payload)}catch(error){if(error?.code==="permission-denied")showPermissionHelp(error);else console.warn("chat:",error)}
+  try{
+    const messageRef=doc(collection(db,"zone_messages"));
+    const archiveRef=doc(db,"zone_chat_archive",messageRef.id);
+    const batch=writeBatch(db);
+    batch.set(messageRef,payload);
+    batch.set(archiveRef,{...payload,messageId:messageRef.id,archivedAt:serverTimestamp()});
+    await batch.commit();
+  }catch(error){
+    if(error?.code==="permission-denied")showPermissionHelp(error);
+    else console.warn("chat:",error);
+  }
 }
 
 $("zoneChatForm").addEventListener("submit",async e=>{e.preventDefault();const input=$("zoneChatInput"),text=input.value;input.value="";await sendMessage(text);input.focus({preventScroll:true})});
@@ -394,12 +405,12 @@ async function handleShopItem(itemId){
 function openShop(){if(isGM())return;renderShop();$("zoneShopModal").classList.remove("hidden")}$("openZoneShop").onclick=openShop;$("closeZoneShop").onclick=()=>$("zoneShopModal").classList.add("hidden");
 function drawOwnProfile(){if(!profile)return;profileCtx.clearRect(0,0,profileCanvas.width,profileCanvas.height);const time=worldTimeState(),bg=profileCtx.createLinearGradient(0,0,0,430);if(time.isDay){bg.addColorStop(0,"#7fcdf0");bg.addColorStop(1,"#6e9b59")}else{bg.addColorStop(0,"#102f47");bg.addColorStop(1,"#315e52")}profileCtx.fillStyle=bg;profileCtx.fillRect(0,0,420,430);const p={uid,studentId:isGM()?"GM":profile.studentId,rank:isGM()?GM_RANK:profile.rank,character:isGM()?{gender:"male",exclusive:"gm_v1"}:{gender:profile.character?.gender,equipped:equipped(profile.character)},direction:"right",isAdmin:isGM()};drawCharacter(profileCtx,p,210,345,1.65,false)}
 $("openMyZoneProfile").onclick=()=>{$("zoneProfileStudentId").textContent=isGM()?"GM":(profile?.studentId||"-");$("zoneProfileKicker").textContent=isGM()?"GM EXCLUSIVE CHARACTER":"MY CHARACTER";$("zoneProfileHelp").textContent=isGM()?"ตัวละครและไอเท็มชุดนี้ผูกกับ ADMIN_UID เท่านั้น User ไม่สามารถซื้อหรือสวมตามได้":"ซื้อและสวมใส่ไอเท็มได้จาก Token Shop ภายใน Zone";drawOwnProfile();$("zoneMyProfileModal").classList.remove("hidden")};$("closeMyZoneProfile").onclick=()=>$("zoneMyProfileModal").classList.add("hidden");
-async function leaveZone(){clearInterval(heartbeat);clearInterval(clockTimer);try{await updateDoc(doc(db,"zone_positions",uid),{online:false,updatedAt:serverTimestamp()})}catch{}try{await setDoc(doc(db,"presence",uid),{online:false,lastSeenAt:serverTimestamp()},{merge:true})}catch{}if(!isGM()){try{await updateDoc(doc(db,"users",uid),{zone:{zoneId:ZONE_ID,x:Math.round(me.x),y:WALK_Y,direction:me.direction,lastSeenAt:new Date().toISOString()}})}catch{}}}
+async function leaveZone(){clearInterval(heartbeat);clearInterval(clockTimer);clearInterval(chatExpiryTimer);try{await updateDoc(doc(db,"zone_positions",uid),{online:false,updatedAt:serverTimestamp()})}catch{}try{await setDoc(doc(db,"presence",uid),{online:false,lastSeenAt:serverTimestamp()},{merge:true})}catch{}if(!isGM()){try{await updateDoc(doc(db,"users",uid),{zone:{zoneId:ZONE_ID,x:Math.round(me.x),y:WALK_Y,direction:me.direction,lastSeenAt:new Date().toISOString()}})}catch{}}}
 window.addEventListener("resize",resizeCanvas);window.addEventListener("pagehide",leaveZone);$("leaveZoneButton").addEventListener("click",()=>leaveZone());
 
 onAuthStateChanged(auth,async user=>{
   setBootStep("auth","loading","กำลังตรวจสอบ");if(!user){setBootStep("auth","error","ยังไม่ได้ Login");showGate("กรุณา Login ก่อน","2D Zone ใช้บัญชีที่ Login แล้ว","login");return}uid=user.uid;setBootStep("auth","ok",isGM()?"GM Login":"Login แล้ว");
   const okProfile=await loadProfile();if(!okProfile)return;const allowed=await checkModerationBeforeEntry();if(!allowed)return;blocked=false;$("zoneGate").classList.add("hidden");$("zoneApp").classList.remove("hidden");
   if(isGM()){$("zoneMyStudentId").textContent="GM";$("zoneMyShield").innerHTML=rankShieldHTML(GM_RANK);$("zoneWalletLabel").textContent="🛡️ ROLE";$("zoneTokenBalance").textContent="GAME MASTER";$("openZoneShop").classList.add("hidden");$("openAdminPanel").classList.remove("hidden");$("leaveZoneButton").href="./admin.html";$("zoneChatInput").placeholder="GM พิมพ์ประกาศหรือพูดคุย (ข้อความ GM ไม่หมดอายุ)...";}else{$("zoneMyStudentId").textContent=profile.studentId||"-";$("zoneMyShield").innerHTML=rankShieldHTML(profile.rank);$("zoneTokenBalance").textContent=Number(profile.tokenBalance||0).toLocaleString();}
-  startWorldClock();resizeCanvas();listenModeration();listenPositions();listenMessages();await syncPublicProfile();await publishPresence();await publishPosition(true);heartbeat=setInterval(async()=>{await publishPresence();await publishPosition(true)},PRESENCE_HEARTBEAT_MS);requestAnimationFrame(loop);
+  startWorldClock();resizeCanvas();listenModeration();listenPositions();listenMessages();clearInterval(chatExpiryTimer);chatExpiryTimer=setInterval(refreshVisibleZoneMessages,60000);await syncPublicProfile();await publishPresence();await publishPosition(true);heartbeat=setInterval(async()=>{await publishPresence();await publishPosition(true)},PRESENCE_HEARTBEAT_MS);requestAnimationFrame(loop);
 });
