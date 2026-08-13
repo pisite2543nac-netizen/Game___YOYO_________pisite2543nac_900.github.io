@@ -1,4 +1,4 @@
-# Code Typing Academy V4.4
+# Code Typing Academy V4.5
 
 ระบบเรียนพิมพ์ Code + Dual Ranking + PVP Multi Room + Token Economy + 2D Zone
 

@@ -36,7 +36,9 @@ service cloud.firestore {
         && request.resource.data.status == "waiting"
         && request.resource.data.players is map
         && request.auth.uid in request.resource.data.players
-        && request.resource.data.players.size() == 1;
+        && request.resource.data.players.size() == 1
+        && request.resource.data.creationFee == 6
+        && request.resource.data.creationFeePaid == true;
 
       allow update: if signedIn()
         && request.resource.data.code == resource.data.code
@@ -155,5 +157,14 @@ service cloud.firestore {
       allow read: if isAdmin() || (signedIn() && request.auth.uid == uid);
       allow create, update, delete: if isAdmin();
     }
+    match /system_settings/{settingId} {
+      allow read: if signedIn();
+      allow create, update, delete: if isAdmin();
+    }
+
+    match /rank_reset_history/{resetId} {
+      allow read, create, update, delete: if isAdmin();
+    }
+
   }
 }

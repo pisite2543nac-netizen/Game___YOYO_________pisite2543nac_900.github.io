@@ -1,0 +1,38 @@
+{
+  "version": "4.5.0",
+  "all_passed": true,
+  "syntax": {
+    "app.js": true,
+    "admin.js": true,
+    "zone.js": true,
+    "ranking-system.js": true,
+    "economy-system.js": true,
+    "reward-data.js": true,
+    "lessons.js": true,
+    "character-system.js": true,
+    "official-data.js": true,
+    "firebase-config.js": true
+  },
+  "features": {
+    "classroom_admin": true,
+    "classroom_rank_score": true,
+    "rank_reset_admin": true,
+    "rank_reset_user": true,
+    "rank_reset_zone": true,
+    "gm_world_chat": true,
+    "pvp_create_fee": true,
+    "pvp_countdown": true,
+    "rules_system_settings": true,
+    "rules_rank_history": true,
+    "zone_version": true
+  },
+  "html_js_missing_ids": {
+    "app": [],
+    "admin": [],
+    "zone": []
+  },
+  "notes": [
+    "lessonPreview is created dynamically by app.js",
+    "rewardShop is optional because the shop moved into 2D Zone"
+  ]
+}

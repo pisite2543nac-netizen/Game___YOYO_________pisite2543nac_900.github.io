@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1">
   <title>ระบบเกมพิมพ์ Code | วิทยาลัยเทคนิคนางรอง</title>
-  <link rel="stylesheet" href="./style.css?v=4.4.0">
+  <link rel="stylesheet" href="./style.css?v=4.5.0">
 </head>
 <body>
 <header class="site-header">
@@ -145,6 +145,16 @@
       <div class="card portal-stat rank-stat"><span>Rank Season</span><strong id="userRank">-</strong><small id="rankSeasonLabel">60 DAYS</small></div>
     </div>
 
+    <section id="rankResetNotice" class="card rank-reset-user-notice hidden">
+      <div class="rank-reset-user-icon">🏆</div>
+      <div>
+        <span class="section-kicker">RANK RESET NOTICE</span>
+        <h3 id="rankResetNoticeTitle">กำหนดการรีแรงค์</h3>
+        <p id="rankResetNoticeText">-</p>
+        <small id="rankResetNoticeCountdown">-</small>
+      </div>
+    </section>
+
     <section id="mobileZoneOnlyNotice" class="card hidden mobile-zone-only-card">
       <div class="mobile-zone-only-badge">📱 MOBILE / TABLET MODE</div>
       <h3>มือถือและแท็บเล็ตเข้าใช้งานเฉพาะ 2D Zone</h3>
@@ -267,10 +277,10 @@
         <label><span>จำนวน Shot</span><select id="pvpShotCount"><option value="1">1 Shot</option><option value="3" selected>3 Shot</option><option value="5">5 Shot</option></select></label>
         <label><span>วาง Token</span><select id="pvpWager"><option value="0">ไม่วาง Token</option><option value="5">5 Token</option><option value="10">10 Token</option><option value="20">20 Token</option><option value="30">30 Token</option><option value="40">40 Token</option><option value="50">50 Token</option></select></label>
       </div>
-      <div class="pvp-wager-note">Token เป็นแต้มภายในเกมเท่านั้น · เมื่อห้องเต็ม ระบบจะล็อก Token ของผู้เล่นแต่ละคนก่อนเริ่ม · ทีมชนะรับ Pot แบ่งเท่ากัน</div>
+      <div class="pvp-wager-note">ค่าสร้างห้อง 6 Token (ไม่คืน) · Token เดิมพันจะล็อกเมื่อสมาชิกครบ · ทีมชนะรับ Pot แบ่งเท่ากัน</div>
 
       <div class="pvp-match-actions three-actions">
-        <button id="createRoomButton" class="pvp-match-card create" type="button"><span class="pvp-match-icon">➕</span><strong>สร้างห้อง</strong><small>สุ่ม Room Code ใหม่จากระบบ</small><em>GENERATE CODE</em></button>
+        <button id="createRoomButton" class="pvp-match-card create" type="button"><span class="pvp-match-icon">➕</span><strong>สร้างห้อง</strong><small>สุ่ม Room Code ใหม่จากระบบ · ค่าสร้าง 6 Token</small><em>6 TOKEN · GENERATE CODE</em></button>
         <button id="refreshRoomsButton" class="pvp-match-card find" type="button"><span class="pvp-match-icon">📋</span><strong>เลือกห้อง</strong><small>ดูห้องที่กำลังรอทั้งหมด</small><em>MULTI ROOM</em></button>
         <div class="pvp-code-join-card"><span>เข้าด้วย Room Code</span><div><input id="joinRoomCodeInput" maxlength="6" autocomplete="off" placeholder="ABC234"><button id="joinRoomCodeButton" class="btn secondary" type="button">เข้าห้อง</button></div><small>Code ต้องเป็น Code ที่ระบบสร้างเท่านั้น</small></div>
       </div>
@@ -369,6 +379,11 @@
   </section>
 
   <section id="pvpGameScreen" class="card hidden pvp-game-v44">
+    <div id="pvpCountdownOverlay" class="pvp-countdown-overlay hidden" aria-live="assertive">
+      <span>เตรียมพร้อม</span>
+      <strong id="pvpCountdownNumber">3</strong>
+      <small>ทุกคนจะเริ่มพิมพ์พร้อมกัน</small>
+    </div>
     <div class="game-head"><div><span class="badge">⚔️ PVP</span><h2 id="pvpChallengeTitle">PVP Challenge</h2><p id="pvpChallengeDescription"></p></div><div class="player-box"><strong id="pvpRoomGame">Room ------</strong><span id="pvpMatchMeta">-</span></div></div>
     <div class="pvp-shot-header"><strong id="pvpShotLabel">SHOT 1/3</strong><span id="pvpShotScore">TEAM A 0 : 0 TEAM B</span><small id="pvpTurnInfo">กำลังเตรียมผู้พิมพ์</small></div>
     <div class="pvp-team-board">
@@ -494,7 +509,7 @@
 </main>
 
 <footer><div class="wrap">ระบบเกมพิมพ์ Code · วิทยาลัยเทคนิคนางรอง</div></footer>
-<script type="module" src="./app.js?v=4.4.0"></script>
+<script type="module" src="./app.js?v=4.5.0"></script>
 
   <div id="characterSetupModal" class="character-modal hidden">
     <div class="character-modal-card character-setup-card">

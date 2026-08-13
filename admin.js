@@ -4,13 +4,15 @@ import {
   getFirestore, collection, doc, getDocs, setDoc, deleteDoc, updateDoc,
   writeBatch, serverTimestamp, onSnapshot, Timestamp, query, orderBy, limit
 } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
-import { firebaseConfig, ADMIN_USERNAME, ADMIN_EMAIL, ADMIN_UID } from "./firebase-config.js?v=4.4.0";
-import { DEFAULT_MODES, DEFAULT_LEVELS } from "./default-data.js?v=4.4.0";
-import { seasonIdFromDate, seasonRange, calculateRankMetrics } from "./ranking-system.js?v=4.4.0";
+import { firebaseConfig, ADMIN_USERNAME, ADMIN_EMAIL, ADMIN_UID } from "./firebase-config.js?v=4.5.0";
+import { DEFAULT_MODES, DEFAULT_LEVELS } from "./default-data.js?v=4.5.0";
+import { seasonIdFromDate, seasonRange, calculateRankMetrics, rankingClassKey } from "./ranking-system.js?v=4.5.0";
 
 const app=initializeApp(firebaseConfig),auth=getAuth(app),db=getFirestore(app),$=id=>document.getElementById(id);
-let cache={users:[],attempts:[],levels:[],modes:[],official:[],zonePositions:[],zoneModeration:[],zoneMessages:[],zoneArchive:[]},unsubs=[];
+let cache={users:[],attempts:[],levels:[],modes:[],official:[],zonePositions:[],zoneModeration:[],zoneMessages:[],zoneArchive:[],rankingSettings:{}},unsubs=[];
 let knownUserIds=null;
+let selectedAdminClass="";
+let adminRankClock=null;
 
 const isAdmin=user=>!!user&&user.uid===ADMIN_UID;
 const dateValue=v=>{try{return v?.toDate?.()?.getTime?.()||0}catch{return 0}};
@@ -38,7 +40,8 @@ $("logoutAdmin").onclick=()=>signOut(auth);
 onAuthStateChanged(auth,user=>{
   const ok=isAdmin(user);$("adminLogin").classList.toggle("hidden",ok);$("adminDashboard").classList.toggle("hidden",!ok);
   unsubs.forEach(fn=>fn());unsubs=[];
-  if(ok)startRealtime();
+  clearInterval(adminRankClock);adminRankClock=null;
+  if(ok){startRealtime();adminRankClock=setInterval(()=>{renderRanking();renderClassrooms();renderRankingSchedule()},30000);}
 });
 
 function startRealtime(){
@@ -54,17 +57,18 @@ function startRealtime(){
   unsubs.push(onSnapshot(collection(db,"official_submissions"),snap=>{cache.official=snap.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>dateValue(b.submittedAt)-dateValue(a.submittedAt));renderAll()}));
   unsubs.push(onSnapshot(collection(db,"zone_positions"),snap=>{cache.zonePositions=snap.docs.map(d=>({id:d.id,...d.data()}));renderAll()}));
   unsubs.push(onSnapshot(collection(db,"zone_moderation"),snap=>{cache.zoneModeration=snap.docs.map(d=>({id:d.id,...d.data()}));renderAll()}));
+  unsubs.push(onSnapshot(doc(db,"system_settings","ranking"),snap=>{cache.rankingSettings=snap.exists()?snap.data():{};renderAll()},error=>console.warn("ranking settings:",error)));
   const chatQuery=query(collection(db,"zone_messages"),orderBy("createdAt","desc"),limit(500));
   unsubs.push(onSnapshot(chatQuery,snap=>{cache.zoneMessages=snap.docs.map(d=>({id:d.id,...d.data()})).filter(x=>x.zoneId===ACTIVE_ZONE_ID);renderAll()},error=>console.warn("live zone chat:",error)));
   const archiveQuery=query(collection(db,"zone_chat_archive"),orderBy("createdAt","desc"),limit(1000));
   unsubs.push(onSnapshot(archiveQuery,snap=>{cache.zoneArchive=snap.docs.map(d=>({id:d.id,...d.data()})).filter(x=>x.zoneId===ACTIVE_ZONE_ID);renderAll()},error=>{cache.zoneArchive=[];console.warn("zone archive:",error)}));
 }
-function renderAll(){renderMetrics();renderResults();renderUsers();renderLevels();renderOfficial();renderRanking();renderZoneControl();renderZoneChatLog()}
+function renderAll(){renderMetrics();renderResults();renderUsers();renderClassrooms();renderLevels();renderOfficial();renderRanking();renderRankingSchedule();renderZoneControl();renderZoneChatLog()}
 function renderMetrics(){
   const completed=cache.attempts.filter(x=>x.status==="completed");
   const avg=completed.length?Math.round(completed.reduce((s,x)=>s+Number(x.score||0),0)/completed.length):0;
   $("metricLevels").textContent=cache.levels.length;$("metricUsers").textContent=cache.users.length;
-  $("metricCompleted").textContent=completed.length;$("metricAverage").textContent=avg.toLocaleString();
+  $("metricCompleted").textContent=completed.length;$("metricAverage").textContent=avg.toLocaleString();if($("metricClasses"))$("metricClasses").textContent=new Set(cache.users.map(u=>rankingClassKey(u.educationLevel,u.classroom)).filter(Boolean)).size;
 }
 function renderResults(){
   $("resultsBody").innerHTML=cache.attempts.map(x=>{
@@ -100,60 +104,138 @@ function renderOfficial(){
   </tr>`).join("")||`<tr><td colspan="9" class="empty">ยังไม่มีผู้ส่งงานทางการ</td></tr>`;
 }
 
+function tsMillis(v){
+  try{return v?.toMillis?.()??v?.toDate?.()?.getTime?.()??0}catch{return 0}
+}
+function rankResetBoundaryMs(now=Date.now()){
+  const cfg=cache.rankingSettings||{};
+  const last=tsMillis(cfg.lastResetAt);
+  const next=tsMillis(cfg.nextResetAt);
+  return Math.max(last,(next&&next<=now)?next:0);
+}
+function effectiveSeasonRange(){
+  const range=seasonRange(new Date()),boundary=rankResetBoundaryMs();
+  return {start:new Date(Math.max(range.start.getTime(),boundary||0)),end:range.end,boundary};
+}
 function seasonAttemptsForUser(uid){
-  const range=seasonRange(new Date());
+  const range=effectiveSeasonRange();
   return cache.attempts.filter(a=>{
     if(a.uid!==uid || a.status!=="completed")return false;
     const dt=a.createdAt?.toDate?.();
     return !!dt && dt>=range.start && dt<=range.end;
   });
 }
-
-function renderRanking(){
-  if(!$("rankingBody"))return;
-  const seasonId=seasonIdFromDate(new Date()),range=seasonRange(new Date());
-  $("adminSeasonId").textContent=seasonId;
-  $("adminSeasonRange").textContent=`${range.start.toLocaleDateString("th-TH")} – ${range.end.toLocaleDateString("th-TH")}`;
-
+function adminRankShieldHTML(rank={}){
+  const id=String(rank.tierId||"bronze").toLowerCase(),letter={bronze:"B",silver:"S",gold:"G",platinum:"P",diamond:"D",master:"M"}[id]||"B";
+  return `<span class="rank-shield rank-${id}" title="${esc(rank.tierName||"Bronze")} · ${Number(rank.rating||0)}"><span class="rank-shield-letter">${letter}</span></span>`;
+}
+function isClassicAttempt(a){return a.status==="completed" && String(a.modeName||a.mode||"").toLowerCase()==="classic"}
+function userNormalScore(uid){return cache.attempts.filter(a=>a.uid===uid&&isClassicAttempt(a)).reduce((sum,a)=>sum+Number(a.score||0),0)}
+function userPlayedStages(uid){
+  const keys=new Set(cache.attempts.filter(a=>a.uid===uid&&isClassicAttempt(a)).map(a=>`${a.languageId||a.language||"?"}:${a.stage??a.levelNo??a.lessonId??"?"}`));
+  return keys.size;
+}
+function officialForUser(uid){return cache.official.find(x=>x.uid===uid||x.id===uid)||null}
+function classKeyForUser(u){return rankingClassKey(u.educationLevel,u.classroom)||"ไม่ระบุห้อง"}
+function buildAdminRankingRows(){
   const rows=cache.users.map(u=>{
     const attempts=seasonAttemptsForUser(u.id);
     const days=new Set(attempts.map(a=>a.createdAt?.toDate?.()?.toISOString().slice(0,10)).filter(Boolean)).size;
     const m=calculateRankMetrics(attempts,days);
-    return {user:u,...m};
-  }).sort((a,b)=>b.rating-a.rating);
+    return {user:u,classKey:classKeyForUser(u),...m};
+  }).sort((a,b)=>b.rating-a.rating||String(a.user.studentId||"").localeCompare(String(b.user.studentId||"")));
+  rows.forEach((r,i)=>r.globalPosition=i+1);
+  const groups=new Map();
+  rows.forEach(r=>{if(!groups.has(r.classKey))groups.set(r.classKey,[]);groups.get(r.classKey).push(r)});
+  groups.forEach(list=>list.sort((a,b)=>b.rating-a.rating||a.globalPosition-b.globalPosition).forEach((r,i)=>r.classPosition=i+1));
+  return rows;
+}
+function adminClassKeys(){return [...new Set(cache.users.map(classKeyForUser))].sort((a,b)=>a.localeCompare(b,"th"))}
+function syncAdminClassSelectors(){
+  const keys=adminClassKeys();
+  const rankSel=$("adminRankingClassFilter"),classSel=$("adminClassroomFilter");
+  if(rankSel){const old=rankSel.value;rankSel.innerHTML=`<option value="">ทุกห้อง</option>`+keys.map(k=>`<option value="${esc(k)}">${esc(k)}</option>`).join("");rankSel.value=keys.includes(old)?old:"";}
+  if(classSel){if(!selectedAdminClass||!keys.includes(selectedAdminClass))selectedAdminClass=keys[0]||"";classSel.innerHTML=keys.map(k=>`<option value="${esc(k)}">${esc(k)}</option>`).join("");classSel.value=selectedAdminClass;}
+}
+function renderClassrooms(){
+  if(!$("adminClassroomBody"))return;
+  syncAdminClassSelectors();
+  const rows=buildAdminRankingRows(),keys=adminClassKeys();
+  $("adminClassroomCards").innerHTML=keys.map(k=>{
+    const members=rows.filter(r=>r.classKey===k),top=members[0],normal=members.reduce((a,r)=>a+userNormalScore(r.user.id),0);
+    return `<button class="admin-classroom-card ${k===selectedAdminClass?"active":""}" data-admin-class="${esc(k)}"><span>ห้อง</span><strong>${esc(k)}</strong><small>${members.length} คน · Top ${top?esc(top.user.studentId):"-"}</small><em>Score รวม ${normal.toLocaleString()}</em></button>`;
+  }).join("")||`<div class="empty">ยังไม่มีห้องเรียน</div>`;
+  document.querySelectorAll("[data-admin-class]").forEach(b=>b.onclick=()=>{selectedAdminClass=b.dataset.adminClass;if($("adminClassroomFilter"))$("adminClassroomFilter").value=selectedAdminClass;renderClassrooms()});
+  const list=rows.filter(r=>r.classKey===selectedAdminClass);
+  $("adminClassroomTitle").textContent=selectedAdminClass||"ยังไม่มีห้อง";
+  $("adminClassroomSummary").textContent=`${list.length} คน · แสดงคะแนนและอันดับแบบ Realtime`;
+  $("adminClassroomBody").innerHTML=list.map(r=>{
+    const official=officialForUser(r.user.id),normal=userNormalScore(r.user.id),stages=userPlayedStages(r.user.id);
+    return `<tr><td><strong>${esc(r.user.studentId||"-")}</strong></td><td>${esc(r.user.fullName||"-")}</td><td>${adminRankShieldHTML(r)}<br><small>${esc(r.tierName)} · ${r.rating}</small></td><td><strong>${stages}</strong></td><td>${normal.toLocaleString()}</td><td><strong>${Number(official?.totalScore||0).toFixed(2)}</strong> / 40</td><td><strong>#${r.classPosition||"-"}</strong> · ${r.rating}</td><td><strong>#${r.globalPosition}</strong> · ${r.rating}</td><td>${Number(r.user.tokenBalance||0).toLocaleString()}</td></tr>`;
+  }).join("")||`<tr><td colspan="9" class="empty">ยังไม่มีสมาชิกในห้องนี้</td></tr>`;
+}
+if($("adminClassroomFilter"))$("adminClassroomFilter").onchange=e=>{selectedAdminClass=e.target.value;renderClassrooms()};
+if($("adminRankingClassFilter"))$("adminRankingClassFilter").onchange=()=>renderRanking();
 
-  $("rankingBody").innerHTML=rows.map((r,i)=>`<tr>
-    <td><strong>${i+1}</strong></td>
+function renderRanking(){
+  if(!$("rankingBody"))return;
+  syncAdminClassSelectors();
+  const seasonId=seasonIdFromDate(new Date()),range=effectiveSeasonRange(),filter=$("adminRankingClassFilter")?.value||"";
+  $("adminSeasonId").textContent=seasonId;
+  $("adminSeasonRange").textContent=`${range.start.toLocaleString("th-TH")} – ${range.end.toLocaleString("th-TH")}`;
+  let rows=buildAdminRankingRows();
+  if(filter)rows=rows.filter(r=>r.classKey===filter);
+  $("rankingBody").innerHTML=rows.map(r=>`<tr>
+    <td><strong>#${r.globalPosition}</strong></td>
+    <td><strong>#${r.classPosition||"-"}</strong></td>
     <td>${esc(r.user.fullName)}<br><small>${esc(r.user.studentId)}</small></td>
-    <td><strong>${r.tierIcon} ${r.tierName}</strong></td>
-    <td>${r.rating}</td>
-    <td>${r.diligence}</td>
-    <td>${r.accuracy}</td>
-    <td>${r.speed}</td>
-    <td>${r.consistency}</td>
-    <td>${r.avgWpm}</td>
-  </tr>`).join("")||`<tr><td colspan="9" class="empty">ยังไม่มีข้อมูล Ranking</td></tr>`;
+    <td>${esc(r.classKey)}</td>
+    <td>${adminRankShieldHTML(r)} <strong>${esc(r.tierName)}</strong></td>
+    <td><strong>${r.rating}</strong></td><td>${r.diligence}</td><td>${r.accuracy}</td><td>${r.speed}</td><td>${r.consistency}</td><td>${r.avgWpm}</td>
+  </tr>`).join("")||`<tr><td colspan="11" class="empty">ยังไม่มีข้อมูล Ranking</td></tr>`;
 }
 
 async function persistRanking(){
-  const seasonId=seasonIdFromDate(new Date());
-  for(const u of cache.users){
-    const attempts=seasonAttemptsForUser(u.id);
-    const days=new Set(attempts.map(a=>a.createdAt?.toDate?.()?.toISOString().slice(0,10)).filter(Boolean)).size;
-    const m=calculateRankMetrics(attempts,days);
-    await setDoc(doc(db,"rankings",`${seasonId}_${u.id}`),{
-      seasonId,uid:u.id,studentId:u.studentId,fullName:u.fullName,...m,updatedAt:serverTimestamp()
-    },{merge:true});
-    await setDoc(doc(db,"users",u.id),{
-      rank:{seasonId,...m,updatedAt:new Date().toISOString()}
-    },{merge:true});
+  const seasonId=seasonIdFromDate(new Date()),rows=buildAdminRankingRows();
+  let batch=writeBatch(db),writes=0;
+  for(const r of rows){
+    const rank={seasonId,rating:r.rating,tierId:r.tierId,tierName:r.tierName,tierIcon:r.tierIcon,diligence:r.diligence,accuracy:r.accuracy,speed:r.speed,consistency:r.consistency,avgWpm:r.avgWpm,avgAccuracy:r.avgAccuracy,completedAttempts:r.completedAttempts,activeDayCount:r.activeDayCount,updatedAt:new Date().toISOString(),resetBoundaryAt:rankResetBoundaryMs()?new Date(rankResetBoundaryMs()).toISOString():null};
+    batch.set(doc(db,"rankings",`${seasonId}_${r.user.id}`),{seasonId,uid:r.user.id,studentId:r.user.studentId,fullName:r.user.fullName,classKey:r.classKey,globalPosition:r.globalPosition,classPosition:r.classPosition,...rank,updatedAt:serverTimestamp()},{merge:true});writes++;
+    batch.set(doc(db,"users",r.user.id),{rank,updatedAt:serverTimestamp()},{merge:true});writes++;
+    batch.set(doc(db,"public_profiles",r.user.id),{rank,educationLevel:r.user.educationLevel||"",classroom:r.user.classroom||"",classKey:r.classKey,updatedAt:serverTimestamp()},{merge:true});writes++;
+    if(writes>=420){await batch.commit();batch=writeBatch(db);writes=0;}
   }
+  if(writes)await batch.commit();
 }
-
-if($("recalculateRanking"))$("recalculateRanking").onclick=async()=>{
-  await persistRanking();
-  alert("คำนวณ Ranking Season ปัจจุบันเรียบร้อย");
+function bronzeResetRank(resetAt){return {seasonId:seasonIdFromDate(resetAt),rating:0,tierId:"bronze",tierName:"Bronze",tierIcon:"🥉",diligence:0,accuracy:0,speed:0,consistency:0,avgWpm:0,avgAccuracy:0,completedAttempts:0,activeDayCount:0,updatedAt:resetAt.toISOString(),resetBoundaryAt:resetAt.toISOString()}}
+async function executeRankingResetNow(){
+  if(!confirm("ยืนยันรีแรงค์ตอนนี้? Rank ของ User ทุกคนจะกลับ Bronze 0 และผลงานก่อนเวลานี้จะไม่ถูกนำมาคำนวณในรอบใหม่"))return;
+  const now=new Date(),rank=bronzeResetRank(now),version=`manual_${now.getTime()}`;
+  await setDoc(doc(db,"system_settings","ranking"),{lastResetAt:Timestamp.fromDate(now),nextResetAt:null,notice:"",resetVersion:version,updatedAt:serverTimestamp()},{merge:true});
+  let batch=writeBatch(db),writes=0;
+  for(const u of cache.users){batch.set(doc(db,"users",u.id),{rank,updatedAt:serverTimestamp()},{merge:true});batch.set(doc(db,"public_profiles",u.id),{rank,updatedAt:serverTimestamp()},{merge:true});writes+=2;if(writes>=420){await batch.commit();batch=writeBatch(db);writes=0;}}
+  if(writes)await batch.commit();
+  await setDoc(doc(collection(db,"rank_reset_history")),{type:"manual",resetAt:Timestamp.fromDate(now),resetVersion:version,adminUid:ADMIN_UID,createdAt:serverTimestamp()});
+  showAdminToast("รีแรงค์สำเร็จ",`เริ่มรอบใหม่ ${now.toLocaleString("th-TH")}`);
+}
+function renderRankingSchedule(){
+  if(!$("adminRankResetStatus"))return;
+  const cfg=cache.rankingSettings||{},next=tsMillis(cfg.nextResetAt),last=tsMillis(cfg.lastResetAt),now=Date.now();
+  if(next){$("adminRankResetStatus").textContent=next>now?`กำหนด ${new Date(next).toLocaleString("th-TH")}`:`มีผลแล้ว ${new Date(next).toLocaleString("th-TH")}`;}
+  else if(last)$("adminRankResetStatus").textContent=`รีล่าสุด ${new Date(last).toLocaleString("th-TH")}`;
+  else $("adminRankResetStatus").textContent="ยังไม่ได้กำหนด";
+  if($("rankResetMessage")&&document.activeElement!==$("rankResetMessage"))$("rankResetMessage").value=cfg.notice||"";
+  if($("rankResetAtInput")&&document.activeElement!==$("rankResetAtInput")){const d=next?new Date(next):null;$("rankResetAtInput").value=d?`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}T${String(d.getHours()).padStart(2,"0")}:${String(d.getMinutes()).padStart(2,"0")}`:"";}
+}
+if($("saveRankResetSchedule"))$("saveRankResetSchedule").onclick=async()=>{
+  const raw=$("rankResetAtInput").value,date=new Date(raw),notice=$("rankResetMessage").value.trim();
+  if(!raw||Number.isNaN(date.getTime())||date.getTime()<=Date.now()){alert("กรุณากำหนดวันและเวลาในอนาคต");return;}
+  await setDoc(doc(db,"system_settings","ranking"),{nextResetAt:Timestamp.fromDate(date),notice,resetVersion:`scheduled_${date.getTime()}`,updatedAt:serverTimestamp()},{merge:true});
+  showAdminToast("บันทึกกำหนดรีแรงค์แล้ว",date.toLocaleString("th-TH"));
 };
+if($("clearRankResetSchedule"))$("clearRankResetSchedule").onclick=async()=>{await setDoc(doc(db,"system_settings","ranking"),{nextResetAt:null,notice:"",updatedAt:serverTimestamp()},{merge:true});showAdminToast("ยกเลิกกำหนดการแล้ว")};
+if($("resetRankingNow"))$("resetRankingNow").onclick=executeRankingResetNow;
+if($("recalculateRanking"))$("recalculateRanking").onclick=async()=>{await persistRanking();showAdminToast("คำนวณ Ranking ใหม่แล้ว","อัปเดตทั้งแรงค์รวมและแรงค์รายห้อง")};
 
 if($("exportOfficialCsv"))$("exportOfficialCsv").onclick=()=>{
   const h=["submitted_at","student_id","name","class","department","completed","score","max_score","accuracy","wpm"];
@@ -405,6 +487,15 @@ if($("exportZoneChatCsv"))$("exportZoneChatCsv").onclick=()=>{
   ].map(q).join(","))].join("\n");
   downloadText(`zone_chat_${new Date().toISOString().slice(0,10)}.csv`,"\ufeff"+data,"text/csv;charset=utf-8");
 };
+
+async function sendGmWorldChat(){
+  const input=$("gmWorldChatInput"),clean=String(input?.value||"").trim().slice(0,120);if(!clean)return;
+  const messageRef=doc(collection(db,"zone_messages")),archiveRef=doc(db,"zone_chat_archive",messageRef.id),payload={uid:ADMIN_UID,studentId:"GM",text:clean,zoneId:ACTIVE_ZONE_ID,isGM:true,createdAt:serverTimestamp()};
+  const batch=writeBatch(db);batch.set(messageRef,payload);batch.set(archiveRef,{...payload,messageId:messageRef.id,archivedAt:serverTimestamp()});
+  try{await batch.commit();input.value="";showAdminToast("ส่งข้อความ GM แล้ว","ข้อความถูกส่งไปยัง World Chat และเก็บถาวร");}catch(error){showAdminToast("ส่งแชตไม่สำเร็จ",error.message||String(error),true)}
+}
+if($("sendGmWorldChat"))$("sendGmWorldChat").onclick=sendGmWorldChat;
+if($("gmWorldChatInput"))$("gmWorldChatInput").addEventListener("keydown",e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();sendGmWorldChat()}});
 
 $("levelForm").addEventListener("submit",async e=>{e.preventDefault();const n=Number($("editLevelNo").value),id=`level_${String(n).padStart(2,"0")}`;await setDoc(doc(db,"levels",id),{levelNo:n,title:$("editTitle").value.trim(),language:$("editLanguage").value.trim(),difficulty:$("editDifficulty").value,basePoints:Number($("editBasePoints").value),timeLimit:Number($("editTimeLimit").value),difficultyMultiplier:Number($("editMultiplier").value),description:$("editDescription").value.trim(),code:$("editCode").value,isActive:true,updatedAt:serverTimestamp()},{merge:true});e.target.reset();$("editBasePoints").value=100;$("editTimeLimit").value=90;$("editMultiplier").value=1});
 $("seedDefaults").onclick=async()=>{if(!confirm("คืนค่า 4 โหมดและ 12 Level เริ่มต้น?"))return;const batch=writeBatch(db);DEFAULT_MODES.forEach(x=>{const {id,...data}=x;batch.set(doc(db,"game_modes",id),{...data,id,isActive:true},{merge:true})});DEFAULT_LEVELS.forEach(x=>batch.set(doc(db,"levels",`level_${String(x.levelNo).padStart(2,"0")}`),{...x,isActive:true},{merge:true}));await batch.commit()};

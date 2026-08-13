@@ -5,9 +5,9 @@ import {
   collection, onSnapshot, serverTimestamp, query, orderBy, limit, where,
   runTransaction, Timestamp, writeBatch
 } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
-import { firebaseConfig, ADMIN_UID } from "./firebase-config.js?v=4.4.0";
-import { REWARD_ITEMS, RARITY_META } from "./reward-data.js?v=4.4.0";
-import { DEFAULT_CHARACTER } from "./character-system.js?v=4.4.0";
+import { firebaseConfig, ADMIN_UID } from "./firebase-config.js?v=4.5.0";
+import { REWARD_ITEMS, RARITY_META } from "./reward-data.js?v=4.5.0";
+import { DEFAULT_CHARACTER } from "./character-system.js?v=4.5.0";
 
 window.__ZONE_V43_BOOTED__ = true;
 
@@ -16,7 +16,7 @@ const auth=getAuth(firebaseApp);
 const db=getFirestore(firebaseApp);
 const $=id=>document.getElementById(id);
 
-const ZONE_VERSION="4.4.0";
+const ZONE_VERSION="4.5.0";
 const ZONE_ID="thai_social_zone_v4_1";
 const WORLD={width:3000,height:900};
 const WALK_Y=700;
@@ -28,6 +28,7 @@ const BUBBLE_MS=9000;
 const WORLD_PERIOD_MS=3*60*60*1000;
 const USER_CHAT_TTL_MS=24*60*60*1000;
 const MAX_CHAT_HISTORY=200;
+let rankResetUnsub=null,rankResetTimer=null,rankResetSettings={};
 
 const GM_RANK={tierId:"master",tierName:"GAME MASTER",rating:999999};
 const GM_EXCLUSIVE_ITEMS=[
@@ -133,6 +134,15 @@ function updateWorldClock(){
   $("zoneWorldIcon").textContent=state.icon;$("zoneWorld").dataset.period=state.period;
   if(lastWorldPeriod!==state.period){lastWorldPeriod=state.period;document.documentElement.dataset.worldPeriod=state.period;}
 }
+function renderZoneRankResetNotice(){
+  const box=$("zoneRankResetNotice");if(!box)return;const next=rankResetSettings?.nextResetAt?.toMillis?.()||rankResetSettings?.nextResetAt?.toDate?.()?.getTime?.()||0;if(!next){box.classList.add("hidden");return;}
+  box.classList.remove("hidden");const now=Date.now(),d=new Date(next),left=Math.max(0,next-now),h=Math.floor(left/3600000),m=Math.floor((left%3600000)/60000);
+  $("zoneRankResetText").textContent=next>now?`${rankResetSettings.notice||"กำหนดรีแรงค์"} · ${d.toLocaleString("th-TH")} · เหลือ ${h}ชม. ${m}น.`:`รีแรงค์มีผลแล้ว · ${d.toLocaleString("th-TH")}`;
+}
+function listenZoneRankReset(){
+  if(rankResetUnsub)rankResetUnsub();clearInterval(rankResetTimer);rankResetUnsub=onSnapshot(doc(db,"system_settings","ranking"),snap=>{rankResetSettings=snap.exists()?snap.data():{};renderZoneRankResetNotice()},()=>{});rankResetTimer=setInterval(renderZoneRankResetNotice,30000);
+}
+
 function startWorldClock(){clearInterval(clockTimer);updateWorldClock();clockTimer=setInterval(updateWorldClock,1000)}
 
 async function checkModerationBeforeEntry(){
@@ -405,12 +415,12 @@ async function handleShopItem(itemId){
 function openShop(){if(isGM())return;renderShop();$("zoneShopModal").classList.remove("hidden")}$("openZoneShop").onclick=openShop;$("closeZoneShop").onclick=()=>$("zoneShopModal").classList.add("hidden");
 function drawOwnProfile(){if(!profile)return;profileCtx.clearRect(0,0,profileCanvas.width,profileCanvas.height);const time=worldTimeState(),bg=profileCtx.createLinearGradient(0,0,0,430);if(time.isDay){bg.addColorStop(0,"#7fcdf0");bg.addColorStop(1,"#6e9b59")}else{bg.addColorStop(0,"#102f47");bg.addColorStop(1,"#315e52")}profileCtx.fillStyle=bg;profileCtx.fillRect(0,0,420,430);const p={uid,studentId:isGM()?"GM":profile.studentId,rank:isGM()?GM_RANK:profile.rank,character:isGM()?{gender:"male",exclusive:"gm_v1"}:{gender:profile.character?.gender,equipped:equipped(profile.character)},direction:"right",isAdmin:isGM()};drawCharacter(profileCtx,p,210,345,1.65,false)}
 $("openMyZoneProfile").onclick=()=>{$("zoneProfileStudentId").textContent=isGM()?"GM":(profile?.studentId||"-");$("zoneProfileKicker").textContent=isGM()?"GM EXCLUSIVE CHARACTER":"MY CHARACTER";$("zoneProfileHelp").textContent=isGM()?"ตัวละครและไอเท็มชุดนี้ผูกกับ ADMIN_UID เท่านั้น User ไม่สามารถซื้อหรือสวมตามได้":"ซื้อและสวมใส่ไอเท็มได้จาก Token Shop ภายใน Zone";drawOwnProfile();$("zoneMyProfileModal").classList.remove("hidden")};$("closeMyZoneProfile").onclick=()=>$("zoneMyProfileModal").classList.add("hidden");
-async function leaveZone(){clearInterval(heartbeat);clearInterval(clockTimer);clearInterval(chatExpiryTimer);try{await updateDoc(doc(db,"zone_positions",uid),{online:false,updatedAt:serverTimestamp()})}catch{}try{await setDoc(doc(db,"presence",uid),{online:false,lastSeenAt:serverTimestamp()},{merge:true})}catch{}if(!isGM()){try{await updateDoc(doc(db,"users",uid),{zone:{zoneId:ZONE_ID,x:Math.round(me.x),y:WALK_Y,direction:me.direction,lastSeenAt:new Date().toISOString()}})}catch{}}}
+async function leaveZone(){clearInterval(heartbeat);clearInterval(clockTimer);clearInterval(chatExpiryTimer);clearInterval(rankResetTimer);if(rankResetUnsub){rankResetUnsub();rankResetUnsub=null;}try{await updateDoc(doc(db,"zone_positions",uid),{online:false,updatedAt:serverTimestamp()})}catch{}try{await setDoc(doc(db,"presence",uid),{online:false,lastSeenAt:serverTimestamp()},{merge:true})}catch{}if(!isGM()){try{await updateDoc(doc(db,"users",uid),{zone:{zoneId:ZONE_ID,x:Math.round(me.x),y:WALK_Y,direction:me.direction,lastSeenAt:new Date().toISOString()}})}catch{}}}
 window.addEventListener("resize",resizeCanvas);window.addEventListener("pagehide",leaveZone);$("leaveZoneButton").addEventListener("click",()=>leaveZone());
 
 onAuthStateChanged(auth,async user=>{
   setBootStep("auth","loading","กำลังตรวจสอบ");if(!user){setBootStep("auth","error","ยังไม่ได้ Login");showGate("กรุณา Login ก่อน","2D Zone ใช้บัญชีที่ Login แล้ว","login");return}uid=user.uid;setBootStep("auth","ok",isGM()?"GM Login":"Login แล้ว");
   const okProfile=await loadProfile();if(!okProfile)return;const allowed=await checkModerationBeforeEntry();if(!allowed)return;blocked=false;$("zoneGate").classList.add("hidden");$("zoneApp").classList.remove("hidden");
   if(isGM()){$("zoneMyStudentId").textContent="GM";$("zoneMyShield").innerHTML=rankShieldHTML(GM_RANK);$("zoneWalletLabel").textContent="🛡️ ROLE";$("zoneTokenBalance").textContent="GAME MASTER";$("openZoneShop").classList.add("hidden");$("openAdminPanel").classList.remove("hidden");$("leaveZoneButton").href="./admin.html";$("zoneChatInput").placeholder="GM พิมพ์ประกาศหรือพูดคุย (ข้อความ GM ไม่หมดอายุ)...";}else{$("zoneMyStudentId").textContent=profile.studentId||"-";$("zoneMyShield").innerHTML=rankShieldHTML(profile.rank);$("zoneTokenBalance").textContent=Number(profile.tokenBalance||0).toLocaleString();}
-  startWorldClock();resizeCanvas();listenModeration();listenPositions();listenMessages();clearInterval(chatExpiryTimer);chatExpiryTimer=setInterval(refreshVisibleZoneMessages,60000);await syncPublicProfile();await publishPresence();await publishPosition(true);heartbeat=setInterval(async()=>{await publishPresence();await publishPosition(true)},PRESENCE_HEARTBEAT_MS);requestAnimationFrame(loop);
+  startWorldClock();resizeCanvas();listenModeration();listenPositions();listenMessages();listenZoneRankReset();clearInterval(chatExpiryTimer);chatExpiryTimer=setInterval(refreshVisibleZoneMessages,60000);await syncPublicProfile();await publishPresence();await publishPosition(true);heartbeat=setInterval(async()=>{await publishPresence();await publishPosition(true)},PRESENCE_HEARTBEAT_MS);requestAnimationFrame(loop);if(location.hash==="#world-chat")setTimeout(()=>{$("openZoneChatHistory")?.click()},350);
 });
