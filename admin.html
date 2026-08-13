@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Admin | ระบบเกมพิมพ์ Code</title>
-  <link rel="stylesheet" href="./style.css?v=4.5.0">
+  <link rel="stylesheet" href="./style.css?v=4.6.0">
 </head>
 <body class="admin-page">
   <main class="wrap admin-wrap">
@@ -38,7 +38,7 @@
           <p>ผู้จัดทำ: นายพิสิษฐ์ หุนตระนี ครูพิเศษสอน</p>
         </div>
         <div>
-          <a class="btn gm-zone-entry" href="./zone.html?v=4.5.0">🌙 เข้า 2D Zone · GM</a>
+          <a class="btn gm-zone-entry" href="./zone.html?v=4.6.0">🌙 เข้า 2D Zone · GM</a>
           <a class="btn ghost" href="index.html">หน้าผู้เล่น</a>
           <button id="logoutAdmin" class="btn secondary">ออกจากระบบ</button>
         </div>
@@ -108,24 +108,40 @@
       </section>
 
       <section id="classroomsTab" class="admin-tab-panel hidden">
-        <div class="panel-title">
+        <div class="panel-title admin-room-panel-title">
           <div>
-            <h2>ข้อมูลนักศึกษาแยกตามห้อง</h2>
-            <p>เลือกห้อง เช่น ปวช.2/1 เพื่อดูโล่ Rank จำนวนด่าน Score ธรรมดา Score ทางการ และอันดับ Rank ทั้งในห้อง/รวม</p>
-          </div>
-          <div class="admin-class-filter-wrap">
-            <label><span>ห้องที่กำลังดู</span><select id="adminClassroomFilter"></select></label>
+            <h2>🏫 นักศึกษาแยกตามห้อง</h2>
+            <p>ค้นหาห้องได้ทันที เช่น <strong>ปวช2/1</strong> หรือ <strong>ปวช.2/1</strong> แล้วกดเลือกห้อง ระบบจะแสดงเฉพาะนักศึกษาในห้องนั้นและเรียงตามรหัสนักศึกษา</p>
           </div>
         </div>
-        <div id="adminClassroomCards" class="admin-classroom-cards"></div>
-        <div class="admin-classroom-summary">
-          <strong id="adminClassroomTitle">-</strong>
+
+        <div class="admin-room-search-card">
+          <div class="admin-room-search-box">
+            <span>🔎</span>
+            <input id="adminClassSearchInput" type="search" autocomplete="off"
+                   placeholder="ค้นหาห้อง เช่น ปวช2/1, ปวช3/2, ปวส1/1">
+            <button id="clearAdminClassSearch" class="btn ghost" type="button">ล้าง</button>
+          </div>
+          <div class="admin-room-search-meta">
+            <strong id="adminRoomSearchResult">ทุกห้อง</strong>
+            <span id="adminRoomTotal">0 ห้อง</span>
+          </div>
+        </div>
+
+        <div id="adminClassroomCards" class="admin-room-directory"></div>
+
+        <div class="admin-selected-room">
+          <div>
+            <span>ห้องที่เลือก</span>
+            <strong id="adminClassroomTitle">เลือกห้องด้านบน</strong>
+          </div>
           <span id="adminClassroomSummary">-</span>
         </div>
-        <div class="table-wrap">
+
+        <div class="table-wrap admin-room-table-wrap">
           <table class="admin-classroom-table">
             <thead><tr>
-              <th>รหัสนักศึกษา</th><th>ชื่อ</th><th>โล่ Rank</th><th>ด่านที่เล่น</th>
+              <th>#</th><th>รหัสนักศึกษา</th><th>ชื่อ-นามสกุล</th><th>โล่ Rank</th><th>ด่านที่เล่น</th>
               <th>Score ธรรมดา</th><th>Score ทางการ</th><th>Rank ในห้อง</th><th>Rank รวม</th><th>Token</th>
             </tr></thead>
             <tbody id="adminClassroomBody"></tbody>
@@ -287,7 +303,7 @@
           <div class="admin-world-chat-input-row">
             <textarea id="gmWorldChatInput" maxlength="120" rows="2" placeholder="GM พิมพ์ข้อความถึงผู้เล่นทุกคน..."></textarea>
             <button id="sendGmWorldChat" class="btn primary" type="button">ส่งในแชตโลก</button>
-            <a class="btn gm-zone-entry" href="./zone.html?v=4.5.0#world-chat">เข้า World Chat</a>
+            <a class="btn gm-zone-entry" href="./zone.html?v=4.6.0#world-chat">เข้า World Chat</a>
           </div>
         </div>
 
@@ -318,6 +334,6 @@
   </main>
 
   <div id="adminToast" class="admin-toast hidden" aria-live="polite"></div>
-  <script type="module" src="./admin.js?v=4.5.0"></script>
+  <script type="module" src="./admin.js?v=4.6.0"></script>
 </body>
 </html>

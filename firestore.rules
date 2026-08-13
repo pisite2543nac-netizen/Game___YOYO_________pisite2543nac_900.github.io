@@ -89,16 +89,21 @@ service cloud.firestore {
 
     match /zone_positions/{uid} {
       allow read: if isAdmin() || zoneAccessAllowed();
+
       allow create, update: if request.auth.uid == uid
         && request.resource.data.uid == request.auth.uid
         && (
           isAdmin()
-          || (
+          ||
+          (
             zoneAccessAllowed()
-            && request.resource.data.studentId == get(/databases/$(database)/documents/users/$(request.auth.uid)).data.studentId
+            && request.resource.data.studentId
+              == get(/databases/$(database)/documents/users/$(request.auth.uid)).data.studentId
           )
         );
-      allow delete: if isAdmin() || (zoneAccessAllowed() && request.auth.uid == uid);
+
+      allow delete: if isAdmin()
+        || (zoneAccessAllowed() && request.auth.uid == uid);
     }
 
     match /zone_messages/{messageId} {
@@ -135,20 +140,28 @@ service cloud.firestore {
       allow delete: if isAdmin() || (zoneAccessAllowed() && resource.data.uid == request.auth.uid);
     }
 
-
+    // Archive เป็นงานรอง: ต่อให้ Archive เขียนไม่ได้ การพูดใน Zone ต้องยังทำงานได้
     match /zone_chat_archive/{messageId} {
       allow read: if isAdmin();
-      allow create: if signedIn()
-        && existsAfter(/databases/$(database)/documents/zone_messages/$(messageId))
-        && request.resource.data.messageId == messageId
+
+      allow create: if isAdmin()
         && request.resource.data.uid == request.auth.uid
-        && request.resource.data.uid == getAfter(/databases/$(database)/documents/zone_messages/$(messageId)).data.uid
-        && request.resource.data.studentId == getAfter(/databases/$(database)/documents/zone_messages/$(messageId)).data.studentId
-        && request.resource.data.text == getAfter(/databases/$(database)/documents/zone_messages/$(messageId)).data.text
-        && request.resource.data.zoneId == getAfter(/databases/$(database)/documents/zone_messages/$(messageId)).data.zoneId
-        && request.resource.data.isGM == getAfter(/databases/$(database)/documents/zone_messages/$(messageId)).data.isGM
-        && request.resource.data.createdAt == request.time
-        && request.resource.data.archivedAt == request.time;
+        && request.resource.data.studentId == "GM"
+        && request.resource.data.isGM == true
+        && request.resource.data.text is string
+        && request.resource.data.text.size() > 0
+        && request.resource.data.text.size() <= 120;
+
+      allow create: if !isAdmin()
+        && zoneAccessAllowed()
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.studentId
+          == get(/databases/$(database)/documents/users/$(request.auth.uid)).data.studentId
+        && request.resource.data.isGM == false
+        && request.resource.data.text is string
+        && request.resource.data.text.size() > 0
+        && request.resource.data.text.size() <= 120;
+
       allow update: if false;
       allow delete: if isAdmin();
     }

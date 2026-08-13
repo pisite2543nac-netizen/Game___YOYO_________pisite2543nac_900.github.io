@@ -4,14 +4,15 @@ import {
   getFirestore, collection, doc, getDocs, setDoc, deleteDoc, updateDoc,
   writeBatch, serverTimestamp, onSnapshot, Timestamp, query, orderBy, limit
 } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
-import { firebaseConfig, ADMIN_USERNAME, ADMIN_EMAIL, ADMIN_UID } from "./firebase-config.js?v=4.5.0";
-import { DEFAULT_MODES, DEFAULT_LEVELS } from "./default-data.js?v=4.5.0";
-import { seasonIdFromDate, seasonRange, calculateRankMetrics, rankingClassKey } from "./ranking-system.js?v=4.5.0";
+import { firebaseConfig, ADMIN_USERNAME, ADMIN_EMAIL, ADMIN_UID } from "./firebase-config.js?v=4.6.0";
+import { DEFAULT_MODES, DEFAULT_LEVELS } from "./default-data.js?v=4.6.0";
+import { seasonIdFromDate, seasonRange, calculateRankMetrics, rankingClassKey } from "./ranking-system.js?v=4.6.0";
 
 const app=initializeApp(firebaseConfig),auth=getAuth(app),db=getFirestore(app),$=id=>document.getElementById(id);
 let cache={users:[],attempts:[],levels:[],modes:[],official:[],zonePositions:[],zoneModeration:[],zoneMessages:[],zoneArchive:[],rankingSettings:{}},unsubs=[];
 let knownUserIds=null;
 let selectedAdminClass="";
+let adminClassSearchTerm="";
 let adminRankClock=null;
 
 const isAdmin=user=>!!user&&user.uid===ADMIN_UID;
@@ -79,8 +80,13 @@ function renderResults(){
   }).join("")||`<tr><td colspan="12" class="empty">ยังไม่มีผลการเล่น</td></tr>`;
   document.querySelectorAll("[data-delete-attempt]").forEach(b=>b.onclick=async()=>{if(confirm("ลบผลรายการนี้?"))await deleteDoc(doc(db,"attempts",b.dataset.deleteAttempt))});
 }
+function compareStudentId(a,b){
+  const av=String(a?.studentId??""),bv=String(b?.studentId??"");
+  return av.localeCompare(bv,"th",{numeric:true,sensitivity:"base"});
+}
 function renderUsers(){
-  $("usersBody").innerHTML=cache.users.map(x=>`<tr><td>${formatDate(x.createdAt)}</td><td>${esc(x.studentId)}</td><td><strong>${esc(x.fullName)}</strong></td><td>${esc(x.educationLevel||"")}${esc(x.classroom||"")}</td><td>${esc(x.department)}</td><td><strong>${Number(x.tokenBalance||0).toLocaleString()}</strong></td><td><span class="status status-active">${esc(x.status||"active")}</span></td><td><button class="mini-delete" data-delete-user="${x.id}">ลบข้อมูล</button></td></tr>`).join("")||`<tr><td colspan="8" class="empty">ยังไม่มีสมาชิก</td></tr>`;
+  const users=[...cache.users].sort(compareStudentId);
+  $("usersBody").innerHTML=users.map(x=>`<tr><td>${formatDate(x.createdAt)}</td><td>${esc(x.studentId)}</td><td><strong>${esc(x.fullName)}</strong></td><td>${esc(x.educationLevel||"")}${esc(x.classroom||"")}</td><td>${esc(x.department)}</td><td><strong>${Number(x.tokenBalance||0).toLocaleString()}</strong></td><td><span class="status status-active">${esc(x.status||"active")}</span></td><td><button class="mini-delete" data-delete-user="${x.id}">ลบข้อมูล</button></td></tr>`).join("")||`<tr><td colspan="8" class="empty">ยังไม่มีสมาชิก</td></tr>`;
   document.querySelectorAll("[data-delete-user]").forEach(b=>b.onclick=async()=>{if(confirm("ลบข้อมูลสมาชิกจาก Firestore? หมายเหตุ: บัญชี Authentication ต้องลบใน Firebase Console แยกต่างหาก"))await deleteDoc(doc(db,"users",b.dataset.deleteUser))});
 }
 function renderLevels(){
@@ -150,31 +156,108 @@ function buildAdminRankingRows(){
   groups.forEach(list=>list.sort((a,b)=>b.rating-a.rating||a.globalPosition-b.globalPosition).forEach((r,i)=>r.classPosition=i+1));
   return rows;
 }
-function adminClassKeys(){return [...new Set(cache.users.map(classKeyForUser))].sort((a,b)=>a.localeCompare(b,"th"))}
+function adminClassKeys(){
+  return [...new Set(cache.users.map(classKeyForUser))]
+    .sort((a,b)=>a.localeCompare(b,"th",{numeric:true,sensitivity:"base"}));
+}
+function normalizeRoomSearch(v){
+  return String(v||"").toLowerCase().replace(/\s+/g,"").replace(/\./g,"").replace(/ห้อง/g,"");
+}
+function roomLevelLabel(room){
+  const m=String(room).match(/^(ปวช|ปวส)\.?(\d)/i);
+  return m?`${m[1]}.${m[2]}`:"อื่น ๆ";
+}
 function syncAdminClassSelectors(){
-  const keys=adminClassKeys();
-  const rankSel=$("adminRankingClassFilter"),classSel=$("adminClassroomFilter");
-  if(rankSel){const old=rankSel.value;rankSel.innerHTML=`<option value="">ทุกห้อง</option>`+keys.map(k=>`<option value="${esc(k)}">${esc(k)}</option>`).join("");rankSel.value=keys.includes(old)?old:"";}
-  if(classSel){if(!selectedAdminClass||!keys.includes(selectedAdminClass))selectedAdminClass=keys[0]||"";classSel.innerHTML=keys.map(k=>`<option value="${esc(k)}">${esc(k)}</option>`).join("");classSel.value=selectedAdminClass;}
+  const keys=adminClassKeys(),rankSel=$("adminRankingClassFilter");
+  if(rankSel){
+    const old=rankSel.value;
+    rankSel.innerHTML=`<option value="">ทุกห้อง</option>`+keys.map(k=>`<option value="${esc(k)}">${esc(k)}</option>`).join("");
+    rankSel.value=keys.includes(old)?old:"";
+  }
+  if(selectedAdminClass&&!keys.includes(selectedAdminClass))selectedAdminClass="";
+}
+function filteredAdminClassKeys(){
+  const keys=adminClassKeys(),q=normalizeRoomSearch(adminClassSearchTerm);
+  return q?keys.filter(k=>normalizeRoomSearch(k).includes(q)):keys;
+}
+function groupRoomKeys(keys){
+  const order=["ปวช.1","ปวช.2","ปวช.3","ปวส.1","ปวส.2","อื่น ๆ"];
+  const map=new Map(order.map(x=>[x,[]]));
+  keys.forEach(k=>{
+    const level=roomLevelLabel(k);
+    if(!map.has(level))map.set(level,[]);
+    map.get(level).push(k);
+  });
+  return [...map.entries()].filter(([,v])=>v.length);
 }
 function renderClassrooms(){
   if(!$("adminClassroomBody"))return;
   syncAdminClassSelectors();
-  const rows=buildAdminRankingRows(),keys=adminClassKeys();
-  $("adminClassroomCards").innerHTML=keys.map(k=>{
-    const members=rows.filter(r=>r.classKey===k),top=members[0],normal=members.reduce((a,r)=>a+userNormalScore(r.user.id),0);
-    return `<button class="admin-classroom-card ${k===selectedAdminClass?"active":""}" data-admin-class="${esc(k)}"><span>ห้อง</span><strong>${esc(k)}</strong><small>${members.length} คน · Top ${top?esc(top.user.studentId):"-"}</small><em>Score รวม ${normal.toLocaleString()}</em></button>`;
-  }).join("")||`<div class="empty">ยังไม่มีห้องเรียน</div>`;
-  document.querySelectorAll("[data-admin-class]").forEach(b=>b.onclick=()=>{selectedAdminClass=b.dataset.adminClass;if($("adminClassroomFilter"))$("adminClassroomFilter").value=selectedAdminClass;renderClassrooms()});
-  const list=rows.filter(r=>r.classKey===selectedAdminClass);
-  $("adminClassroomTitle").textContent=selectedAdminClass||"ยังไม่มีห้อง";
-  $("adminClassroomSummary").textContent=`${list.length} คน · แสดงคะแนนและอันดับแบบ Realtime`;
-  $("adminClassroomBody").innerHTML=list.map(r=>{
+
+  const rankingRows=buildAdminRankingRows(),allKeys=adminClassKeys(),keys=filteredAdminClassKeys();
+  const q=normalizeRoomSearch(adminClassSearchTerm);
+  const exact=keys.find(k=>normalizeRoomSearch(k)===q);
+  if(exact)selectedAdminClass=exact;
+  if(!selectedAdminClass&&keys.length===1)selectedAdminClass=keys[0];
+  if(selectedAdminClass&&!allKeys.includes(selectedAdminClass))selectedAdminClass="";
+
+  $("adminRoomTotal").textContent=`${allKeys.length} ห้อง`;
+  $("adminRoomSearchResult").textContent=adminClassSearchTerm
+    ? `พบ ${keys.length} ห้อง จากคำค้น “${adminClassSearchTerm}”`
+    : "แสดงทุกห้อง";
+
+  const groups=groupRoomKeys(keys);
+  $("adminClassroomCards").innerHTML=groups.length?groups.map(([level,roomKeys])=>`
+    <section class="admin-room-group">
+      <div class="admin-room-group-title"><strong>${esc(level)}</strong><span>${roomKeys.length} ห้อง</span></div>
+      <div class="admin-room-buttons">
+        ${roomKeys.map(k=>{
+          const members=rankingRows.filter(r=>r.classKey===k);
+          const online=members.filter(r=>zonePositionOnline(zonePositionFor(r.user.id))).length;
+          return `<button class="admin-room-button ${k===selectedAdminClass?"active":""}" data-admin-class="${esc(k)}">
+            <span>${esc(k)}</span>
+            <small>${members.length} คน${online?` · 🟢 ${online} online`:""}</small>
+          </button>`;
+        }).join("")}
+      </div>
+    </section>
+  `).join(""):`<div class="admin-room-no-result">ไม่พบห้อง “${esc(adminClassSearchTerm)}”</div>`;
+
+  document.querySelectorAll("[data-admin-class]").forEach(btn=>btn.onclick=()=>{
+    selectedAdminClass=btn.dataset.adminClass;
+    renderClassrooms();
+    document.querySelector(".admin-room-table-wrap")?.scrollIntoView({behavior:"smooth",block:"nearest"});
+  });
+
+  if(!selectedAdminClass){
+    $("adminClassroomTitle").textContent="เลือกห้องด้านบน";
+    $("adminClassroomSummary").textContent="ยังไม่ได้เลือกห้อง";
+    $("adminClassroomBody").innerHTML=`<tr><td colspan="10" class="empty">ค้นหาแล้วกดเลือกห้อง เช่น ปวช.2/1</td></tr>`;
+    return;
+  }
+
+  const list=rankingRows.filter(r=>r.classKey===selectedAdminClass).sort((a,b)=>compareStudentId(a.user,b.user));
+  $("adminClassroomTitle").textContent=selectedAdminClass;
+  $("adminClassroomSummary").textContent=`${list.length} คน · เรียงตามรหัสนักศึกษาจากน้อยไปมาก`;
+  $("adminClassroomBody").innerHTML=list.map((r,index)=>{
     const official=officialForUser(r.user.id),normal=userNormalScore(r.user.id),stages=userPlayedStages(r.user.id);
-    return `<tr><td><strong>${esc(r.user.studentId||"-")}</strong></td><td>${esc(r.user.fullName||"-")}</td><td>${adminRankShieldHTML(r)}<br><small>${esc(r.tierName)} · ${r.rating}</small></td><td><strong>${stages}</strong></td><td>${normal.toLocaleString()}</td><td><strong>${Number(official?.totalScore||0).toFixed(2)}</strong> / 40</td><td><strong>#${r.classPosition||"-"}</strong> · ${r.rating}</td><td><strong>#${r.globalPosition}</strong> · ${r.rating}</td><td>${Number(r.user.tokenBalance||0).toLocaleString()}</td></tr>`;
-  }).join("")||`<tr><td colspan="9" class="empty">ยังไม่มีสมาชิกในห้องนี้</td></tr>`;
+    return `<tr>
+      <td>${index+1}</td><td><strong>${esc(r.user.studentId||"-")}</strong></td><td>${esc(r.user.fullName||"-")}</td>
+      <td>${adminRankShieldHTML(r)}<br><small>${esc(r.tierName)} · ${r.rating}</small></td><td><strong>${stages}</strong></td>
+      <td>${normal.toLocaleString()}</td><td><strong>${Number(official?.totalScore||0).toFixed(2)}</strong> / 40</td>
+      <td><strong>#${r.classPosition||"-"}</strong> · ${r.rating}</td><td><strong>#${r.globalPosition}</strong> · ${r.rating}</td>
+      <td>${Number(r.user.tokenBalance||0).toLocaleString()}</td>
+    </tr>`;
+  }).join("")||`<tr><td colspan="10" class="empty">ยังไม่มีสมาชิกในห้องนี้</td></tr>`;
 }
-if($("adminClassroomFilter"))$("adminClassroomFilter").onchange=e=>{selectedAdminClass=e.target.value;renderClassrooms()};
+if($("adminClassSearchInput"))$("adminClassSearchInput").addEventListener("input",e=>{
+  adminClassSearchTerm=e.target.value.trim();renderClassrooms();
+});
+if($("clearAdminClassSearch"))$("clearAdminClassSearch").onclick=()=>{
+  adminClassSearchTerm="";
+  if($("adminClassSearchInput"))$("adminClassSearchInput").value="";
+  renderClassrooms();
+};
 if($("adminRankingClassFilter"))$("adminRankingClassFilter").onchange=()=>renderRanking();
 
 function renderRanking(){
@@ -490,9 +573,19 @@ if($("exportZoneChatCsv"))$("exportZoneChatCsv").onclick=()=>{
 
 async function sendGmWorldChat(){
   const input=$("gmWorldChatInput"),clean=String(input?.value||"").trim().slice(0,120);if(!clean)return;
-  const messageRef=doc(collection(db,"zone_messages")),archiveRef=doc(db,"zone_chat_archive",messageRef.id),payload={uid:ADMIN_UID,studentId:"GM",text:clean,zoneId:ACTIVE_ZONE_ID,isGM:true,createdAt:serverTimestamp()};
-  const batch=writeBatch(db);batch.set(messageRef,payload);batch.set(archiveRef,{...payload,messageId:messageRef.id,archivedAt:serverTimestamp()});
-  try{await batch.commit();input.value="";showAdminToast("ส่งข้อความ GM แล้ว","ข้อความถูกส่งไปยัง World Chat และเก็บถาวร");}catch(error){showAdminToast("ส่งแชตไม่สำเร็จ",error.message||String(error),true)}
+  const messageRef=doc(collection(db,"zone_messages"));
+  const payload={uid:ADMIN_UID,studentId:"GM",text:clean,zoneId:ACTIVE_ZONE_ID,isGM:true,createdAt:serverTimestamp()};
+  try{
+    await setDoc(messageRef,payload);
+    input.value="";
+    showAdminToast("ส่งข้อความ GM แล้ว","ข้อความเข้า World Chat แล้ว");
+    try{
+      await setDoc(doc(db,"zone_chat_archive",messageRef.id),{
+        uid:ADMIN_UID,studentId:"GM",text:clean,zoneId:ACTIVE_ZONE_ID,isGM:true,
+        messageId:messageRef.id,createdAt:serverTimestamp(),archivedAt:serverTimestamp()
+      });
+    }catch(archiveError){console.warn("GM archive:",archiveError)}
+  }catch(error){showAdminToast("ส่งแชตไม่สำเร็จ",error.message||String(error),true)}
 }
 if($("sendGmWorldChat"))$("sendGmWorldChat").onclick=sendGmWorldChat;
 if($("gmWorldChatInput"))$("gmWorldChatInput").addEventListener("keydown",e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();sendGmWorldChat()}});

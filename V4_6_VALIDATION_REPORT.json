@@ -1,0 +1,18 @@
+{
+  "syntax_app.js": true,
+  "syntax_admin.js": true,
+  "syntax_zone.js": true,
+  "syntax_ranking-system.js": true,
+  "syntax_economy-system.js": true,
+  "zone_html_js_ids_ok": true,
+  "zone_missing_ids": [],
+  "wasd_4_direction": true,
+  "smooth_remote_interpolation": true,
+  "high_dpi_canvas": true,
+  "chat_send_independent_archive": true,
+  "admin_room_search": true,
+  "student_sort": true,
+  "rules_archive_simplified": true,
+  "all_required_files": true,
+  "all_passed": true
+}
