@@ -1,24 +1,24 @@
-# FULL CODE V4.6 — Admin Classroom / Rank Reset / GM World Chat / PVP Countdown
+# FULL CODE V4.7 — Admin Classroom / Rank Reset / GM World Chat / PVP Countdown
 
 ## 404.html
 
 ```html
-<!DOCTYPE html><html lang="th"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>กำลังกู้คืนหน้า</title><style>body{font-family:system-ui;margin:0;min-height:100vh;display:grid;place-items:center;background:#f4f7fa;color:#173449}.box{max-width:520px;padding:30px;text-align:center;background:#fff;border:1px solid #dce3ea;border-radius:16px}.box a{display:inline-block;margin:6px;padding:10px 16px;border-radius:9px;background:#244b75;color:#fff;text-decoration:none}</style></head><body><div class="box"><h1>กำลังกู้คืนหน้า...</h1><p>กำลังกู้คืน URL ของ GitHub Pages</p><a href="./index.html?v=4.6.0">หน้า Login</a><a href="./zone.html?v=4.6.0">2D Zone</a></div><script>(function(){const ua=navigator.userAgent||"";const mobile=/Android|iPhone|iPad|iPod|Mobile|Tablet|Silk|Kindle/i.test(ua)||(navigator.platform==="MacIntel"&&navigator.maxTouchPoints>1);const parts=location.pathname.split("/").filter(Boolean);const base=parts.length?`/${parts[0]}/`:"/";const wanted=base+((location.pathname.toLowerCase().includes("zone")||mobile)?"zone.html?v=4.6.0":"index.html?v=4.6.0");if(!sessionStorage.getItem("v44_404_recovered")){sessionStorage.setItem("v44_404_recovered","1");setTimeout(()=>location.replace(wanted),700)}})();</script></body></html>
+<!DOCTYPE html><html lang="th"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>กำลังกู้คืนหน้า</title><style>body{font-family:system-ui;margin:0;min-height:100vh;display:grid;place-items:center;background:#f4f7fa;color:#173449}.box{max-width:520px;padding:30px;text-align:center;background:#fff;border:1px solid #dce3ea;border-radius:16px}.box a{display:inline-block;margin:6px;padding:10px 16px;border-radius:9px;background:#244b75;color:#fff;text-decoration:none}</style></head><body><div class="box"><h1>กำลังกู้คืนหน้า...</h1><p>กำลังกู้คืน URL ของ GitHub Pages</p><a href="./index.html?v=4.7.0">หน้า Login</a><a href="./zone.html?v=4.7.0">2D Zone</a></div><script>(function(){const ua=navigator.userAgent||"";const mobile=/Android|iPhone|iPad|iPod|Mobile|Tablet|Silk|Kindle/i.test(ua)||(navigator.platform==="MacIntel"&&navigator.maxTouchPoints>1);const parts=location.pathname.split("/").filter(Boolean);const base=parts.length?`/${parts[0]}/`:"/";const wanted=base+((location.pathname.toLowerCase().includes("zone")||mobile)?"zone.html?v=4.7.0":"index.html?v=4.7.0");if(!sessionStorage.getItem("v44_404_recovered")){sessionStorage.setItem("v44_404_recovered","1");setTimeout(()=>location.replace(wanted),700)}})();</script></body></html>
 ```
 
 ## DEPLOY_STEP_BY_STEP.md
 
 ```markdown
-# ติดตั้ง V4.6 แบบทีละขั้น
+# ติดตั้ง V4.7 แบบทีละขั้น
 
 1. แตก `CODE_TYPING_V4_4_RANKING_PVP_ECONOMY_COMPLETE_READY_GITHUB.zip`
 2. อัปโหลดไฟล์ทั้งหมดไว้ที่ Root ของ GitHub repository
 3. GitHub → Settings → Pages → Deploy from branch → `main` → `/(root)`
 4. Firebase → Authentication → Sign-in method → Email/Password = Enabled
-5. Firebase → Firestore Database → Rules → ลบ Rules เดิม → วาง `firestore.rules` V4.6 ทั้งไฟล์ → Publish
+5. Firebase → Firestore Database → Rules → ลบ Rules เดิม → วาง `firestore.rules` V4.7 ทั้งไฟล์ → Publish
 6. รอ GitHub Pages deploy แล้วกด Ctrl+F5
 
-## ระบบใหม่ V4.6
+## ระบบใหม่ V4.7
 - Ranking รวม + Ranking ห้อง
 - PVP หลายห้อง + Room Code ระบบสร้าง
 - 1/3/5 Shot
@@ -36,7 +36,7 @@
 ## README.md
 
 ```markdown
-# Code Typing Academy V4.6
+# Code Typing Academy V4.7
 
 ระบบเรียนพิมพ์ Code + Dual Ranking + PVP Multi Room + Token Economy + 2D Zone
 
@@ -47,7 +47,7 @@
 ## UPDATE_V4_5_ADMIN_CLASS_RANK_PVP.md
 
 ```markdown
-# V4.6 — Admin Classroom + Rank Reset Schedule + GM World Chat + PVP Countdown
+# V4.7 — Admin Classroom + Rank Reset Schedule + GM World Chat + PVP Countdown
 
 ## เพิ่มใน Admin
 - Tab `🏫 แยกตามห้อง` เช่น ปวช.2/1
@@ -74,8 +74,8 @@
 - `rank_reset_history` เก็บประวัติรีแรงค์จาก Admin
 
 ## ติดตั้ง
-1. อัปโหลดไฟล์ทั้งหมดของ V4.6 ทับ Root GitHub Pages
-2. Firebase → Firestore → Rules → วาง `firestore.rules` V4.6 ทั้งไฟล์ → Publish
+1. อัปโหลดไฟล์ทั้งหมดของ V4.7 ทับ Root GitHub Pages
+2. Firebase → Firestore → Rules → วาง `firestore.rules` V4.7 ทั้งไฟล์ → Publish
 3. รอ Deploy แล้ว Ctrl+F5
 
 ```
@@ -89,7 +89,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Admin | ระบบเกมพิมพ์ Code</title>
-  <link rel="stylesheet" href="./style.css?v=4.6.0">
+  <link rel="stylesheet" href="./style.css?v=4.7.0">
 </head>
 <body class="admin-page">
   <main class="wrap admin-wrap">
@@ -123,7 +123,7 @@
           <p>ผู้จัดทำ: นายพิสิษฐ์ หุนตระนี ครูพิเศษสอน</p>
         </div>
         <div>
-          <a class="btn gm-zone-entry" href="./zone.html?v=4.6.0">🌙 เข้า 2D Zone · GM</a>
+          <a class="btn gm-zone-entry" href="./zone.html?v=4.7.0">🌙 เข้า 2D Zone · GM</a>
           <a class="btn ghost" href="index.html">หน้าผู้เล่น</a>
           <button id="logoutAdmin" class="btn secondary">ออกจากระบบ</button>
         </div>
@@ -372,7 +372,7 @@
           <div class="admin-world-chat-input-row">
             <textarea id="gmWorldChatInput" maxlength="120" rows="2" placeholder="GM พิมพ์ข้อความถึงผู้เล่นทุกคน..."></textarea>
             <button id="sendGmWorldChat" class="btn primary" type="button">ส่งในแชตโลก</button>
-            <a class="btn gm-zone-entry" href="./zone.html?v=4.6.0#world-chat">เข้า World Chat</a>
+            <a class="btn gm-zone-entry" href="./zone.html?v=4.7.0#world-chat">เข้า World Chat</a>
           </div>
         </div>
 
@@ -403,7 +403,7 @@
   </main>
 
   <div id="adminToast" class="admin-toast hidden" aria-live="polite"></div>
-  <script type="module" src="./admin.js?v=4.6.0"></script>
+  <script type="module" src="./admin.js?v=4.7.0"></script>
 </body>
 </html>
 
@@ -418,9 +418,9 @@ import {
   getFirestore, collection, doc, getDocs, setDoc, deleteDoc, updateDoc,
   writeBatch, serverTimestamp, onSnapshot, Timestamp, query, orderBy, limit
 } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
-import { firebaseConfig, ADMIN_USERNAME, ADMIN_EMAIL, ADMIN_UID } from "./firebase-config.js?v=4.6.0";
-import { DEFAULT_MODES, DEFAULT_LEVELS } from "./default-data.js?v=4.6.0";
-import { seasonIdFromDate, seasonRange, calculateRankMetrics, rankingClassKey } from "./ranking-system.js?v=4.6.0";
+import { firebaseConfig, ADMIN_USERNAME, ADMIN_EMAIL, ADMIN_UID } from "./firebase-config.js?v=4.7.0";
+import { DEFAULT_MODES, DEFAULT_LEVELS } from "./default-data.js?v=4.7.0";
+import { seasonIdFromDate, seasonRange, calculateRankMetrics, rankingClassKey } from "./ranking-system.js?v=4.7.0";
 
 const app=initializeApp(firebaseConfig),auth=getAuth(app),db=getFirestore(app),$=id=>document.getElementById(id);
 let cache={users:[],attempts:[],levels:[],modes:[],official:[],zonePositions:[],zoneModeration:[],zoneMessages:[],zoneArchive:[],rankingSettings:{}},unsubs=[];
@@ -942,13 +942,13 @@ import {
   getFirestore, collection, doc, getDoc, getDocs, setDoc, addDoc, updateDoc, deleteDoc,
   serverTimestamp, query, where, orderBy, limit, onSnapshot, runTransaction
 } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
-import { firebaseConfig } from "./firebase-config.js?v=4.6.0";
-import { LANGUAGES, LESSONS, DIFFICULTIES } from "./lessons.js?v=4.6.0";
-import { REWARD_ITEMS, RARITY_META } from "./reward-data.js?v=4.6.0";
-import { DEFAULT_CHARACTER, DEFAULT_ZONE_STATE } from "./character-system.js?v=4.6.0";
-import { OFFICIAL_STAGES, OFFICIAL_TOTAL_SCORE } from "./official-data.js?v=4.6.0";
-import { RANKING_CONFIG, seasonIdFromDate, seasonRange, calculateRankMetrics, rankingClassKey, rankProfiles } from "./ranking-system.js?v=4.6.0";
-import { TOKEN_REWARD_CONFIG, calculateStageTokenReward, maxTokenForLesson, classKey } from "./economy-system.js?v=4.6.0";
+import { firebaseConfig } from "./firebase-config.js?v=4.7.0";
+import { LANGUAGES, LESSONS, DIFFICULTIES } from "./lessons.js?v=4.7.0";
+import { REWARD_ITEMS, RARITY_META } from "./reward-data.js?v=4.7.0";
+import { DEFAULT_CHARACTER, DEFAULT_ZONE_STATE } from "./character-system.js?v=4.7.0";
+import { OFFICIAL_STAGES, OFFICIAL_TOTAL_SCORE } from "./official-data.js?v=4.7.0";
+import { RANKING_CONFIG, seasonIdFromDate, seasonRange, calculateRankMetrics, rankingClassKey, rankProfiles } from "./ranking-system.js?v=4.7.0";
+import { TOKEN_REWARD_CONFIG, calculateStageTokenReward, maxTokenForLesson, classKey } from "./economy-system.js?v=4.7.0";
 
 const firebaseApp = initializeApp(firebaseConfig);
 const auth = getAuth(firebaseApp);
@@ -1095,7 +1095,7 @@ async function routeAuthenticatedStudent(){
     }catch(error){
       console.warn("mobile route sync skipped:", error);
     }
-    location.replace("./zone.html?v=4.6.0");
+    location.replace("./zone.html?v=4.7.0");
     return;
   }
 
@@ -1814,7 +1814,7 @@ async function saveCharacterGender(gender){
 
   // มือถือ/แท็บเล็ตใช้เฉพาะ 2D Zone หลังเลือกตัวละครเสร็จ
   if(isMobileOrTabletDevice()){
-    location.replace("./zone.html?v=4.6.0");
+    location.replace("./zone.html?v=4.7.0");
   }
 }
 
@@ -2042,7 +2042,7 @@ function startSocialHub(){
 window.addEventListener('pagehide',()=>markOffline());
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')writePresence(document.body.classList.contains('game-active')?'game':'portal')});
 
-/* ===== V4.6 PVP MULTI ROOM · 1/3/5 SHOT · 1V1/2V2 RELAY · TOKEN WAGER ===== */
+/* ===== V4.7 PVP MULTI ROOM · 1/3/5 SHOT · 1V1/2V2 RELAY · TOKEN WAGER ===== */
 const PVP_ROOM_STALE_MS=20*60*1000;
 const PVP_CREATE_FEE=6;
 const PVP_COUNTDOWN_MS=3000;
@@ -2372,7 +2372,7 @@ updateDeviceUX();
 
 onAuthStateChanged(auth,async user=>{
   if(!user){state.uid=null;state.player=null;showScreen("authScreen");return;}
-  if(user.email==="pisit_2000@thc-nr.local"){location.replace("./admin.html?v=4.6.0");return;}
+  if(user.email==="pisit_2000@thc-nr.local"){location.replace("./admin.html?v=4.7.0");return;}
   state.uid=user.uid;
   try{
     await routeAuthenticatedStudent();
@@ -2421,7 +2421,7 @@ export const DEFAULT_ZONE_STATE = {
 ## chat.html
 
 ```html
-<!DOCTYPE html><html lang="th"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="refresh" content="0;url=./zone.html?v=4.6.0"><title>ย้ายไป 2D Zone</title><script>location.replace("./zone.html?v=4.6.0");</script></head><body><p>ระบบแชตรวมย้ายเข้า 2D Zone แล้ว</p><a href="./zone.html?v=4.6.0">เข้า 2D Zone</a></body></html>
+<!DOCTYPE html><html lang="th"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="refresh" content="0;url=./zone.html?v=4.7.0"><title>ย้ายไป 2D Zone</title><script>location.replace("./zone.html?v=4.7.0");</script></head><body><p>ระบบแชตรวมย้ายเข้า 2D Zone แล้ว</p><a href="./zone.html?v=4.7.0">เข้า 2D Zone</a></body></html>
 ```
 
 ## default-data.js
@@ -2888,7 +2888,7 @@ service cloud.firestore {
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1">
   <title>ระบบเกมพิมพ์ Code | วิทยาลัยเทคนิคนางรอง</title>
-  <link rel="stylesheet" href="./style.css?v=4.6.0">
+  <link rel="stylesheet" href="./style.css?v=4.7.0">
 </head>
 <body>
 <header class="site-header">
@@ -3393,7 +3393,7 @@ service cloud.firestore {
 </main>
 
 <footer><div class="wrap">ระบบเกมพิมพ์ Code · วิทยาลัยเทคนิคนางรอง</div></footer>
-<script type="module" src="./app.js?v=4.6.0"></script>
+<script type="module" src="./app.js?v=4.7.0"></script>
 
   <div id="characterSetupModal" class="character-modal hidden">
     <div class="character-modal-card character-setup-card">
@@ -3488,8 +3488,8 @@ service cloud.firestore {
 ## lessons.js
 
 ```javascript
-import { HTML_LEVELS } from "./levels-html.js?v=4.6.0";
-import { PYTHON_LEVELS } from "./levels-python.js?v=4.6.0";
+import { HTML_LEVELS } from "./levels-html.js?v=4.7.0";
+import { PYTHON_LEVELS } from "./levels-python.js?v=4.7.0";
 
 export const LANGUAGES = [
   {
@@ -8550,7 +8550,7 @@ html,body.social-zone-page{
 
 
 /* =====================================================================
-   V4.6 — DUAL RANKING / PVP MULTI ROOM / TOKEN ECONOMY / ITEM SET 2
+   V4.7 — DUAL RANKING / PVP MULTI ROOM / TOKEN ECONOMY / ITEM SET 2
    ===================================================================== */
 .ranking-mode-switch{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin:8px 0 10px}
 .ranking-mode-btn{min-height:38px;border:1px solid #d4dde6;border-radius:9px;background:#f6f8fa;color:#496174;font-weight:800;cursor:pointer}
@@ -8576,7 +8576,7 @@ html,body.social-zone-page{
 
 
 /* ==================================================================
-   V4.6 ADMIN CLASSROOM / RANK RESET / GM WORLD CHAT / PVP COUNTDOWN
+   V4.7 ADMIN CLASSROOM / RANK RESET / GM WORLD CHAT / PVP COUNTDOWN
    ================================================================== */
 .admin-metrics{grid-template-columns:repeat(5,minmax(0,1fr))}
 .admin-class-filter-wrap label,.admin-ranking-filter{display:flex;align-items:center;gap:8px;font-size:10px}.admin-class-filter-wrap select,.admin-ranking-filter select{min-width:150px;min-height:38px}
@@ -8602,13 +8602,13 @@ html,body.social-zone-page{
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#0b2b40">
   <title>2D Zone · Code Typing Academy</title>
-  <link rel="stylesheet" href="./style.css?v=4.6.0">
+  <link rel="stylesheet" href="./style.css?v=4.7.0">
 </head>
 <body class="zone-v41-page">
   <div id="zoneGate" class="zone-v40-gate">
     <div class="zone-v40-gate-card">
       <div id="zoneGateIcon" class="zone-v40-gate-icon">🌙</div>
-      <span class="section-kicker">2D ZONE · V4.6.0</span>
+      <span class="section-kicker">2D ZONE · V4.7.0</span>
       <h1 id="zoneGateTitle">กำลังเปิด 2D Social Zone</h1>
       <p id="zoneGateText">กำลังตรวจสอบระบบ...</p>
 
@@ -8760,7 +8760,7 @@ html,body.social-zone-page{
       if(t())t().textContent=message;
       if(h()){
         h().classList.remove("hidden");
-        h().innerHTML="<strong>ตรวจไฟล์ V4.6.0</strong><p>อัปโหลดไฟล์ทั้งชุดและ Publish firestore.rules เวอร์ชันเดียวกัน</p>";
+        h().innerHTML="<strong>ตรวจไฟล์ V4.7.0</strong><p>อัปโหลดไฟล์ทั้งชุดและ Publish firestore.rules เวอร์ชันเดียวกัน</p>";
       }
     }
     window.addEventListener("error",e=>{if(!window.__ZONE_V43_BOOTED__)fail("โหลด 2D Zone ไม่สำเร็จ: "+(e.message||"JavaScript error"));});
@@ -8768,7 +8768,7 @@ html,body.social-zone-page{
     setTimeout(()=>{if(!window.__ZONE_V43_BOOTED__)fail("2D Zone ใช้เวลานานผิดปกติ — ตรวจ zone.js และ Firebase Rules");},9000);
   })();
   </script>
-  <script type="module" src="./zone.js?v=4.6.0"></script>
+  <script type="module" src="./zone.js?v=4.7.0"></script>
 </body>
 </html>
 ```
@@ -8783,9 +8783,9 @@ import {
   collection, onSnapshot, serverTimestamp, query, orderBy, limit, where,
   runTransaction, Timestamp, writeBatch
 } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
-import { firebaseConfig, ADMIN_UID } from "./firebase-config.js?v=4.6.0";
-import { REWARD_ITEMS, RARITY_META } from "./reward-data.js?v=4.6.0";
-import { DEFAULT_CHARACTER } from "./character-system.js?v=4.6.0";
+import { firebaseConfig, ADMIN_UID } from "./firebase-config.js?v=4.7.0";
+import { REWARD_ITEMS, RARITY_META } from "./reward-data.js?v=4.7.0";
+import { DEFAULT_CHARACTER } from "./character-system.js?v=4.7.0";
 
 window.__ZONE_V43_BOOTED__ = true;
 

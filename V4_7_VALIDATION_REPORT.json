@@ -1,0 +1,22 @@
+{
+  "syntax_app.js": true,
+  "syntax_admin.js": true,
+  "syntax_zone.js": true,
+  "syntax_quest-system.js": true,
+  "syntax_ranking-system.js": true,
+  "syntax_economy-system.js": true,
+  "zone_ids_ok": true,
+  "zone_missing_ids": [],
+  "horizontal_only": true,
+  "smooth_local": true,
+  "smooth_remote": true,
+  "wizard": true,
+  "shop": true,
+  "quest_daily_limit": true,
+  "quest_rewards": true,
+  "quest_app_hook": true,
+  "admin_quest_panel": true,
+  "rules_quest": true,
+  "high_dpi": true,
+  "all_passed": true
+}

@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Admin | ระบบเกมพิมพ์ Code</title>
-  <link rel="stylesheet" href="./style.css?v=4.6.0">
+  <link rel="stylesheet" href="./style.css?v=4.7.0">
 </head>
 <body class="admin-page">
   <main class="wrap admin-wrap">
@@ -38,7 +38,7 @@
           <p>ผู้จัดทำ: นายพิสิษฐ์ หุนตระนี ครูพิเศษสอน</p>
         </div>
         <div>
-          <a class="btn gm-zone-entry" href="./zone.html?v=4.6.0">🌙 เข้า 2D Zone · GM</a>
+          <a class="btn gm-zone-entry" href="./zone.html?v=4.7.0">🌙 เข้า 2D Zone · GM</a>
           <a class="btn ghost" href="index.html">หน้าผู้เล่น</a>
           <button id="logoutAdmin" class="btn secondary">ออกจากระบบ</button>
         </div>
@@ -59,6 +59,7 @@
         <button class="tab" data-tab="levelsTab">จัดการโจทย์ Code</button>
         <button class="tab" data-tab="officialTab">คะแนนทางการ</button>
         <button class="tab" data-tab="rankingTab">Ranking</button>
+        <button class="tab" data-tab="teacherQuestsTab">🧙 ภารกิจครู</button>
         <button class="tab zone-admin-tab" data-tab="zoneControlTab">🌙 ควบคุม 2D Zone</button>
         <button class="tab zone-chat-admin-tab" data-tab="zoneChatLogTab">💬 ประวัติแชต Zone</button>
         <button class="tab" data-tab="backupTab">สำรองข้อมูล</button>
@@ -245,6 +246,38 @@
       </section>
 
 
+      <section id="teacherQuestsTab" class="admin-tab-panel hidden">
+        <div class="panel-title">
+          <div>
+            <h2>🧙 ภารกิจจากครูผู้สอน</h2>
+            <p>สร้างภารกิจที่จะไปปรากฏที่พ่อมดใน 2D Zone · User ทำได้สูงสุด 3 ภารกิจ/วัน</p>
+          </div>
+          <button id="seedTeacherQuests" class="btn secondary" type="button">สร้างภารกิจตัวอย่าง</button>
+        </div>
+
+        <form id="teacherQuestForm" class="admin-quest-form">
+          <input id="teacherQuestEditId" type="hidden">
+          <label><span>ชื่อภารกิจ</span><input id="teacherQuestTitle" required placeholder="เช่น HTML Speed Challenge"></label>
+          <label><span>ภาษา</span><select id="teacherQuestLanguage"><option value="html">HTML</option><option value="python">Python</option></select></label>
+          <label><span>Stage</span><input id="teacherQuestStage" type="number" min="1" max="50" value="1" required></label>
+          <label><span>ความยาก</span><select id="teacherQuestDifficulty"><option value="easy">ง่าย</option><option value="medium">ปานกลาง</option><option value="hard">ยาก</option></select></label>
+          <label><span>เงื่อนไข</span><select id="teacherQuestObjective"><option value="pass">ผ่านด่าน</option><option value="time">กำหนดเวลา</option><option value="accuracy">กำหนด Accuracy</option></select></label>
+          <label><span>ค่าเป้าหมาย</span><input id="teacherQuestTarget" type="number" min="0" step="1" value="0"><small>เวลา = วินาที / Accuracy = %</small></label>
+          <label><span>Token พิเศษ</span><input id="teacherQuestReward" type="number" min="2" max="20" value="4" required><small id="teacherQuestRewardHint">ง่าย 2–5 Token</small></label>
+          <label><span>Rank ขั้นต่ำ</span><select id="teacherQuestMinRank"><option value="bronze">Bronze</option><option value="silver">Silver</option><option value="gold">Gold</option><option value="platinum">Platinum</option><option value="diamond">Diamond</option><option value="master">Master</option></select></label>
+          <label class="admin-quest-description"><span>คำอธิบาย</span><textarea id="teacherQuestDescription" rows="3" placeholder="อธิบายสิ่งที่ต้องทำ"></textarea></label>
+          <label class="admin-quest-check"><input id="teacherQuestActive" type="checkbox" checked> เปิดใช้งาน</label>
+          <div class="admin-quest-actions"><button class="btn primary" type="submit">บันทึกภารกิจ</button><button id="cancelTeacherQuestEdit" class="btn ghost" type="button">ล้างฟอร์ม</button></div>
+        </form>
+
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>ภารกิจ</th><th>ด่าน</th><th>ความยาก</th><th>เงื่อนไข</th><th>Rank ขั้นต่ำ</th><th>Token</th><th>สถานะ</th><th>จัดการ</th></tr></thead>
+            <tbody id="teacherQuestBody"></tbody>
+          </table>
+        </div>
+      </section>
+
       <section id="zoneControlTab" class="admin-tab-panel hidden">
         <div class="panel-title">
           <div>
@@ -303,7 +336,7 @@
           <div class="admin-world-chat-input-row">
             <textarea id="gmWorldChatInput" maxlength="120" rows="2" placeholder="GM พิมพ์ข้อความถึงผู้เล่นทุกคน..."></textarea>
             <button id="sendGmWorldChat" class="btn primary" type="button">ส่งในแชตโลก</button>
-            <a class="btn gm-zone-entry" href="./zone.html?v=4.6.0#world-chat">เข้า World Chat</a>
+            <a class="btn gm-zone-entry" href="./zone.html?v=4.7.0#world-chat">เข้า World Chat</a>
           </div>
         </div>
 
@@ -334,6 +367,6 @@
   </main>
 
   <div id="adminToast" class="admin-toast hidden" aria-live="polite"></div>
-  <script type="module" src="./admin.js?v=4.6.0"></script>
+  <script type="module" src="./admin.js?v=4.7.0"></script>
 </body>
 </html>

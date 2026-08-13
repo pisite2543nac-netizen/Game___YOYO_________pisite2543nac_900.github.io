@@ -7,13 +7,14 @@ import {
   getFirestore, collection, doc, getDoc, getDocs, setDoc, addDoc, updateDoc, deleteDoc,
   serverTimestamp, query, where, orderBy, limit, onSnapshot, runTransaction
 } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
-import { firebaseConfig } from "./firebase-config.js?v=4.6.0";
-import { LANGUAGES, LESSONS, DIFFICULTIES } from "./lessons.js?v=4.6.0";
-import { REWARD_ITEMS, RARITY_META } from "./reward-data.js?v=4.6.0";
-import { DEFAULT_CHARACTER, DEFAULT_ZONE_STATE } from "./character-system.js?v=4.6.0";
-import { OFFICIAL_STAGES, OFFICIAL_TOTAL_SCORE } from "./official-data.js?v=4.6.0";
-import { RANKING_CONFIG, seasonIdFromDate, seasonRange, calculateRankMetrics, rankingClassKey, rankProfiles } from "./ranking-system.js?v=4.6.0";
-import { TOKEN_REWARD_CONFIG, calculateStageTokenReward, maxTokenForLesson, classKey } from "./economy-system.js?v=4.6.0";
+import { firebaseConfig } from "./firebase-config.js?v=4.7.0";
+import { LANGUAGES, LESSONS, DIFFICULTIES } from "./lessons.js?v=4.7.0";
+import { REWARD_ITEMS, RARITY_META } from "./reward-data.js?v=4.7.0";
+import { DEFAULT_CHARACTER, DEFAULT_ZONE_STATE } from "./character-system.js?v=4.7.0";
+import { OFFICIAL_STAGES, OFFICIAL_TOTAL_SCORE } from "./official-data.js?v=4.7.0";
+import { RANKING_CONFIG, seasonIdFromDate, seasonRange, calculateRankMetrics, rankingClassKey, rankProfiles } from "./ranking-system.js?v=4.7.0";
+import { TOKEN_REWARD_CONFIG, calculateStageTokenReward, maxTokenForLesson, classKey } from "./economy-system.js?v=4.7.0";
+import { DEFAULT_TEACHER_QUESTS, localDayKey, questObjectiveMet, questObjectiveLabel, clampQuestReward } from "./quest-system.js?v=4.7.0";
 
 const firebaseApp = initializeApp(firebaseConfig);
 const auth = getAuth(firebaseApp);
@@ -33,7 +34,8 @@ const state = {
   pvpProgressTimer:null, pvpProgressLastSent:0, pvpResultSaved:false,
   pvpRoomListUnsub:null,pvpStakeLocking:false,pvpCurrentShot:-1,pvpShotRecorded:-1,
   pvpAggregate:{typedChars:0,keys:0,mistakes:0,seconds:0},pvpPayoutClaimed:false,pvpWasActive:false,pvpTargetCode:"",pvpTurnSignature:null,pvpRecordedSignature:null,
-  pvpCountdownTimer:null,pvpCountdownEndMs:0,rankSettingsUnsub:null,rankResetTimer:null,rankSettings:{},rankResetAppliedVersion:null
+  pvpCountdownTimer:null,pvpCountdownEndMs:0,rankSettingsUnsub:null,rankResetTimer:null,rankSettings:{},rankResetAppliedVersion:null,
+  activeQuest:null,questLaunchHandled:false
 };
 
 const studentEmail = id => `${String(id).trim()}@student.thc-nr.local`;
@@ -152,7 +154,8 @@ async function routeAuthenticatedStudent(){
   }
   if(!state.player) throw new Error("ไม่พบข้อมูลผู้ใช้");
 
-  // มือถือ/แท็บเล็ต: Login/สมัครได้ที่หน้าแรก แต่หลังมีตัวละครแล้วเข้า Zone โดยตรง
+  const requestedQuest=new URLSearchParams(location.search).get("quest");
+  // มือถือ/แท็บเล็ตยังเข้าได้เฉพาะ 2D Zone ตามกติกาเดิม
   if(isMobileOrTabletDevice() && ["male","female"].includes(state.player?.character?.gender)){
     try{
       await syncPublicProfile();
@@ -160,7 +163,7 @@ async function routeAuthenticatedStudent(){
     }catch(error){
       console.warn("mobile route sync skipped:", error);
     }
-    location.replace("./zone.html?v=4.6.0");
+    location.replace("./zone.html?v=4.7.0");
     return;
   }
 
@@ -194,6 +197,8 @@ async function enterPortal(){
   } catch (error) {
     console.warn("Ranking update skipped:", error);
   }
+
+  await maybeLaunchQuestFromUrl();
 }
 
 $("logoutUserButton").onclick=async()=>{
@@ -379,8 +384,90 @@ function liveScore(){
   return Math.max(0,Math.round(base*(accuracy()/100)+Math.min(base*.35,wpm()*2)-state.mistakes*4));
 }
 
+
+async function resolveTeacherQuest(id){
+  if(!id)return null;
+  try{
+    const snap=await getDoc(doc(db,"teacher_quests",id));
+    if(snap.exists())return {id:snap.id,...snap.data()};
+  }catch(error){console.warn("quest read:",error)}
+  return DEFAULT_TEACHER_QUESTS.find(q=>q.id===id)||null;
+}
+function questProgressRefForToday(){
+  return doc(db,"quest_progress",state.uid,"days",localDayKey());
+}
+async function maybeLaunchQuestFromUrl(){
+  const id=new URLSearchParams(location.search).get("quest");
+  if(!id||state.questLaunchHandled||!state.uid||!state.player)return false;
+  state.questLaunchHandled=true;
+  if(isMobileOrTabletDevice()){
+    location.replace("./zone.html?v=4.7.0");
+    return true;
+  }
+  const quest=await resolveTeacherQuest(id);
+  if(!quest){console.warn("ไม่พบภารกิจ",id);return false}
+  const progress=await getDoc(questProgressRefForToday());
+  const accepted=progress.exists()?progress.data()?.accepted?.[id]:null;
+  if(!accepted||accepted.status!=="accepted"){
+    alert("ต้องกดรับภารกิจจากพ่อมดใน 2D Zone ก่อน");
+    return false;
+  }
+  const lesson=LESSONS.find(l=>l.language===quest.languageId&&Number(l.stage)===Number(quest.stage));
+  const language=LANGUAGES.find(l=>l.id===quest.languageId);
+  if(!lesson||!language){alert("ไม่พบด่านของภารกิจนี้");return false}
+  state.activeQuest=quest;
+  state.gameMode="classic";
+  state.language=language;
+  state.lesson=lesson;
+  state.difficulty=DIFFICULTIES.find(d=>d.id===(quest.difficulty||lesson.difficulty))||DIFFICULTIES[0];
+  prepareClassic();
+  $("modeBadge").textContent=`🧙 QUEST · ${quest.title}`;
+  $("challengeDescription").textContent=`${quest.description} · ${questObjectiveLabel(quest)} · โบนัส +${clampQuestReward(quest.difficulty,quest.rewardToken)} Token`;
+  $("questZoneButton")?.classList.add("hidden");
+  showScreen("gameScreen");
+  await requestRealFullscreen();
+  setTimeout(()=>$("typingInput")?.focus({preventScroll:true}),120);
+  return true;
+}
+async function completeActiveQuestIfEligible(result){
+  const quest=state.activeQuest;
+  if(!quest)return {rewarded:0,met:false};
+  const met=questObjectiveMet(quest,result);
+  if(!met)return {rewarded:0,met:false};
+  const reward=clampQuestReward(quest.difficulty,quest.rewardToken);
+  let rewarded=0;
+  const progressRef=questProgressRefForToday(),userRef=doc(db,"users",state.uid);
+  try{
+    await runTransaction(db,async tx=>{
+      const [progressSnap,userSnap]=await Promise.all([tx.get(progressRef),tx.get(userRef)]);
+      if(!progressSnap.exists()||!userSnap.exists())return;
+      const p=progressSnap.data(),accepted={...(p.accepted||{})},completed={...(p.completed||{})};
+      const entry=accepted[quest.id];
+      if(!entry||entry.status!=="accepted"||completed[quest.id])return;
+      const completedCount=Object.keys(completed).length;
+      if(completedCount>=3)return;
+      accepted[quest.id]={...entry,status:"completed",completedAt:new Date().toISOString()};
+      completed[quest.id]={
+        status:"completed",completedAt:new Date().toISOString(),rewardToken:reward,
+        wpm:Number(result.wpm||0),accuracy:Number(result.accuracy||0),elapsedSeconds:Number(result.elapsedSeconds||0)
+      };
+      const u=userSnap.data();
+      tx.set(progressRef,{accepted,completed,completedCount:completedCount+1,updatedAt:serverTimestamp()},{merge:true});
+      tx.update(userRef,{
+        tokenBalance:Number(u.tokenBalance||0)+reward,
+        tokenLifetime:Number(u.tokenLifetime||0)+reward,
+        updatedAt:serverTimestamp()
+      });
+      rewarded=reward;
+    });
+  }catch(error){console.warn("quest completion:",error)}
+  if(rewarded)await ensureProfileDefaults();
+  return {rewarded,met:true};
+}
+
 function prepareClassic(){
   $("resultExplanation")?.classList.add("hidden");
+  $("questZoneButton")?.classList.add("hidden");
   state.attemptId=null;state.started=false;state.finished=false;state.mistakes=0;state.keystrokes=0;state.correctText="";
   clearInterval(state.timer);$("typingInput").value="";
   $("modeBadge").textContent=`⌨️ CLASSIC · ${state.language.name}`;
@@ -410,7 +497,7 @@ async function startClassic(){
     educationLevel:state.player.educationLevel,classroom:state.player.classroom,department:state.player.department,
     language:state.language.name,languageId:state.language.id,modeName:state.gameMode==="official"?"Official":"Classic",
     difficulty:state.difficulty.name,difficultyId:state.difficulty.id,stage:state.lesson.stage,
-    lessonId:state.lesson.id,levelTitle:state.lesson.title,status:"playing",
+    lessonId:state.lesson.id,levelTitle:state.lesson.title,questId:state.activeQuest?.id||null,questTitle:state.activeQuest?.title||null,status:"playing",
     score:0,rewardPoints:0,maxRewardPoints:state.gameMode==="official"?0:maxTokenForLesson(state.lesson),wpm:0,accuracy:0,mistakes:0,elapsedSeconds:0,createdAt:serverTimestamp()
   });
   state.attemptId=r.id;
@@ -588,15 +675,30 @@ async function finishClassic(){
   });
 
   await awardCompletion(earnedToken);
+  const questBonus=await completeActiveQuestIfEligible({
+    languageId:state.language.id,stage:state.lesson.stage,wpm:wp,accuracy:acc,elapsedSeconds:e
+  });
   await updateMyRank();
 
-  $("resultTitle").textContent=`ผ่าน Stage ${state.lesson.stage} +${earnedToken} Token`;
-  $("resultText").textContent=`${state.language.name} · ${state.difficulty.name} · ${state.lesson.title} · สูงสุด ${tokenResult.maxToken} Token`;
-  $("resultScore").textContent=`+${earnedToken} / ${tokenResult.maxToken} Token`;
+  if(state.activeQuest&&questBonus.rewarded){
+    $("resultTitle").textContent=`ภารกิจสำเร็จ! +${earnedToken+questBonus.rewarded} Token`;
+  }else{
+    $("resultTitle").textContent=`ผ่าน Stage ${state.lesson.stage} +${earnedToken} Token`;
+  }
+  if(state.activeQuest){
+    $("resultText").textContent=questBonus.rewarded
+      ?`${state.language.name} · ${state.lesson.title} · โบนัสภารกิจ +${questBonus.rewarded} Token`
+      :`${state.language.name} · ${state.lesson.title} · ภารกิจยังไม่สำเร็จ: ${questObjectiveLabel(state.activeQuest)}`;
+    $("resultScore").textContent=questBonus.rewarded?`+${earnedToken} ด่าน + ${questBonus.rewarded} ภารกิจ`:`+${earnedToken} Token`;
+    $("questZoneButton")?.classList.remove("hidden");
+  }else{
+    $("resultText").textContent=`${state.language.name} · ${state.difficulty.name} · ${state.lesson.title} · สูงสุด ${tokenResult.maxToken} Token`;
+    $("resultScore").textContent=`+${earnedToken} / ${tokenResult.maxToken} Token`;
+  }
   $("resultWpm").textContent=wp;
   $("resultAccuracy").textContent=`${acc}%`;
   $("resultTime").textContent=`${e.toFixed(2)}s`;
-  $("nextLevelButton").style.display=state.lesson.stage<50?"":"none";
+  $("nextLevelButton").style.display=state.activeQuest?"none":(state.lesson.stage<50?"":"none");
   renderResultExplanation(state.lesson);
 
   await leaveRealFullscreen();
@@ -614,7 +716,8 @@ $("nextLevelButton").onclick=async()=>{
   state.lesson=next;state.difficulty=DIFFICULTIES.find(x=>x.id===next.difficulty);
   prepareClassic();showScreen("gameScreen");await requestRealFullscreen();setTimeout(()=>$("typingInput").focus({preventScroll:true}),100);
 };
-$("portalButton").onclick=async()=>{await ensureProfileDefaults();await enterPortal()};
+$("questZoneButton").onclick=()=>{location.href="./zone.html?v=4.7.0"};
+$("portalButton").onclick=async()=>{state.activeQuest=null;history.replaceState(null,"",location.pathname);await ensureProfileDefaults();await enterPortal()};
 
 function renderRewardShop(){
   if(!$("rewardShop"))return;
@@ -879,7 +982,7 @@ async function saveCharacterGender(gender){
 
   // มือถือ/แท็บเล็ตใช้เฉพาะ 2D Zone หลังเลือกตัวละครเสร็จ
   if(isMobileOrTabletDevice()){
-    location.replace("./zone.html?v=4.6.0");
+    location.replace("./zone.html?v=4.7.0");
   }
 }
 
@@ -1107,7 +1210,7 @@ function startSocialHub(){
 window.addEventListener('pagehide',()=>markOffline());
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')writePresence(document.body.classList.contains('game-active')?'game':'portal')});
 
-/* ===== V4.6 PVP MULTI ROOM · 1/3/5 SHOT · 1V1/2V2 RELAY · TOKEN WAGER ===== */
+/* ===== V4.7 PVP MULTI ROOM · 1/3/5 SHOT · 1V1/2V2 RELAY · TOKEN WAGER ===== */
 const PVP_ROOM_STALE_MS=20*60*1000;
 const PVP_CREATE_FEE=6;
 const PVP_COUNTDOWN_MS=3000;
@@ -1437,7 +1540,7 @@ updateDeviceUX();
 
 onAuthStateChanged(auth,async user=>{
   if(!user){state.uid=null;state.player=null;showScreen("authScreen");return;}
-  if(user.email==="pisit_2000@thc-nr.local"){location.replace("./admin.html?v=4.6.0");return;}
+  if(user.email==="pisit_2000@thc-nr.local"){location.replace("./admin.html?v=4.7.0");return;}
   state.uid=user.uid;
   try{
     await routeAuthenticatedStudent();

@@ -1,4 +1,4 @@
-# V4.6 — Admin Classroom + Rank Reset Schedule + GM World Chat + PVP Countdown
+# V4.7 — Admin Classroom + Rank Reset Schedule + GM World Chat + PVP Countdown
 
 ## เพิ่มใน Admin
 - Tab `🏫 แยกตามห้อง` เช่น ปวช.2/1
@@ -25,6 +25,6 @@
 - `rank_reset_history` เก็บประวัติรีแรงค์จาก Admin
 
 ## ติดตั้ง
-1. อัปโหลดไฟล์ทั้งหมดของ V4.6 ทับ Root GitHub Pages
-2. Firebase → Firestore → Rules → วาง `firestore.rules` V4.6 ทั้งไฟล์ → Publish
+1. อัปโหลดไฟล์ทั้งหมดของ V4.7 ทับ Root GitHub Pages
+2. Firebase → Firestore → Rules → วาง `firestore.rules` V4.7 ทั้งไฟล์ → Publish
 3. รอ Deploy แล้ว Ctrl+F5

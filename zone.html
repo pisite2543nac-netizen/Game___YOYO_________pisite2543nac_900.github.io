@@ -5,113 +5,119 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#102c3d">
   <title>2D Zone | Code Typing Academy</title>
-  <link rel="stylesheet" href="./style.css?v=4.6.0">
+  <link rel="stylesheet" href="./style.css?v=4.7.0">
 </head>
-<body class="simple-zone-page">
-
-  <div id="zoneGate" class="simple-zone-gate">
-    <div class="simple-zone-gate-card">
-      <div class="simple-zone-gate-mark">💬</div>
-      <span class="section-kicker">2D SOCIAL ZONE · V4.6.0</span>
+<body class="zone47-page">
+  <div id="zoneGate" class="zone47-gate">
+    <div class="zone47-gate-card">
+      <div class="zone47-gate-icon">🌙</div>
+      <span class="section-kicker">2D SOCIAL ZONE · V4.7.0</span>
       <h1 id="zoneGateTitle">กำลังเข้าสู่ 2D Zone</h1>
-      <p id="zoneGateText">กำลังตรวจสอบบัญชีและเชื่อมต่อห้องพูดคุย...</p>
-      <div id="zoneGateHelp" class="simple-zone-gate-help hidden"></div>
+      <p id="zoneGateText">กำลังเชื่อมต่อผู้เล่น แชต ร้านค้า และภารกิจ...</p>
+      <div id="zoneGateHelp" class="zone47-gate-help hidden"></div>
       <a href="./index.html" class="btn ghost">กลับหน้า User</a>
     </div>
   </div>
 
-  <main id="zoneApp" class="simple-zone-app hidden">
-    <header class="simple-zone-topbar">
-      <div class="simple-zone-brand">
-        <span id="zoneWorldIcon" class="simple-zone-brand-icon">🌙</span>
-        <div>
-          <strong>2D SOCIAL ZONE</strong>
-          <small>พื้นที่เดินพบกันและพูดคุยเท่านั้น</small>
-        </div>
+  <main id="zoneApp" class="zone47-app hidden">
+    <header class="zone47-topbar">
+      <div class="zone47-brand">
+        <span id="zoneWorldIcon" class="zone47-brand-icon">🌙</span>
+        <div><strong>2D SOCIAL ZONE</strong><small>เดินซ้าย–ขวา · พูดคุย · รับภารกิจ · Token Shop</small></div>
       </div>
-
-      <div class="simple-zone-worldtime">
-        <span id="zoneWorldPeriod">กลางคืน</span>
-        <small id="zoneWorldCountdown">เปลี่ยนใน --:--:--</small>
-      </div>
-
-      <div class="simple-zone-user">
+      <div class="zone47-time"><span id="zoneWorldPeriod">กลางคืน</span><small id="zoneWorldCountdown">เปลี่ยนใน --:--:--</small></div>
+      <div class="zone47-user">
         <div id="zoneMyShield"></div>
-        <div>
-          <strong id="zoneMyStudentId">-</strong>
-          <small><i></i><span id="zoneOnlineCount">1</span> คนออนไลน์</small>
-        </div>
+        <div><strong id="zoneMyStudentId">-</strong><small><i></i><span id="zoneOnlineCount">1</span> online</small></div>
       </div>
-
-      <div class="simple-zone-top-actions">
-        <button id="openZoneChatHistory" class="btn ghost" type="button">💬 แชต 24 ชม.</button>
+      <div class="zone47-token"><span>🪙 Token</span><strong id="zoneTokenBalance">0</strong></div>
+      <div class="zone47-actions">
+        <button id="openWizardQuests" class="btn ghost" type="button">🧙 ภารกิจ</button>
+        <button id="openZoneShop" class="btn ghost" type="button">🛒 ร้านค้า</button>
+        <button id="openZoneChatHistory" class="btn ghost" type="button">💬 แชต</button>
         <a id="openAdminPanel" class="btn ghost hidden" href="./admin.html">Admin</a>
         <a id="leaveZoneButton" class="btn danger" href="./index.html">ออก</a>
       </div>
     </header>
 
-    <section id="zoneWorld" class="simple-zone-world" data-period="night">
-      <canvas id="zoneCanvas" aria-label="2D Social Zone"></canvas>
+    <section id="zoneWorld" class="zone47-world" data-period="night">
+      <canvas id="zoneCanvas"></canvas>
 
-      <div class="simple-zone-help">
-        <strong>เดินได้ 4 ทิศ</strong>
-        <span>W ↑</span><span>A ←</span><span>S ↓</span><span>D →</span>
+      <div class="zone47-help">
+        <strong>เดิน</strong><span>A / ←</span><span>D / →</span>
       </div>
 
-      <div id="zoneConnectionBadge" class="simple-zone-connection">
-        <i></i><strong>REALTIME</strong>
-      </div>
+      <div id="zoneSystemNotice" class="zone47-system-notice hidden"></div>
 
-      <div id="zoneSystemNotice" class="simple-zone-system-notice hidden"></div>
+      <div id="zoneConnectionBadge" class="zone47-connection"><i></i><strong>REALTIME</strong></div>
 
-      <aside id="zonePlayerCard" class="simple-zone-player-card hidden">
-        <button id="closeZonePlayerCard" class="simple-zone-card-close" type="button">✕</button>
-        <div class="simple-zone-player-head">
+      <button id="zoneNearbyAction" class="zone47-nearby-action hidden" type="button"></button>
+
+      <aside id="zonePlayerCard" class="zone47-player-card hidden">
+        <button id="closeZonePlayerCard" class="zone47-card-close" type="button">✕</button>
+        <div class="zone47-player-head">
           <div id="zonePlayerCardShield"></div>
-          <div>
-            <h3 id="zonePlayerCardId">-</h3>
-            <p id="zonePlayerCardRank">Bronze</p>
-          </div>
+          <div><h3 id="zonePlayerCardId">-</h3><p id="zonePlayerCardRank">Bronze</p></div>
         </div>
         <span id="zonePlayerCardItemTitle">ไอเท็มที่กำลังสวม</span>
-        <div id="zonePlayerCardItems" class="simple-zone-equipped-list"></div>
+        <div id="zonePlayerCardItems" class="zone47-equipped-list"></div>
       </aside>
-
-      <div class="simple-zone-mobile-pad" aria-label="ปุ่มเดินสำหรับอุปกรณ์สัมผัส">
-        <button id="moveUpButton" type="button">▲</button>
-        <button id="moveLeftButton" type="button">◀</button>
-        <button id="moveDownButton" type="button">▼</button>
-        <button id="moveRightButton" type="button">▶</button>
-      </div>
     </section>
 
-    <footer class="simple-zone-chatbar">
-      <div class="simple-zone-chat-identity">
-        <strong id="zoneChatIdentity">-</strong>
-        <small id="zoneChatStatus">พร้อมพูดคุย</small>
-      </div>
-      <form id="zoneChatForm" class="simple-zone-chat-form">
-        <input id="zoneChatInput" maxlength="120" autocomplete="off"
-               placeholder="พิมพ์ข้อความ แล้วกด Enter เพื่อพูด...">
-        <button id="zoneChatSendButton" type="submit">พูด</button>
+    <footer class="zone47-footer">
+      <button id="moveLeftButton" class="zone47-move-button" type="button">◀</button>
+      <div class="zone47-chat-id"><strong id="zoneChatIdentity">-</strong><small id="zoneChatStatus">พร้อมพูดคุย</small></div>
+      <form id="zoneChatForm" class="zone47-chat-form">
+        <input id="zoneChatInput" maxlength="120" autocomplete="off" placeholder="พิมพ์ข้อความ แล้วกด Enter...">
+        <button type="submit">พูด</button>
       </form>
+      <button id="moveRightButton" class="zone47-move-button" type="button">▶</button>
     </footer>
   </main>
 
-  <div id="zoneChatHistoryModal" class="simple-zone-modal hidden">
-    <div class="simple-zone-modal-card">
-      <button id="closeZoneChatHistory" class="simple-zone-modal-close" type="button">✕</button>
-      <div class="simple-zone-modal-title">
+  <div id="zoneQuestModal" class="zone47-modal hidden">
+    <div class="zone47-modal-card zone47-quest-card">
+      <button id="closeWizardQuests" class="zone47-modal-close" type="button">✕</button>
+      <div class="zone47-modal-header">
+        <div class="zone47-wizard-portrait">🧙‍♂️</div>
         <div>
-          <span class="section-kicker">WORLD CHAT</span>
-          <h2>บทสนทนาใน 2D Zone</h2>
+          <span class="section-kicker">TEACHER QUEST WIZARD</span>
+          <h2>พ่อมดผู้มอบภารกิจ</h2>
+          <p>ต้องกดรับภารกิจก่อนจึงจะได้รับ Token พิเศษ</p>
         </div>
-        <small>User แสดง 24 ชั่วโมง · GM เป็นข้อความถาวร</small>
       </div>
-      <div id="zoneChatHistoryList" class="simple-zone-chat-history"></div>
+      <div class="zone47-quest-metrics">
+        <div><span>Rank</span><strong id="questRankLabel">Bronze</strong></div>
+        <div><span>วันนี้</span><strong id="questDailyCount">0 / 3</strong></div>
+        <div><span>รับพร้อมกันได้</span><strong id="questActiveLimit">1</strong></div>
+      </div>
+      <div class="zone47-quest-reward-rule">
+        <span>ง่าย 2–5 Token</span><span>ปานกลาง 10–15 Token</span><span>ยาก 15–20 Token</span>
+      </div>
+      <div id="zoneQuestList" class="zone47-quest-list"></div>
+      <small class="zone47-mobile-quest-note">มือถือ/แท็บเล็ตยังใช้เฉพาะ 2D Zone ตามกติกาเดิม จึงรับภารกิจไว้ก่อนได้ และไปทำจากคอมพิวเตอร์</small>
     </div>
   </div>
 
-  <script type="module" src="./zone.js?v=4.6.0"></script>
+  <div id="zoneShopModal" class="zone47-modal hidden">
+    <div class="zone47-modal-card zone47-shop-card">
+      <button id="closeZoneShop" class="zone47-modal-close" type="button">✕</button>
+      <div class="zone47-shop-head">
+        <div><span class="section-kicker">TOKEN SHOP</span><h2>ร้านค้าไอเท็ม</h2><p>ซื้อแล้วสวมใส่ได้ทันที และจะแสดงทั้งหน้า Profile กับตัวละครใน 2D Zone</p></div>
+        <div class="zone47-shop-wallet"><span>Token</span><strong id="zoneShopBalance">0</strong></div>
+      </div>
+      <div id="zoneShopGrid" class="zone47-shop-grid"></div>
+    </div>
+  </div>
+
+  <div id="zoneChatHistoryModal" class="zone47-modal hidden">
+    <div class="zone47-modal-card">
+      <button id="closeZoneChatHistory" class="zone47-modal-close" type="button">✕</button>
+      <div class="zone47-shop-head"><div><span class="section-kicker">WORLD CHAT</span><h2>บทสนทนาใน Zone</h2></div><small>User 24 ชั่วโมง · GM ถาวร</small></div>
+      <div id="zoneChatHistoryList" class="zone47-chat-history"></div>
+    </div>
+  </div>
+
+  <script type="module" src="./zone.js?v=4.7.0"></script>
 </body>
 </html>

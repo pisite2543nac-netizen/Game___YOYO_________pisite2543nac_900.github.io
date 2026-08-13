@@ -1,4 +1,4 @@
-# V4.6 — Simple Chat-Only 2D Zone + Admin Room Search
+# V4.7 — Simple Chat-Only 2D Zone + Admin Room Search
 
 ## 2D Zone
 - ใช้สำหรับเดินพบกันและพูดคุยเท่านั้น
@@ -25,6 +25,6 @@
 อัปไฟล์ทั้งหมดใน ZIP ทับ Root ของ GitHub Pages
 
 จากนั้น:
-Firebase → Firestore Database → Rules → วาง `firestore.rules` V4.6 → Publish
+Firebase → Firestore Database → Rules → วาง `firestore.rules` V4.7 → Publish
 
 รอ GitHub Pages deploy แล้วกด Ctrl+F5

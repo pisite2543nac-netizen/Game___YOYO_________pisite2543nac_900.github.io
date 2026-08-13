@@ -170,6 +170,18 @@ service cloud.firestore {
       allow read: if isAdmin() || (signedIn() && request.auth.uid == uid);
       allow create, update, delete: if isAdmin();
     }
+
+    match /teacher_quests/{questId} {
+      allow read: if signedIn();
+      allow create, update, delete: if isAdmin();
+    }
+
+    match /quest_progress/{uid}/days/{dayId} {
+      allow read, create, update: if signedIn() && request.auth.uid == uid;
+      allow delete: if signedIn() && request.auth.uid == uid;
+      allow read, write: if isAdmin();
+    }
+
     match /system_settings/{settingId} {
       allow read: if signedIn();
       allow create, update, delete: if isAdmin();

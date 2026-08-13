@@ -4,12 +4,13 @@ import {
   getFirestore, collection, doc, getDocs, setDoc, deleteDoc, updateDoc,
   writeBatch, serverTimestamp, onSnapshot, Timestamp, query, orderBy, limit
 } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
-import { firebaseConfig, ADMIN_USERNAME, ADMIN_EMAIL, ADMIN_UID } from "./firebase-config.js?v=4.6.0";
-import { DEFAULT_MODES, DEFAULT_LEVELS } from "./default-data.js?v=4.6.0";
-import { seasonIdFromDate, seasonRange, calculateRankMetrics, rankingClassKey } from "./ranking-system.js?v=4.6.0";
+import { firebaseConfig, ADMIN_USERNAME, ADMIN_EMAIL, ADMIN_UID } from "./firebase-config.js?v=4.7.0";
+import { DEFAULT_MODES, DEFAULT_LEVELS } from "./default-data.js?v=4.7.0";
+import { seasonIdFromDate, seasonRange, calculateRankMetrics, rankingClassKey } from "./ranking-system.js?v=4.7.0";
+import { DEFAULT_TEACHER_QUESTS, clampQuestReward, questDifficultyName, questObjectiveLabel, defaultMinRankForDifficulty, rewardRange } from "./quest-system.js?v=4.7.0";
 
 const app=initializeApp(firebaseConfig),auth=getAuth(app),db=getFirestore(app),$=id=>document.getElementById(id);
-let cache={users:[],attempts:[],levels:[],modes:[],official:[],zonePositions:[],zoneModeration:[],zoneMessages:[],zoneArchive:[],rankingSettings:{}},unsubs=[];
+let cache={users:[],attempts:[],levels:[],modes:[],official:[],zonePositions:[],zoneModeration:[],zoneMessages:[],zoneArchive:[],rankingSettings:{},teacherQuests:[]},unsubs=[];
 let knownUserIds=null;
 let selectedAdminClass="";
 let adminClassSearchTerm="";
@@ -58,13 +59,14 @@ function startRealtime(){
   unsubs.push(onSnapshot(collection(db,"official_submissions"),snap=>{cache.official=snap.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>dateValue(b.submittedAt)-dateValue(a.submittedAt));renderAll()}));
   unsubs.push(onSnapshot(collection(db,"zone_positions"),snap=>{cache.zonePositions=snap.docs.map(d=>({id:d.id,...d.data()}));renderAll()}));
   unsubs.push(onSnapshot(collection(db,"zone_moderation"),snap=>{cache.zoneModeration=snap.docs.map(d=>({id:d.id,...d.data()}));renderAll()}));
+  unsubs.push(onSnapshot(collection(db,"teacher_quests"),snap=>{cache.teacherQuests=snap.docs.map(d=>({id:d.id,...d.data()}));renderAll()},error=>console.warn("teacher quests:",error)));
   unsubs.push(onSnapshot(doc(db,"system_settings","ranking"),snap=>{cache.rankingSettings=snap.exists()?snap.data():{};renderAll()},error=>console.warn("ranking settings:",error)));
   const chatQuery=query(collection(db,"zone_messages"),orderBy("createdAt","desc"),limit(500));
   unsubs.push(onSnapshot(chatQuery,snap=>{cache.zoneMessages=snap.docs.map(d=>({id:d.id,...d.data()})).filter(x=>x.zoneId===ACTIVE_ZONE_ID);renderAll()},error=>console.warn("live zone chat:",error)));
   const archiveQuery=query(collection(db,"zone_chat_archive"),orderBy("createdAt","desc"),limit(1000));
   unsubs.push(onSnapshot(archiveQuery,snap=>{cache.zoneArchive=snap.docs.map(d=>({id:d.id,...d.data()})).filter(x=>x.zoneId===ACTIVE_ZONE_ID);renderAll()},error=>{cache.zoneArchive=[];console.warn("zone archive:",error)}));
 }
-function renderAll(){renderMetrics();renderResults();renderUsers();renderClassrooms();renderLevels();renderOfficial();renderRanking();renderRankingSchedule();renderZoneControl();renderZoneChatLog()}
+function renderAll(){renderMetrics();renderResults();renderUsers();renderClassrooms();renderLevels();renderOfficial();renderRanking();renderRankingSchedule();renderTeacherQuests();renderZoneControl();renderZoneChatLog()}
 function renderMetrics(){
   const completed=cache.attempts.filter(x=>x.status==="completed");
   const avg=completed.length?Math.round(completed.reduce((s,x)=>s+Number(x.score||0),0)/completed.length):0;
@@ -333,6 +335,66 @@ if($("exportOfficialCsv"))$("exportOfficialCsv").onclick=()=>{
 
 
 const ZONE_ONLINE_STALE_MS=95000;
+
+function teacherQuestById(id){return cache.teacherQuests.find(q=>q.id===id)}
+function syncTeacherQuestRewardHint(){
+  const diff=$("teacherQuestDifficulty")?.value||"easy",range=rewardRange(diff);
+  if($("teacherQuestRewardHint"))$("teacherQuestRewardHint").textContent=`${questDifficultyName(diff)} ${range.min}–${range.max} Token`;
+  if($("teacherQuestMinRank")&&!$("teacherQuestEditId")?.value)$("teacherQuestMinRank").value=defaultMinRankForDifficulty(diff);
+  const input=$("teacherQuestReward");
+  if(input){input.min=range.min;input.max=range.max;input.value=clampQuestReward(diff,input.value)}
+}
+function resetTeacherQuestForm(){
+  $("teacherQuestForm")?.reset();if($("teacherQuestEditId"))$("teacherQuestEditId").value="";
+  if($("teacherQuestStage"))$("teacherQuestStage").value=1;
+  if($("teacherQuestReward"))$("teacherQuestReward").value=4;
+  if($("teacherQuestActive"))$("teacherQuestActive").checked=true;
+  syncTeacherQuestRewardHint();
+}
+function renderTeacherQuests(){
+  if(!$("teacherQuestBody"))return;
+  const rows=[...cache.teacherQuests].sort((a,b)=>(a.active===false)-(b.active===false)||String(a.title||"").localeCompare(String(b.title||""),"th"));
+  $("teacherQuestBody").innerHTML=rows.map(q=>`<tr>
+    <td><strong>${esc(q.title||"-")}</strong><br><small>${esc(q.description||"")}</small></td>
+    <td>${esc(String(q.languageId||"").toUpperCase())} ${Number(q.stage||0)}</td>
+    <td>${esc(questDifficultyName(q.difficulty))}</td>
+    <td>${esc(questObjectiveLabel(q))}</td>
+    <td>${esc(q.minRank||"-")}</td>
+    <td><strong>${clampQuestReward(q.difficulty,q.rewardToken)}</strong></td>
+    <td><span class="status ${q.active===false?"status-abandoned":"status-completed"}">${q.active===false?"ปิด":"เปิด"}</span></td>
+    <td><button class="btn btn-small ghost" data-edit-teacher-quest="${q.id}">แก้ไข</button> <button class="btn btn-small danger" data-delete-teacher-quest="${q.id}">ลบ</button></td>
+  </tr>`).join("")||`<tr><td colspan="8" class="empty">ยังไม่มีภารกิจ · กด “สร้างภารกิจตัวอย่าง” ได้</td></tr>`;
+  document.querySelectorAll("[data-edit-teacher-quest]").forEach(btn=>btn.onclick=()=>{
+    const q=teacherQuestById(btn.dataset.editTeacherQuest);if(!q)return;
+    $("teacherQuestEditId").value=q.id;$("teacherQuestTitle").value=q.title||"";$("teacherQuestLanguage").value=q.languageId||"html";$("teacherQuestStage").value=q.stage||1;
+    $("teacherQuestDifficulty").value=q.difficulty||"easy";$("teacherQuestObjective").value=q.objectiveType||"pass";$("teacherQuestTarget").value=q.targetValue||0;
+    $("teacherQuestReward").value=q.rewardToken||4;$("teacherQuestMinRank").value=q.minRank||"bronze";$("teacherQuestDescription").value=q.description||"";$("teacherQuestActive").checked=q.active!==false;
+    syncTeacherQuestRewardHint();$("teacherQuestForm")?.scrollIntoView({behavior:"smooth",block:"center"});
+  });
+  document.querySelectorAll("[data-delete-teacher-quest]").forEach(btn=>btn.onclick=async()=>{if(confirm("ลบภารกิจนี้?"))await deleteDoc(doc(db,"teacher_quests",btn.dataset.deleteTeacherQuest))});
+}
+if($("teacherQuestDifficulty"))$("teacherQuestDifficulty").onchange=syncTeacherQuestRewardHint;
+if($("teacherQuestForm"))$("teacherQuestForm").onsubmit=async e=>{
+  e.preventDefault();
+  const id=$("teacherQuestEditId").value||doc(collection(db,"teacher_quests")).id,diff=$("teacherQuestDifficulty").value;
+  const data={
+    title:$("teacherQuestTitle").value.trim(),languageId:$("teacherQuestLanguage").value,stage:Math.max(1,Math.min(50,Number($("teacherQuestStage").value||1))),
+    difficulty:diff,objectiveType:$("teacherQuestObjective").value,targetValue:Number($("teacherQuestTarget").value||0),
+    rewardToken:clampQuestReward(diff,$("teacherQuestReward").value),minRank:$("teacherQuestMinRank").value,
+    description:$("teacherQuestDescription").value.trim(),active:$("teacherQuestActive").checked,updatedAt:serverTimestamp()
+  };
+  if(!$("teacherQuestEditId").value)data.createdAt=serverTimestamp();
+  await setDoc(doc(db,"teacher_quests",id),data,{merge:true});resetTeacherQuestForm();showAdminToast("บันทึกภารกิจแล้ว",data.title);
+};
+if($("cancelTeacherQuestEdit"))$("cancelTeacherQuestEdit").onclick=resetTeacherQuestForm;
+if($("seedTeacherQuests"))$("seedTeacherQuests").onclick=async()=>{
+  if(!confirm("สร้าง/อัปเดตภารกิจตัวอย่าง 6 รายการ?"))return;
+  const batch=writeBatch(db);
+  DEFAULT_TEACHER_QUESTS.forEach(q=>{const {id,...data}=q;batch.set(doc(db,"teacher_quests",id),{...data,updatedAt:serverTimestamp()},{merge:true})});
+  await batch.commit();showAdminToast("สร้างภารกิจตัวอย่างแล้ว","6 รายการ");
+};
+syncTeacherQuestRewardHint();
+
 const ACTIVE_ZONE_ID="thai_social_zone_v4_1";
 
 function zonePositionOnline(p){
@@ -599,10 +661,10 @@ function downloadFile(name,text,type){const blob=new Blob([text],{type}),url=URL
 $("exportCsv").onclick=()=>{const h=["date","student_id","name","level","classroom","department","mode","game_level","status","score","wpm","accuracy","mistakes","time_seconds"],q=v=>`"${String(v??"").replaceAll('"','""')}"`,rows=cache.attempts.map(x=>[formatDate(x.createdAt),x.studentId,x.fullName,x.educationLevel,x.classroom,x.department,x.modeName,(x.stage??x.levelNo),x.status,x.score,x.wpm,x.accuracy,x.mistakes,x.elapsedSeconds].map(q).join(","));downloadFile("code_typing_results.csv","\ufeff"+h.join(",")+"\n"+rows.join("\n"),"text/csv;charset=utf-8")};
 $("exportJson").onclick=()=>downloadFile("code_typing_backup.json",JSON.stringify({
   exportedAt:new Date().toISOString(),game_modes:cache.modes,levels:cache.levels,users:cache.users,attempts:cache.attempts,
-  official_submissions:cache.official,zone_moderation:cache.zoneModeration,zone_chat_archive:combinedZoneChatArchive()
+  official_submissions:cache.official,zone_moderation:cache.zoneModeration,zone_chat_archive:combinedZoneChatArchive(),teacher_quests:cache.teacherQuests
 },(k,v)=>v?.toDate?.()?v.toDate().toISOString():v,2),"application/json");
 $("importJson").addEventListener("change",async e=>{const f=e.target.files[0];if(!f||!confirm("นำเข้าข้อมูล JSON?"))return;const data=JSON.parse(await f.text());for(const [name,rows] of Object.entries({
   game_modes:data.game_modes||[],levels:data.levels||[],users:data.users||[],attempts:data.attempts||[],
-  official_submissions:data.official_submissions||[],zone_moderation:data.zone_moderation||[],zone_chat_archive:data.zone_chat_archive||[]
+  official_submissions:data.official_submissions||[],zone_moderation:data.zone_moderation||[],zone_chat_archive:data.zone_chat_archive||[],teacher_quests:data.teacher_quests||[]
 })){for(const row of rows){const id=row.id||doc(collection(db,name)).id,copy={...row};delete copy.id;await setDoc(doc(db,name,id),copy,{merge:true})}}alert("นำเข้าสำเร็จ")});
 document.querySelectorAll(".tab").forEach(btn=>btn.onclick=()=>{document.querySelectorAll(".tab").forEach(x=>x.classList.remove("active"));document.querySelectorAll(".admin-tab-panel").forEach(x=>x.classList.add("hidden"));btn.classList.add("active");$(btn.dataset.tab).classList.remove("hidden")});
