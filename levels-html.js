@@ -11,7 +11,7 @@ export const HTML_LEVELS = [
     "code": "<h1>Hello HTML</h1>\n<p>เริ่มต้นเรียนรู้ HTML</p>",
     "outputExplain": "ใช้ h1 เป็นหัวข้อหลักและ p เป็นย่อหน้า",
     "basePoints": 110,
-    "rewardPoints": 22,
+    "rewardPoints": 12,
     "timeLimit": 66
   },
   {
@@ -26,7 +26,7 @@ export const HTML_LEVELS = [
     "code": "<p>เรียน <strong>HTML</strong> แบบ <em>เข้าใจง่าย</em></p>",
     "outputExplain": "strong เน้นความสำคัญ ส่วน em เน้นข้อความ",
     "basePoints": 120,
-    "rewardPoints": 24,
+    "rewardPoints": 13,
     "timeLimit": 73
   },
   {
@@ -41,7 +41,7 @@ export const HTML_LEVELS = [
     "code": "<a href=\"https://example.com\">เปิดเว็บไซต์ตัวอย่าง</a>",
     "outputExplain": "แท็ก a ใช้สร้างลิงก์",
     "basePoints": 130,
-    "rewardPoints": 26,
+    "rewardPoints": 15,
     "timeLimit": 70
   },
   {
@@ -56,7 +56,7 @@ export const HTML_LEVELS = [
     "code": "<img src=\"https://picsum.photos/240/120\" alt=\"ภาพตัวอย่าง\">",
     "outputExplain": "img ใช้แสดงรูปและ alt อธิบายรูป",
     "basePoints": 140,
-    "rewardPoints": 28,
+    "rewardPoints": 16,
     "timeLimit": 74
   },
   {
@@ -71,7 +71,7 @@ export const HTML_LEVELS = [
     "code": "<ul>\n  <li>HTML</li>\n  <li>CSS</li>\n  <li>JavaScript</li>\n</ul>",
     "outputExplain": "ul และ li ใช้สร้างรายการแบบจุด",
     "basePoints": 150,
-    "rewardPoints": 30,
+    "rewardPoints": 17,
     "timeLimit": 77
   },
   {
@@ -86,7 +86,7 @@ export const HTML_LEVELS = [
     "code": "<ol>\n  <li>วางแผน</li>\n  <li>เขียนโค้ด</li>\n  <li>ทดสอบ</li>\n</ol>",
     "outputExplain": "ol ใช้สร้างรายการมีลำดับ",
     "basePoints": 160,
-    "rewardPoints": 32,
+    "rewardPoints": 18,
     "timeLimit": 79
   },
   {
@@ -101,7 +101,7 @@ export const HTML_LEVELS = [
     "code": "<p>บรรทัดแรก<br>บรรทัดที่สอง</p>\n<hr>",
     "outputExplain": "br ขึ้นบรรทัดใหม่และ hr สร้างเส้นแบ่ง",
     "basePoints": 170,
-    "rewardPoints": 34,
+    "rewardPoints": 20,
     "timeLimit": 57
   },
   {
@@ -116,7 +116,7 @@ export const HTML_LEVELS = [
     "code": "<div class=\"card\">\n  <h2>Card</h2>\n  <p>เนื้อหาภายในการ์ด</p>\n</div>",
     "outputExplain": "div ใช้จัดกลุ่มองค์ประกอบ",
     "basePoints": 180,
-    "rewardPoints": 36,
+    "rewardPoints": 21,
     "timeLimit": 81
   },
   {
@@ -131,7 +131,7 @@ export const HTML_LEVELS = [
     "code": "<p>คะแนน: <span class=\"score\">100</span> แต้ม</p>",
     "outputExplain": "span ใช้ครอบข้อความเฉพาะส่วน",
     "basePoints": 190,
-    "rewardPoints": 38,
+    "rewardPoints": 22,
     "timeLimit": 66
   },
   {
@@ -146,7 +146,7 @@ export const HTML_LEVELS = [
     "code": "<table>\n  <tr><th>ชื่อ</th><th>คะแนน</th></tr>\n  <tr><td>Ann</td><td>90</td></tr>\n</table>",
     "outputExplain": "table, tr, th, td ใช้สร้างตาราง",
     "basePoints": 200,
-    "rewardPoints": 40,
+    "rewardPoints": 24,
     "timeLimit": 97
   },
   {
@@ -161,7 +161,7 @@ export const HTML_LEVELS = [
     "code": "<table>\n  <thead><tr><th>วิชา</th><th>เกรด</th></tr></thead>\n  <tbody><tr><td>Programming</td><td>A</td></tr></tbody>\n</table>",
     "outputExplain": "thead และ tbody แยกส่วนหัวและข้อมูล",
     "basePoints": 210,
-    "rewardPoints": 42,
+    "rewardPoints": 25,
     "timeLimit": 124
   },
   {
@@ -176,7 +176,7 @@ export const HTML_LEVELS = [
     "code": "<button type=\"button\">เริ่มเกม</button>",
     "outputExplain": "button ใช้สร้างปุ่ม",
     "basePoints": 220,
-    "rewardPoints": 44,
+    "rewardPoints": 26,
     "timeLimit": 59
   },
   {
@@ -191,7 +191,7 @@ export const HTML_LEVELS = [
     "code": "<label for=\"name\">ชื่อ</label>\n<input id=\"name\" type=\"text\">",
     "outputExplain": "label เชื่อมกับ input เพื่อรับข้อมูล",
     "basePoints": 230,
-    "rewardPoints": 46,
+    "rewardPoints": 27,
     "timeLimit": 75
   },
   {
@@ -206,7 +206,7 @@ export const HTML_LEVELS = [
     "code": "<label for=\"email\">อีเมล</label>\n<input id=\"email\" type=\"email\" required>",
     "outputExplain": "input email ช่วยตรวจรูปแบบอีเมล",
     "basePoints": 240,
-    "rewardPoints": 48,
+    "rewardPoints": 29,
     "timeLimit": 84
   },
   {
@@ -221,7 +221,7 @@ export const HTML_LEVELS = [
     "code": "<label for=\"password\">รหัสผ่าน</label>\n<input id=\"password\" type=\"password\" minlength=\"6\">",
     "outputExplain": "password ซ่อนตัวอักษรขณะพิมพ์",
     "basePoints": 250,
-    "rewardPoints": 50,
+    "rewardPoints": 30,
     "timeLimit": 97
   },
   {
@@ -236,7 +236,7 @@ export const HTML_LEVELS = [
     "code": "<label for=\"level\">ระดับ</label>\n<select id=\"level\">\n  <option>ง่าย</option>\n  <option>ปานกลาง</option>\n  <option>ยาก</option>\n</select>",
     "outputExplain": "select และ option สร้างรายการเลือก",
     "basePoints": 260,
-    "rewardPoints": 93,
+    "rewardPoints": 30,
     "timeLimit": 132
   },
   {
@@ -251,7 +251,7 @@ export const HTML_LEVELS = [
     "code": "<label>\n  <input type=\"checkbox\">\n  ยอมรับเงื่อนไข\n</label>",
     "outputExplain": "checkbox ใช้เลือกค่าแบบเปิด/ปิด",
     "basePoints": 270,
-    "rewardPoints": 96,
+    "rewardPoints": 31,
     "timeLimit": 74
   },
   {
@@ -266,7 +266,7 @@ export const HTML_LEVELS = [
     "code": "<label><input type=\"radio\" name=\"mode\"> Classic</label>\n<label><input type=\"radio\" name=\"mode\"> PVP</label>",
     "outputExplain": "radio ใช้เลือกหนึ่งค่าจากกลุ่ม",
     "basePoints": 280,
-    "rewardPoints": 99,
+    "rewardPoints": 32,
     "timeLimit": 110
   },
   {
@@ -281,7 +281,7 @@ export const HTML_LEVELS = [
     "code": "<label for=\"note\">หมายเหตุ</label>\n<textarea id=\"note\" rows=\"4\"></textarea>",
     "outputExplain": "textarea ใช้รับข้อความหลายบรรทัด",
     "basePoints": 290,
-    "rewardPoints": 102,
+    "rewardPoints": 33,
     "timeLimit": 86
   },
   {
@@ -296,7 +296,7 @@ export const HTML_LEVELS = [
     "code": "<form>\n  <label for=\"student\">รหัสนักศึกษา</label>\n  <input id=\"student\" required>\n  <button type=\"submit\">สมัคร</button>\n</form>",
     "outputExplain": "form รวมช่องข้อมูลและปุ่มส่ง",
     "basePoints": 300,
-    "rewardPoints": 105,
+    "rewardPoints": 34,
     "timeLimit": 126
   },
   {
@@ -311,7 +311,7 @@ export const HTML_LEVELS = [
     "code": "<header>\n  <h1>Code Typing</h1>\n  <p>ฝึกพิมพ์โค้ดให้แม่นยำ</p>\n</header>",
     "outputExplain": "header คือส่วนหัวของหน้า/ส่วน",
     "basePoints": 310,
-    "rewardPoints": 108,
+    "rewardPoints": 35,
     "timeLimit": 84
   },
   {
@@ -326,7 +326,7 @@ export const HTML_LEVELS = [
     "code": "<nav>\n  <a href=\"#home\">หน้าแรก</a>\n  <a href=\"#lesson\">บทเรียน</a>\n  <a href=\"#game\">เกม</a>\n</nav>",
     "outputExplain": "nav ใช้กับชุดลิงก์นำทาง",
     "basePoints": 320,
-    "rewardPoints": 111,
+    "rewardPoints": 36,
     "timeLimit": 105
   },
   {
@@ -341,7 +341,7 @@ export const HTML_LEVELS = [
     "code": "<main>\n  <h1>บทเรียน HTML</h1>\n  <p>เนื้อหาหลักของหน้า</p>\n</main>",
     "outputExplain": "main ครอบเนื้อหาหลัก",
     "basePoints": 330,
-    "rewardPoints": 114,
+    "rewardPoints": 37,
     "timeLimit": 79
   },
   {
@@ -356,7 +356,7 @@ export const HTML_LEVELS = [
     "code": "<section>\n  <h2>บทที่ 1</h2>\n  <p>พื้นฐาน HTML</p>\n</section>",
     "outputExplain": "section แบ่งเนื้อหาเป็นหมวด",
     "basePoints": 340,
-    "rewardPoints": 117,
+    "rewardPoints": 38,
     "timeLimit": 75
   },
   {
@@ -371,7 +371,7 @@ export const HTML_LEVELS = [
     "code": "<article>\n  <h2>ข่าวการเขียนโปรแกรม</h2>\n  <p>เนื้อหาที่อยู่ได้ด้วยตัวเอง</p>\n</article>",
     "outputExplain": "article เหมาะกับเนื้อหาอิสระ",
     "basePoints": 350,
-    "rewardPoints": 120,
+    "rewardPoints": 39,
     "timeLimit": 96
   },
   {
@@ -386,7 +386,7 @@ export const HTML_LEVELS = [
     "code": "<main>\n  <article>เนื้อหาหลัก</article>\n  <aside>คำแนะนำเพิ่มเติม</aside>\n</main>",
     "outputExplain": "aside คือข้อมูลเสริมจากเนื้อหาหลัก",
     "basePoints": 360,
-    "rewardPoints": 123,
+    "rewardPoints": 41,
     "timeLimit": 90
   },
   {
@@ -401,7 +401,7 @@ export const HTML_LEVELS = [
     "code": "<footer>\n  <p>© 2026 Code Academy</p>\n</footer>",
     "outputExplain": "footer คือส่วนท้าย",
     "basePoints": 370,
-    "rewardPoints": 126,
+    "rewardPoints": 42,
     "timeLimit": 65
   },
   {
@@ -416,7 +416,7 @@ export const HTML_LEVELS = [
     "code": "<figure>\n  <img src=\"https://picsum.photos/220/100\" alt=\"ตัวอย่าง\">\n  <figcaption>ภาพประกอบบทเรียน</figcaption>\n</figure>",
     "outputExplain": "figure จัดกลุ่มสื่อกับคำอธิบาย",
     "basePoints": 380,
-    "rewardPoints": 129,
+    "rewardPoints": 43,
     "timeLimit": 120
   },
   {
@@ -431,7 +431,7 @@ export const HTML_LEVELS = [
     "code": "<details>\n  <summary>ดูคำอธิบาย</summary>\n  <p>HTML คือภาษาสำหรับโครงสร้างเว็บ</p>\n</details>",
     "outputExplain": "details สร้างส่วนเปิด/ปิด",
     "basePoints": 390,
-    "rewardPoints": 132,
+    "rewardPoints": 44,
     "timeLimit": 99
   },
   {
@@ -446,7 +446,7 @@ export const HTML_LEVELS = [
     "code": "<label for=\"progress\">ความคืบหน้า</label>\n<progress id=\"progress\" value=\"65\" max=\"100\">65%</progress>",
     "outputExplain": "progress แสดงความคืบหน้า",
     "basePoints": 400,
-    "rewardPoints": 135,
+    "rewardPoints": 45,
     "timeLimit": 105
   },
   {
@@ -461,7 +461,7 @@ export const HTML_LEVELS = [
     "code": "<label for=\"accuracy\">Accuracy</label>\n<meter id=\"accuracy\" min=\"0\" max=\"100\" value=\"92\">92%</meter>",
     "outputExplain": "meter แสดงค่าภายในช่วง",
     "basePoints": 410,
-    "rewardPoints": 138,
+    "rewardPoints": 46,
     "timeLimit": 105
   },
   {
@@ -476,7 +476,7 @@ export const HTML_LEVELS = [
     "code": "<p>เริ่มเรียนวันที่ <time datetime=\"2026-08-12\">12 สิงหาคม 2569</time></p>",
     "outputExplain": "time ระบุวันเวลาอย่างมีความหมาย",
     "basePoints": 420,
-    "rewardPoints": 141,
+    "rewardPoints": 47,
     "timeLimit": 85
   },
   {
@@ -491,7 +491,7 @@ export const HTML_LEVELS = [
     "code": "<p>คำสำคัญคือ <mark>semantic HTML</mark></p>",
     "outputExplain": "mark ไฮไลต์ข้อความ",
     "basePoints": 430,
-    "rewardPoints": 144,
+    "rewardPoints": 48,
     "timeLimit": 63
   },
   {
@@ -506,7 +506,7 @@ export const HTML_LEVELS = [
     "code": "<p>ใช้คำสั่ง <code>&lt;h1&gt;</code> เพื่อสร้างหัวข้อ</p>",
     "outputExplain": "code ใช้แสดงข้อความโค้ด",
     "basePoints": 440,
-    "rewardPoints": 147,
+    "rewardPoints": 49,
     "timeLimit": 72
   },
   {
@@ -521,7 +521,7 @@ export const HTML_LEVELS = [
     "code": "<pre><code>&lt;h1&gt;Hello&lt;/h1&gt;\n&lt;p&gt;World&lt;/p&gt;</code></pre>",
     "outputExplain": "pre รักษาช่องว่างและบรรทัด",
     "basePoints": 450,
-    "rewardPoints": 150,
+    "rewardPoints": 50,
     "timeLimit": 86
   },
   {
@@ -536,7 +536,7 @@ export const HTML_LEVELS = [
     "code": "<iframe src=\"https://example.com\" title=\"เว็บไซต์ตัวอย่าง\"></iframe>",
     "outputExplain": "iframe ฝังเอกสารอื่น",
     "basePoints": 460,
-    "rewardPoints": 244,
+    "rewardPoints": 52,
     "timeLimit": 81
   },
   {
@@ -551,7 +551,7 @@ export const HTML_LEVELS = [
     "code": "<audio controls>\n  <source src=\"audio.mp3\" type=\"audio/mpeg\">\n  Browser ไม่รองรับเสียง\n</audio>",
     "outputExplain": "audio ฝังเสียงพร้อม controls",
     "basePoints": 470,
-    "rewardPoints": 248,
+    "rewardPoints": 53,
     "timeLimit": 101
   },
   {
@@ -566,7 +566,7 @@ export const HTML_LEVELS = [
     "code": "<video controls width=\"320\">\n  <source src=\"video.mp4\" type=\"video/mp4\">\n  Browser ไม่รองรับวิดีโอ\n</video>",
     "outputExplain": "video ฝังวิดีโอ",
     "basePoints": 480,
-    "rewardPoints": 252,
+    "rewardPoints": 55,
     "timeLimit": 110
   },
   {
@@ -581,7 +581,7 @@ export const HTML_LEVELS = [
     "code": "<picture>\n  <source media=\"(min-width: 800px)\" srcset=\"large.jpg\">\n  <img src=\"small.jpg\" alt=\"Responsive image\">\n</picture>",
     "outputExplain": "picture เลือกรูปตามเงื่อนไข",
     "basePoints": 490,
-    "rewardPoints": 256,
+    "rewardPoints": 56,
     "timeLimit": 123
   },
   {
@@ -596,7 +596,7 @@ export const HTML_LEVELS = [
     "code": "<button data-level=\"10\" data-mode=\"classic\">เล่น Level 10</button>",
     "outputExplain": "data-* เก็บข้อมูลเพิ่มเติมบน element",
     "basePoints": 500,
-    "rewardPoints": 260,
+    "rewardPoints": 57,
     "timeLimit": 79
   },
   {
@@ -611,7 +611,7 @@ export const HTML_LEVELS = [
     "code": "<button aria-label=\"ปิดหน้าต่าง\">×</button>",
     "outputExplain": "aria-label ช่วย Screen Reader",
     "basePoints": 510,
-    "rewardPoints": 264,
+    "rewardPoints": 58,
     "timeLimit": 62
   },
   {
@@ -626,7 +626,7 @@ export const HTML_LEVELS = [
     "code": "<form>\n  <fieldset>\n    <legend>ข้อมูลผู้เล่น</legend>\n    <label>ชื่อ <input type=\"text\"></label>\n  </fieldset>\n</form>",
     "outputExplain": "fieldset จัดกลุ่มช่องฟอร์ม",
     "basePoints": 520,
-    "rewardPoints": 268,
+    "rewardPoints": 60,
     "timeLimit": 120
   },
   {
@@ -641,7 +641,7 @@ export const HTML_LEVELS = [
     "code": "<label for=\"lang\">ภาษา</label>\n<input id=\"lang\" list=\"languages\">\n<datalist id=\"languages\">\n  <option value=\"HTML\">\n  <option value=\"Python\">\n</datalist>",
     "outputExplain": "datalist ให้คำแนะนำใน input",
     "basePoints": 530,
-    "rewardPoints": 272,
+    "rewardPoints": 61,
     "timeLimit": 144
   },
   {
@@ -656,7 +656,7 @@ export const HTML_LEVELS = [
     "code": "<form oninput=\"result.value=Number(a.value)+Number(b.value)\">\n  <input id=\"a\" type=\"number\" value=\"2\"> +\n  <input id=\"b\" type=\"number\" value=\"3\"> =\n  <output name=\"result\">5</output>\n</form>",
     "outputExplain": "output แสดงผลการคำนวณ",
     "basePoints": 540,
-    "rewardPoints": 276,
+    "rewardPoints": 62,
     "timeLimit": 172
   },
   {
@@ -671,7 +671,7 @@ export const HTML_LEVELS = [
     "code": "<template id=\"cardTemplate\">\n  <article class=\"card\">\n    <h2>Template Card</h2>\n  </article>\n</template>",
     "outputExplain": "template เก็บ markup ที่ยังไม่ render",
     "basePoints": 550,
-    "rewardPoints": 280,
+    "rewardPoints": 64,
     "timeLimit": 108
   },
   {
@@ -686,7 +686,7 @@ export const HTML_LEVELS = [
     "code": "<dialog open>\n  <h2>Level Complete</h2>\n  <p>คุณผ่านด่านแล้ว</p>\n  <button>ตกลง</button>\n</dialog>",
     "outputExplain": "dialog ใช้สร้างกล่องโต้ตอบ",
     "basePoints": 560,
-    "rewardPoints": 284,
+    "rewardPoints": 65,
     "timeLimit": 103
   },
   {
@@ -701,7 +701,7 @@ export const HTML_LEVELS = [
     "code": "<!DOCTYPE html>\n<html>\n<head>\n  <meta charset=\"UTF-8\">\n  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n  <title>Responsive Page</title>\n</head>\n<body>\n  <h1>Responsive HTML</h1>\n</body>\n</html>",
     "outputExplain": "meta viewport ทำให้หน้าเว็บรองรับมือถือ",
     "basePoints": 570,
-    "rewardPoints": 288,
+    "rewardPoints": 66,
     "timeLimit": 193
   },
   {
@@ -716,7 +716,7 @@ export const HTML_LEVELS = [
     "code": "<main>\n  <article class=\"profile\">\n    <img src=\"avatar.png\" alt=\"รูปผู้เล่น\">\n    <h1>Pisit</h1>\n    <p>Level 25 · 2,450 Points</p>\n    <button>แก้ไขตัวละคร</button>\n  </article>\n</main>",
     "outputExplain": "รวม semantic elements เป็นหน้าโปรไฟล์",
     "basePoints": 580,
-    "rewardPoints": 292,
+    "rewardPoints": 67,
     "timeLimit": 170
   },
   {
@@ -731,7 +731,7 @@ export const HTML_LEVELS = [
     "code": "<header><h1>Student Dashboard</h1></header>\n<main>\n  <section>\n    <h2>สถิติ</h2>\n    <ul>\n      <li>WPM: 52</li>\n      <li>Accuracy: 98%</li>\n      <li>Points: 3200</li>\n    </ul>\n  </section>\n</main>",
     "outputExplain": "รวมองค์ประกอบเป็น Dashboard",
     "basePoints": 590,
-    "rewardPoints": 296,
+    "rewardPoints": 69,
     "timeLimit": 180
   },
   {
@@ -746,7 +746,7 @@ export const HTML_LEVELS = [
     "code": "<!DOCTYPE html>\n<html lang=\"th\">\n<head>\n  <meta charset=\"UTF-8\">\n  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n  <title>Code Typing Arena</title>\n</head>\n<body>\n  <header>\n    <h1>Code Typing Arena</h1>\n    <nav><a href=\"#classic\">Classic</a> <a href=\"#pvp\">PVP</a></nav>\n  </header>\n  <main>\n    <section id=\"classic\">\n      <h2>Classic Mode</h2>\n      <p>พิมพ์โค้ดให้ถูกต้องและเร็วที่สุด</p>\n      <button type=\"button\">เริ่มเกม</button>\n    </section>\n  </main>\n  <footer>© 2026 Nangrong Technical College</footer>\n</body>\n</html>",
     "outputExplain": "ด่านสุดท้ายรวมโครงสร้าง HTML5 หลายส่วน",
     "basePoints": 600,
-    "rewardPoints": 300,
+    "rewardPoints": 70,
     "timeLimit": 300
   }
 ];

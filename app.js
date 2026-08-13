@@ -7,12 +7,13 @@ import {
   getFirestore, collection, doc, getDoc, getDocs, setDoc, addDoc, updateDoc, deleteDoc,
   serverTimestamp, query, where, orderBy, limit, onSnapshot, runTransaction
 } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
-import { firebaseConfig } from "./firebase-config.js?v=4.3.0";
-import { LANGUAGES, LESSONS, DIFFICULTIES } from "./lessons.js?v=4.3.0";
-import { REWARD_ITEMS, RARITY_META } from "./reward-data.js?v=4.3.0";
-import { DEFAULT_CHARACTER, DEFAULT_ZONE_STATE } from "./character-system.js?v=4.3.0";
-import { OFFICIAL_STAGES, OFFICIAL_TOTAL_SCORE } from "./official-data.js?v=4.3.0";
-import { RANKING_CONFIG, seasonIdFromDate, seasonRange, calculateRankMetrics } from "./ranking-system.js?v=4.3.0";
+import { firebaseConfig } from "./firebase-config.js?v=4.4.0";
+import { LANGUAGES, LESSONS, DIFFICULTIES } from "./lessons.js?v=4.4.0";
+import { REWARD_ITEMS, RARITY_META } from "./reward-data.js?v=4.4.0";
+import { DEFAULT_CHARACTER, DEFAULT_ZONE_STATE } from "./character-system.js?v=4.4.0";
+import { OFFICIAL_STAGES, OFFICIAL_TOTAL_SCORE } from "./official-data.js?v=4.4.0";
+import { RANKING_CONFIG, seasonIdFromDate, seasonRange, calculateRankMetrics, rankingClassKey, rankProfiles } from "./ranking-system.js?v=4.4.0";
+import { TOKEN_REWARD_CONFIG, calculateStageTokenReward, maxTokenForLesson, classKey } from "./economy-system.js?v=4.4.0";
 
 const firebaseApp = initializeApp(firebaseConfig);
 const auth = getAuth(firebaseApp);
@@ -29,7 +30,9 @@ const state = {
   presenceUnsub:null, leaderboardUnsub:null, presenceTimer:null, communityUnsub:null, presenceCache:new Map(),
   pvpStartTime:0, pvpTimer:null, pvpMistakes:0, pvpKeys:0, pvpCorrectText:"",
   pvpLesson:null, pvpAttemptId:null, pvpFinished:false, pvpActiveRoom:null,
-  pvpProgressTimer:null, pvpProgressLastSent:0, pvpResultSaved:false
+  pvpProgressTimer:null, pvpProgressLastSent:0, pvpResultSaved:false,
+  pvpRoomListUnsub:null,pvpStakeLocking:false,pvpCurrentShot:-1,pvpShotRecorded:-1,
+  pvpAggregate:{typedChars:0,keys:0,mistakes:0,seconds:0},pvpPayoutClaimed:false,pvpWasActive:false,pvpTargetCode:"",pvpTurnSignature:null,pvpRecordedSignature:null
 };
 
 const studentEmail = id => `${String(id).trim()}@student.thc-nr.local`;
@@ -82,6 +85,7 @@ async function ensureProfileDefaults(){
       equipped:{...DEFAULT_CHARACTER.equipped,...(d.character.equipped||{})}
     };
   }
+  if(!d.classKey && d.educationLevel && d.classroom) patch.classKey=classKey(d.educationLevel,d.classroom);
   if(!d.zone) patch.zone = {...DEFAULT_ZONE_STATE};
   if(Object.keys(patch).length) await updateDoc(ref,patch);
   const refreshed = await getDoc(ref);
@@ -110,6 +114,7 @@ $("registerForm").addEventListener("submit",async e=>{
     const p={
       uid:state.uid,studentId:sid,fullName:$("fullName").value.trim(),
       educationLevel:$("educationLevel").value,classroom:$("classroom").value,
+      classKey:classKey($("educationLevel").value,$("classroom").value),
       department:$("department").value.trim(),role:"student",status:"active",
       tokenBalance:0,tokenLifetime:0,inventory:[],
       officialProgress:{},officialSubmitted:false,
@@ -154,7 +159,7 @@ async function routeAuthenticatedStudent(){
     }catch(error){
       console.warn("mobile route sync skipped:", error);
     }
-    location.replace("./zone.html?v=4.3.0");
+    location.replace("./zone.html?v=4.4.0");
     return;
   }
 
@@ -196,6 +201,7 @@ $("logoutUserButton").onclick=async()=>{
   if(state.presenceUnsub) state.presenceUnsub();
   if(state.communityUnsub) state.communityUnsub();
   if(state.leaderboardUnsub) state.leaderboardUnsub();
+  if(state.pvpRoomListUnsub) state.pvpRoomListUnsub();
   clearInterval(state.presenceTimer);
   await signOut(auth);
 };
@@ -318,7 +324,7 @@ function renderClassicStages(){
   const list=languageLessons().filter(x=>x.difficulty===state.difficulty.id);
   $("classicStageGrid").innerHTML=list.map(l=>`
     <button class="classic-stage ${state.lesson?.id===l.id?"selected":""}" data-classic-stage="${l.stage}" ${l.stage>unlocked?"disabled":""}>
-      <strong>${String(l.stage).padStart(2,"0")}</strong><span>${esc(l.title)}</span><small>${l.rewardPoints} pts ${l.stage>unlocked?"· 🔒":""}</small>
+      <strong>${String(l.stage).padStart(2,"0")}</strong><span>${esc(l.title)}</span><small>${maxTokenForLesson(l)} Token สูงสุด ${l.stage>unlocked?"· 🔒":""}</small>
     </button>`).join("");
   document.querySelectorAll("[data-classic-stage]:not([disabled])").forEach(b=>b.onclick=()=>{
     state.lesson=languageLessons().find(x=>x.stage===Number(b.dataset.classicStage));
@@ -329,7 +335,7 @@ function renderClassicStages(){
 function updateClassicSummary(){
   const ok=state.language&&state.difficulty&&state.lesson&&state.lesson.stage<=maxUnlocked(state.language.id);
   $("startClassicButton").disabled=!ok;
-  $("classicLessonSummary").textContent=ok?`${state.language.name} · ${state.difficulty.name} · ด่าน ${state.lesson.stage} · รับ ${state.lesson.rewardPoints} แต้ม`:"เลือกภาษาระดับและด่านที่ปลดล็อกแล้ว";
+  $("classicLessonSummary").textContent=ok?`${state.language.name} · ${state.difficulty.name} · ด่าน ${state.lesson.stage} · สูงสุด ${maxTokenForLesson(state.lesson)} Token`:"เลือกภาษาระดับและด่านที่ปลดล็อกแล้ว";
 }
 
 $("startClassicButton").onclick=async()=>{
@@ -370,6 +376,7 @@ function liveScore(){
 }
 
 function prepareClassic(){
+  $("resultExplanation")?.classList.add("hidden");
   state.attemptId=null;state.started=false;state.finished=false;state.mistakes=0;state.keystrokes=0;state.correctText="";
   clearInterval(state.timer);$("typingInput").value="";
   $("modeBadge").textContent=`⌨️ CLASSIC · ${state.language.name}`;
@@ -382,7 +389,7 @@ function prepareClassic(){
   $("timeRuleLabel").textContent=`เป้าหมาย ${state.lesson.timeLimit}s`;
   $("fileName").textContent=`${state.language.id}_stage_${String(state.lesson.stage).padStart(2,"0")}`;
   $("typingStatus").textContent="พิมพ์ตัวแรกเพื่อเริ่มจับเวลา";
-  $("saveState").textContent=`รางวัล ${state.lesson.rewardPoints} Token`;
+  $("saveState").textContent=`รางวัลสูงสุด ${maxTokenForLesson(state.lesson)} Token`;
   $("statTime").textContent="00:00";
   ["statWpm","statMistakes","statScore"].forEach(id=>$(id).textContent="0");
   $("statAccuracy").textContent="100%";
@@ -400,7 +407,7 @@ async function startClassic(){
     language:state.language.name,languageId:state.language.id,modeName:state.gameMode==="official"?"Official":"Classic",
     difficulty:state.difficulty.name,difficultyId:state.difficulty.id,stage:state.lesson.stage,
     lessonId:state.lesson.id,levelTitle:state.lesson.title,status:"playing",
-    score:0,rewardPoints:state.gameMode==="official"?0:state.lesson.rewardPoints,wpm:0,accuracy:0,mistakes:0,elapsedSeconds:0,createdAt:serverTimestamp()
+    score:0,rewardPoints:0,maxRewardPoints:state.gameMode==="official"?0:maxTokenForLesson(state.lesson),wpm:0,accuracy:0,mistakes:0,elapsedSeconds:0,createdAt:serverTimestamp()
   });
   state.attemptId=r.id;
   state.timer=setInterval(updateClassicStats,100);
@@ -487,15 +494,16 @@ function updateClassicStats(){
   $("statWpm").textContent=Math.round(wpm());
   $("statAccuracy").textContent=`${accuracy().toFixed(0)}%`;
   $("statMistakes").textContent=state.mistakes;
-  $("statScore").textContent=state.gameMode==="official"?"—":Number(state.lesson.rewardPoints||0);
+  if(state.gameMode==="official") $("statScore").textContent="—";
+  else { const live=calculateStageTokenReward(state.lesson,wpm(),accuracy()); $("statScore").textContent=`${live.earned}/${live.maxToken}`; }
   syncMobileStats();
 }
 
-async function awardCompletion(){
+async function awardCompletion(reward){
   const ref=doc(db,"users",state.uid);
   const lang=state.language.id;
   const stage=state.lesson.stage;
-  const reward=Number(state.lesson.rewardPoints||0);
+  reward=Math.min(70,Math.max(0,Number(reward||0)));
   await runTransaction(db,async tx=>{
     const snap=await tx.get(ref);
     if(!snap.exists())return;
@@ -512,6 +520,16 @@ async function awardCompletion(){
     });
   });
   await ensureProfileDefaults();
+}
+
+function renderResultExplanation(lesson){
+  const box=$("resultExplanation");
+  if(!box||!lesson)return;
+  box.classList.remove("hidden");
+  $("resultCodeUsage").textContent=lesson.usage||lesson.description||"ฝึกโครงสร้างและไวยากรณ์ของโค้ด";
+  $("resultCodeBenefit").textContent=lesson.benefit||"ช่วยให้เข้าใจวิธีนำโค้ดไปต่อยอดในงานจริง";
+  $("resultCodeOutput").textContent=lesson.outputExplain||lesson.output||lesson.description||"ผลลัพธ์ตามคำสั่งที่พิมพ์";
+  $("resultCodeSample").textContent=lesson.code||"";
 }
 
 async function finishClassic(){
@@ -551,27 +569,31 @@ async function finishClassic(){
     $("resultAccuracy").textContent=`${acc}%`;
     $("resultTime").textContent=`${e.toFixed(2)}s`;
     $("nextLevelButton").style.display="none";
+    renderResultExplanation(state.lesson);
 
     await leaveRealFullscreen();
     showScreen("resultScreen");
     return;
   }
 
+  const tokenResult=calculateStageTokenReward(state.lesson,wp,acc);
+  const earnedToken=Math.min(70,tokenResult.earned);
   if(state.attemptId)await updateDoc(doc(db,"attempts",state.attemptId),{
-    status:"completed",score,rewardPoints:state.lesson.rewardPoints,wpm:wp,accuracy:acc,
+    status:"completed",score,rewardPoints:earnedToken,maxRewardPoints:tokenResult.maxToken,wpm:wp,accuracy:acc,
     mistakes:state.mistakes,elapsedSeconds:Math.round(e*100)/100,finishedAt:serverTimestamp()
   });
 
-  await awardCompletion();
+  await awardCompletion(earnedToken);
   await updateMyRank();
 
-  $("resultTitle").textContent=`ผ่าน Stage ${state.lesson.stage} +${state.lesson.rewardPoints} Token`;
-  $("resultText").textContent=`${state.language.name} · ${state.difficulty.name} · ${state.lesson.title}`;
-  $("resultScore").textContent=`+${state.lesson.rewardPoints} Token`;
+  $("resultTitle").textContent=`ผ่าน Stage ${state.lesson.stage} +${earnedToken} Token`;
+  $("resultText").textContent=`${state.language.name} · ${state.difficulty.name} · ${state.lesson.title} · สูงสุด ${tokenResult.maxToken} Token`;
+  $("resultScore").textContent=`+${earnedToken} / ${tokenResult.maxToken} Token`;
   $("resultWpm").textContent=wp;
   $("resultAccuracy").textContent=`${acc}%`;
   $("resultTime").textContent=`${e.toFixed(2)}s`;
   $("nextLevelButton").style.display=state.lesson.stage<50?"":"none";
+  renderResultExplanation(state.lesson);
 
   await leaveRealFullscreen();
   showScreen("resultScreen");
@@ -601,7 +623,7 @@ function renderRewardShop(){
 
   $("rewardShop").innerHTML=items.map(item=>`
     <article class="reward-card rarity-${item.rarity} ${owned.has(item.id)?"owned":""}">
-      <div class="reward-rarity">${RARITY_META[item.rarity]?.name||item.rarity}</div>
+      <div class="reward-rarity">${RARITY_META[item.rarity]?.name||item.rarity}${item.set==="set2"?" · SET 2 +30%":""}</div>
       <div class="reward-icon">${item.icon}</div>
       <h3>${esc(item.name)}</h3>
       <p>${esc(item.description)}</p>
@@ -826,7 +848,7 @@ async function saveCharacterGender(gender){
 
   // มือถือ/แท็บเล็ตใช้เฉพาะ 2D Zone หลังเลือกตัวละครเสร็จ
   if(isMobileOrTabletDevice()){
-    location.replace("./zone.html?v=4.3.0");
+    location.replace("./zone.html?v=4.4.0");
   }
 }
 
@@ -955,6 +977,9 @@ async function syncPublicProfile(){
       uid:state.uid,
       fullName:state.player.fullName,
       studentId:state.player.studentId,
+      educationLevel:state.player.educationLevel||"",
+      classroom:state.player.classroom||"",
+      classKey:classKey(state.player.educationLevel,state.player.classroom),
       rank:state.player.rank||{tierId:"bronze",tierName:"Bronze",rating:0},
       avatarId:state.player.character?.avatarId||"default_student",
       character:{
@@ -1017,18 +1042,31 @@ function listenCommunityPlayers(){
     renderCommunity(profiles);
   });
 }
+function rankingRowsHtml(rows,scopeLabel){
+  return rows.length?rows.map((u,i)=>`<div class="ranking-row ${i<3?`podium-${i+1}`:''} ${u.uid===state.uid?'me':''}">
+    <div class="ranking-position">${i+1}</div>${rankShieldHTML(u.rank)}
+    <div class="ranking-player"><strong>${esc(u.fullName||u.studentId||'-')}</strong><small>${esc(u.studentId||'-')} · ${esc(u.rank?.tierName||'Bronze')} · ${scopeLabel}</small></div>
+    <div class="ranking-rating"><strong>${Number(u.rank?.rating||0)}</strong><small>RATING</small></div>
+  </div>`).join(''):`<div class="empty-card">ยังไม่มีข้อมูล Ranking</div>`;
+}
+function setupRankingModeSwitch(){
+  const overall=$("rankingModeOverall"),room=$("rankingModeClass");
+  if(overall)overall.onclick=()=>{overall.classList.add("active");room?.classList.remove("active");$("topRankingList")?.classList.remove("hidden");$("classRankingList")?.classList.add("hidden")};
+  if(room)room.onclick=()=>{room.classList.add("active");overall?.classList.remove("active");$("classRankingList")?.classList.remove("hidden");$("topRankingList")?.classList.add("hidden")};
+}
 function listenTopRanking(){
   if(state.leaderboardUnsub)state.leaderboardUnsub();
-  const q=query(collection(db,"public_profiles"),orderBy("rank.rating","desc"),limit(10));
-  state.leaderboardUnsub=onSnapshot(q,snap=>{
-    const rows=snap.docs.map(d=>({uid:d.id,...d.data()}));
-    if($('leaderboardSeason'))$('leaderboardSeason').textContent=seasonIdFromDate(new Date());
-    if($('topRankingList'))$('topRankingList').innerHTML=rows.length?rows.map((u,i)=>`<div class="ranking-row ${i<3?`podium-${i+1}`:''}">
-      <div class="ranking-position">${i+1}</div>${rankShieldHTML(u.rank)}
-      <div class="ranking-player"><strong>${esc(u.fullName||'-')}</strong><small>${esc(u.rank?.tierName||'Bronze')} · Season Rating</small></div>
-      <div class="ranking-rating"><strong>${Number(u.rank?.rating||0)}</strong><small>RATING</small></div>
-    </div>`).join(''):`<div class="empty-card">ยังไม่มีข้อมูล Ranking</div>`;
-  },error=>{console.warn('top ranking:',error)});
+  const myClass=classKey(state.player?.educationLevel,state.player?.classroom);
+  if($("classRankingLabel"))$("classRankingLabel").textContent=myClass||"ห้องของฉัน";
+  if($("leaderboardSeason"))$("leaderboardSeason").textContent=seasonIdFromDate(new Date());
+  setupRankingModeSwitch();
+  state.leaderboardUnsub=onSnapshot(collection(db,"public_profiles"),snap=>{
+    const all=snap.docs.map(d=>({uid:d.id,...d.data()})).filter(x=>x.uid!=="TWUrLjOh3BTa1cBNwDXKk4X2IAg1");
+    const overall=rankProfiles(all,10);
+    const room=rankProfiles(all.filter(x=>(x.classKey||classKey(x.educationLevel,x.classroom))===myClass),10);
+    if($("topRankingList"))$("topRankingList").innerHTML=rankingRowsHtml(overall,"แรงค์รวม");
+    if($("classRankingList"))$("classRankingList").innerHTML=rankingRowsHtml(room,myClass||"แรงค์ห้อง");
+  },error=>console.warn("dual ranking:",error));
 }
 function startSocialHub(){
   clearInterval(state.presenceTimer);
@@ -1038,613 +1076,177 @@ function startSocialHub(){
 window.addEventListener('pagehide',()=>markOffline());
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')writePresence(document.body.classList.contains('game-active')?'game':'portal')});
 
-/* PVP V2.1 — Auto Room Code + Random Matchmaking */
+/* ===== V4.4 PVP MULTI ROOM · 1/3/5 SHOT · 1V1/2V2 RELAY · TOKEN WAGER ===== */
+const PVP_ROOM_STALE_MS=20*60*1000;
+function pvpSettings(){
+  const teamMode=$("pvpTeamMode")?.value||"1v1";
+  const shotCount=Number($("pvpShotCount")?.value||3);
+  return {teamMode,shotCount,wager:Number($("pvpWager")?.value||0),maxPlayers:teamMode==="2v2"?4:2};
+}
 function renderPvpConfig(){
-  if(!state.language){
-    setMatchmakingStatus("error","ยังไม่ได้เลือกภาษา","กรุณาเลือก HTML หรือ Python ก่อนเข้า PVP");
-    return false;
-  }
-
-  if(!state.difficulty) state.difficulty = DIFFICULTIES[0];
-
-  if(!state.lesson){
-    state.lesson =
-      languageLessons().find(x => x.stage <= maxUnlocked(state.language.id)) ||
-      languageLessons()[0];
-  }
-
+  if(!state.language){setMatchmakingStatus("error","ยังไม่ได้เลือกภาษา","กรุณาเลือก HTML หรือ Python ก่อนเข้า PVP");return false;}
+  if(!state.difficulty)state.difficulty=DIFFICULTIES[0];
+  if(!state.lesson)state.lesson=languageLessons().find(x=>x.stage<=maxUnlocked(state.language.id))||languageLessons()[0];
+  startPvpRoomBrowser();
   return !!state.lesson;
 }
-
-function setMatchmakingStatus(type, title, detail=""){
-  const box = $("matchmakingStatus");
-  if(!box) return;
-
-  box.dataset.state = type || "idle";
-  $("matchmakingStatusText").textContent = title;
-  $("matchmakingStatusDetail").textContent = detail;
+function setMatchmakingStatus(type,title,detail=""){
+  const box=$("matchmakingStatus");if(!box)return;box.dataset.state=type||"idle";
+  $("matchmakingStatusText").textContent=title;$("matchmakingStatusDetail").textContent=detail;
 }
-
 function setMatchButtonsBusy(busy){
-  const create = $("createRoomButton");
-  const find = $("findRoomButton");
-
-  if(create) create.disabled = busy;
-  if(find) find.disabled = busy;
+  ["createRoomButton","refreshRoomsButton","joinRoomCodeButton"].forEach(id=>{if($(id))$(id).disabled=busy});
 }
-
 function systemRoomCode(length=6){
-  // ตัด I, O, 0, 1 ออก เพื่อไม่ให้ผู้เล่นอ่านสับสน
-  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-  const bytes = new Uint32Array(length);
+  const chars="ABCDEFGHJKLMNPQRSTUVWXYZ23456789",bytes=new Uint32Array(length);
+  if(window.crypto?.getRandomValues){window.crypto.getRandomValues(bytes);return Array.from(bytes,n=>chars[n%chars.length]).join("");}
+  return Array.from({length},()=>chars[Math.floor(Math.random()*chars.length)]).join("");
+}
+async function createUniqueRoomCode(){for(let i=0;i<20;i++){const code=systemRoomCode();if(!(await getDoc(doc(db,"pvp_rooms",code))).exists())return code;}throw new Error("สร้าง Room Code ไม่สำเร็จ");}
+function roomPlayers(room){return Object.values(room?.players||{}).sort((a,b)=>Number(a.joinedOrder||0)-Number(b.joinedOrder||0));}
+function playerCount(room){return roomPlayers(room).length;}
+function roomFull(room){return playerCount(room)>=Number(room?.maxPlayers||2);}
+function roomFresh(room){const d=room?.createdAt?.toDate?.();return !d||Date.now()-d.getTime()<PVP_ROOM_STALE_MS;}
+function isJoinableRoom(room){return !!room&&room.status==="waiting"&&roomFresh(room)&&!room.players?.[state.uid]&&playerCount(room)<Number(room.maxPlayers||2)&&(!state.language?.id||room.languageId===state.language.id);}
+function teamMembers(room,team){return roomPlayers(room).filter(p=>p.team===team);}
+function activeUidForTeam(room,team){const m=teamMembers(room,team);if(!m.length)return null;if(room?.teamMode!=="2v2")return m[0]?.uid||null;const leg=Math.max(0,Math.min(1,Number(room?.relayLegs?.[team]||0)));return m[leg]?.uid||m[0]?.uid||null;}
+function activePlayerForTeam(room,team){return room?.players?.[activeUidForTeam(room,team)]||null;}
+function myPvpTeam(room=state.roomData){return room?.players?.[state.uid]?.team||null;}
+function isMyTurn(room=state.roomData){if(!room)return false;if(room.teamMode!=="2v2")return !!room.players?.[state.uid];return activeUidForTeam(room,myPvpTeam(room))===state.uid;}
+function splitRelayCode(code){const src=String(code||"");if(src.length<2)return [src,""];let mid=Math.floor(src.length/2),best=-1;for(let d=0;d<Math.min(80,src.length);d++){for(const pos of [mid+d,mid-d]){if(pos>0&&pos<src.length&&src[pos]==="\n"){best=pos+1;break}}if(best>0)break;}if(best<0){for(let d=0;d<Math.min(50,src.length);d++){for(const pos of [mid+d,mid-d]){if(pos>0&&pos<src.length&&/\s/.test(src[pos])){best=pos+1;break}}if(best>0)break;}}if(best<0)best=mid;return [src.slice(0,best),src.slice(best)];}
+function pvpCodeForMyTurn(room,lesson){if(room?.teamMode!=="2v2")return lesson?.code||"";const team=myPvpTeam(room),leg=Math.max(0,Math.min(1,Number(room?.relayLegs?.[team]||0)));return splitRelayCode(lesson?.code||"")[leg]||"";}
+function teamProgress(room,team){const active=activePlayerForTeam(room,team)||{},seg=Math.max(0,Math.min(100,Number(active.progress||0)));if(room?.teamMode!=="2v2")return seg;const leg=Math.max(0,Math.min(1,Number(room?.relayLegs?.[team]||0)));return Math.min(100,leg*50+seg*.5);}
 
-  if(window.crypto?.getRandomValues){
-    window.crypto.getRandomValues(bytes);
-    return Array.from(bytes, n => chars[n % chars.length]).join("");
-  }
+function teamAssignment(players,mode){const n=Object.keys(players||{}).length;if(mode==="1v1")return {team:n===0?"A":"B",teamSlot:0};const seq=[{team:"A",teamSlot:0},{team:"B",teamSlot:0},{team:"A",teamSlot:1},{team:"B",teamSlot:1}];return seq[Math.min(n,3)];}
+function choosePvpLessons(count){
+  let pool=languageLessons().filter(x=>x.difficulty===(state.difficulty?.id||"easy")&&x.stage<=maxUnlocked(state.language.id));
+  if(pool.length<count)pool=languageLessons().filter(x=>x.stage<=maxUnlocked(state.language.id));
+  if(!pool.length)pool=languageLessons();
+  const shuffled=[...pool].sort(()=>Math.random()-.5),ids=[];for(let i=0;i<count;i++)ids.push(shuffled[i%shuffled.length].id);return ids;
+}
+function pvpRoomRuleText(room){return `${room.teamMode.toUpperCase()} · ${room.shotCount} SHOT · ${Number(room.wager||0)} TOKEN · ${playerCount(room)}/${room.maxPlayers}`;}
+function renderAvailableRooms(rooms){
+  const box=$("availablePvpRooms");if(!box)return;const list=rooms.filter(isJoinableRoom).sort((a,b)=>Number(b.createdAt?.seconds||0)-Number(a.createdAt?.seconds||0));
+  $("availableRoomCount").textContent=`${list.length} ห้อง`;
+  box.innerHTML=list.length?list.map(r=>`<article class="available-room-card"><div><span>ROOM</span><strong>${r.code}</strong></div><div><b>${r.teamMode.toUpperCase()}</b><small>${r.shotCount} Shot · ${Number(r.wager||0)} Token · ${playerCount(r)}/${r.maxPlayers}</small></div><button class="btn secondary" data-join-pvp-room="${r.code}" type="button">เข้าห้อง</button></article>`).join(""):`<div class="empty-card">ยังไม่มีห้อง ${esc(state.language?.name||"")} ที่กำลังรอ — สร้างห้องใหม่ได้ทันที</div>`;
+  document.querySelectorAll("[data-join-pvp-room]").forEach(b=>b.onclick=()=>joinRoomByCode(b.dataset.joinPvpRoom));
+}
+function startPvpRoomBrowser(){
+  if(state.pvpRoomListUnsub)state.pvpRoomListUnsub();
+  state.pvpRoomListUnsub=onSnapshot(query(collection(db,"pvp_rooms"),where("status","==","waiting")),snap=>renderAvailableRooms(snap.docs.map(d=>({code:d.id,...d.data()}))),err=>{console.warn("room browser:",err);if($("availablePvpRooms"))$("availablePvpRooms").innerHTML='<div class="empty-card">โหลดรายการห้องไม่สำเร็จ</div>'});
+}
+async function refreshRoomBrowser(){startPvpRoomBrowser();setMatchmakingStatus("idle","รีเฟรชรายการห้องแล้ว","เลือกห้องจากรายการหรือกรอก Room Code");}
+$("refreshRoomsButton").onclick=refreshRoomBrowser;
+$("pvpTeamMode").onchange=()=>setMatchmakingStatus("idle","ปรับรูปแบบทีมแล้ว",$("pvpTeamMode").value==="2v2"?"2v2 Relay: สมาชิกทีมสลับกันพิมพ์คนละครึ่งของ Code ในทุก Shot":"1v1: แข่ง Code เต็มชุด");
 
-  // fallback เฉพาะ Browser เก่ามาก
-  let code = "";
-  for(let i=0;i<length;i++){
-    code += chars[Math.floor(Math.random()*chars.length)];
-  }
-  return code;
+async function leaveCurrentLobby(){
+  if(state.roomUnsub){state.roomUnsub();state.roomUnsub=null;}
+  const code=state.roomCode;if(code){const roomRef=doc(db,"pvp_rooms",code),userRef=doc(db,"users",state.uid);
+    try{await runTransaction(db,async tx=>{const rs=await tx.get(roomRef);if(!rs.exists())return;const room=rs.data();if(room.status!=="waiting"||!room.players?.[state.uid])return;const players={...(room.players||{})},mine=players[state.uid],wager=Number(room.wager||0);if(mine.stakeLocked&&wager>0){const us=await tx.get(userRef);if(us.exists())tx.update(userRef,{tokenBalance:Number(us.data().tokenBalance||0)+wager,updatedAt:serverTimestamp()});}delete players[state.uid];const left=Object.keys(players);if(!left.length){tx.delete(roomRef);return;}let hostUid=room.hostUid;if(hostUid===state.uid)hostUid=left[0];tx.update(roomRef,{players,hostUid,lastActivityAt:serverTimestamp()});});}catch(e){console.warn("leave lobby:",e)} }
+  state.roomCode=null;state.roomData=null;state.pvpActiveRoom=null;state.pvpCurrentShot=-1;state.pvpAttemptId=null;state.pvpResultSaved=false;state.pvpTurnSignature=null;state.pvpRecordedSignature=null;state.pvpTargetCode="";state.pvpAggregate={typedChars:0,keys:0,mistakes:0,seconds:0};
+  $("pvpLobby")?.classList.add("hidden");$("startPvpButton")?.classList.add("hidden");$("leaveLobbyButton")?.classList.add("hidden");setMatchButtonsBusy(false);setMatchmakingStatus("idle","พร้อมใช้งาน","สร้างห้อง เลือกห้อง หรือกรอก Room Code");await ensureProfileDefaults();if($("userTokens"))$("userTokens").textContent=Number(state.player?.tokenBalance||0).toLocaleString();
 }
 
-async function createUniqueRoomCode(){
-  for(let attempt=0; attempt<15; attempt++){
-    const code = systemRoomCode(6);
-    const snap = await getDoc(doc(db,"pvp_rooms",code));
-    if(!snap.exists()) return code;
-  }
-
-  throw new Error("ไม่สามารถสร้าง Room Code ที่ไม่ซ้ำได้ กรุณาลองอีกครั้ง");
+async function createRoom(){
+  if(!renderPvpConfig())return;const cfg=pvpSettings();if(Number(state.player?.tokenBalance||0)<cfg.wager){setMatchmakingStatus("error","Token ไม่พอ",`ต้องมีอย่างน้อย ${cfg.wager} Token`);return;}
+  setMatchButtonsBusy(true);setMatchmakingStatus("searching","กำลังสร้างห้อง...","ระบบกำลังสุ่ม Room Code");
+  try{await leaveCurrentLobby();const code=await createUniqueRoomCode(),lessonIds=choosePvpLessons(cfg.shotCount),assign=teamAssignment({},cfg.teamMode);state.roomCode=code;
+    await setDoc(doc(db,"pvp_rooms",code),{code,hostUid:state.uid,languageId:state.language.id,difficultyId:state.difficulty?.id||state.lesson.difficulty,teamMode:cfg.teamMode,shotCount:cfg.shotCount,maxPlayers:cfg.maxPlayers,wager:cfg.wager,lessonIds,shotIndex:0,relayLegs:{A:0,B:0},scores:{A:0,B:0},shotResults:{},status:"waiting",createdAt:serverTimestamp(),lastActivityAt:serverTimestamp(),players:{[state.uid]:{uid:state.uid,name:state.player.fullName,studentId:state.player.studentId,educationLevel:state.player.educationLevel,classroom:state.player.classroom,...assign,joinedOrder:0,stakeLocked:cfg.wager===0,progress:0,shotFinished:false,joinedAt:new Date().toISOString()}}});
+    setMatchmakingStatus("waiting",`สร้างห้อง ${code} แล้ว`,`ส่ง Code ให้เพื่อน หรือรอผู้เล่นเลือกห้องจากรายการ`);listenRoom(code);
+  }catch(e){console.error(e);setMatchButtonsBusy(false);setMatchmakingStatus("error","สร้างห้องไม่สำเร็จ",e.message||"");}
 }
+$("createRoomButton").onclick=createRoom;
 
-function playerCount(room){
-  return Object.keys(room?.players || {}).length;
+async function joinRoomByCode(rawCode){
+  if(!renderPvpConfig())return;const code=String(rawCode||"").trim().toUpperCase();if(code.length!==6){setMatchmakingStatus("error","Room Code ไม่ถูกต้อง","Code ต้องมี 6 ตัวอักษร");return;}
+  setMatchButtonsBusy(true);setMatchmakingStatus("searching",`กำลังเข้าห้อง ${code}...`,`ตรวจสอบที่ว่างและกติกาห้อง`);
+  try{await leaveCurrentLobby();const ref=doc(db,"pvp_rooms",code);await runTransaction(db,async tx=>{const snap=await tx.get(ref);if(!snap.exists())throw new Error("ไม่พบห้องนี้");const room=snap.data();if(!isJoinableRoom(room))throw new Error("ห้องเต็ม เริ่มแล้ว หมดอายุ หรือภาษาไม่ตรง");if(Number(state.player?.tokenBalance||0)<Number(room.wager||0))throw new Error(`Token ไม่พอ ต้องมี ${Number(room.wager||0)} Token`);const players={...(room.players||{})},assign=teamAssignment(players,room.teamMode);players[state.uid]={uid:state.uid,name:state.player.fullName,studentId:state.player.studentId,educationLevel:state.player.educationLevel,classroom:state.player.classroom,...assign,joinedOrder:Object.keys(players).length,stakeLocked:Number(room.wager||0)===0,progress:0,shotFinished:false,joinedAt:new Date().toISOString()};tx.update(ref,{players,lastActivityAt:serverTimestamp()});});state.roomCode=code;setMatchmakingStatus("matched",`เข้าห้อง ${code} แล้ว`,`รอสมาชิกครบและระบบล็อก Token`);listenRoom(code);
+  }catch(e){console.error(e);setMatchButtonsBusy(false);setMatchmakingStatus("error","เข้าห้องไม่สำเร็จ",e.message||"");}
 }
+$("joinRoomCodeButton").onclick=()=>joinRoomByCode($("joinRoomCodeInput").value);
+$("joinRoomCodeInput").addEventListener("input",e=>e.target.value=e.target.value.toUpperCase().replace(/[^A-Z2-9]/g,"").slice(0,6));
 
-function isJoinableRoom(room){
-  if(!room) return false;
-  if(room.status !== "waiting") return false;
-  if(room.hostUid === state.uid) return false;
-  if(playerCount(room) >= 2) return false;
-  const created=room.createdAt?.toDate?.();
-  if(created && Date.now()-created.getTime()>10*60*1000) return false;
-
-  // ให้ค้นหาเฉพาะห้องภาษาเดียวกัน เพื่อเริ่มแข่งได้ทันที
-  if(state.language?.id && room.languageId !== state.language.id) return false;
-
-  return true;
+async function ensureMyStakeLocked(room){
+  if(state.pvpStakeLocking||room.status!=="waiting"||!roomFull(room)||room.players?.[state.uid]?.stakeLocked)return;
+  state.pvpStakeLocking=true;const wager=Number(room.wager||0),roomRef=doc(db,"pvp_rooms",state.roomCode),userRef=doc(db,"users",state.uid);
+  try{await runTransaction(db,async tx=>{const rs=await tx.get(roomRef);if(!rs.exists())return;const r=rs.data(),mine=r.players?.[state.uid];if(r.status!=="waiting"||!mine||mine.stakeLocked)return;const players={...(r.players||{})};if(wager>0){const us=await tx.get(userRef);if(!us.exists())throw new Error("ไม่พบ User");const bal=Number(us.data().tokenBalance||0);if(bal<wager)throw new Error("TOKEN_LOW");tx.update(userRef,{tokenBalance:bal-wager,updatedAt:serverTimestamp()});}players[state.uid]={...mine,stakeLocked:true,stakeLockedAt:new Date().toISOString()};tx.update(roomRef,{players,lastActivityAt:serverTimestamp()});});await ensureProfileDefaults();if($("userTokens"))$("userTokens").textContent=Number(state.player?.tokenBalance||0).toLocaleString();
+  }catch(e){if(e.message==="TOKEN_LOW"){alert(`Token ไม่พอสำหรับห้องนี้ (${wager} Token)`);await leaveCurrentLobby();}else console.warn("stake lock:",e)}finally{state.pvpStakeLocking=false;}
 }
-
-async function leaveCurrentLobby({deleteEmptyHostRoom=true} = {}){
-  if(state.roomUnsub){
-    state.roomUnsub();
-    state.roomUnsub = null;
-  }
-
-  const code = state.roomCode;
-  const room = state.roomData;
-
-  if(code && room){
-    const ref = doc(db,"pvp_rooms",code);
-
-    try{
-      if(room.hostUid === state.uid && deleteEmptyHostRoom && room.status === "waiting"){
-        // ถ้า Host ออกตอนยังรอ ให้ลบห้อง เพื่อไม่ให้เหลือ Lobby ร้าง
-        await deleteDoc(ref);
-      } else if(room.status === "waiting" && room.players?.[state.uid]){
-        // Challenger ออกจาก Lobby: เอาตัวเองออกจาก players
-        await runTransaction(db, async tx => {
-          const snap = await tx.get(ref);
-          if(!snap.exists()) return;
-
-          const data = snap.data();
-          const players = {...(data.players || {})};
-          delete players[state.uid];
-
-          tx.update(ref,{players});
-        });
-      }
-    }catch(error){
-      console.warn("leaveCurrentLobby:", error);
-    }
-  }
-
-  state.roomCode = null;
-  state.roomData = null;
-
-  $("pvpLobby")?.classList.add("hidden");
-  $("startPvpButton")?.classList.add("hidden");
-  $("leaveLobbyButton")?.classList.add("hidden");
-
-  setMatchButtonsBusy(false);
-  setMatchmakingStatus("idle","พร้อมจับคู่","เลือก “สร้างห้อง” หรือ “ค้นหาห้อง”");
+function allStakesLocked(room){return roomFull(room)&&roomPlayers(room).every(p=>p.stakeLocked===true);}
+function renderLobbyPlayers(room){
+  const activeA=activeUidForTeam(room,"A"),activeB=activeUidForTeam(room,"B");
+  $("pvpPlayersGrid").innerHTML=roomPlayers(room).map(p=>`<div class="pvp-player-slot team-${p.team.toLowerCase()}"><span>TEAM ${p.team} · SLOT ${Number(p.teamSlot||0)+1}</span><strong>${esc(p.name||p.studentId)}</strong><small>${esc(p.studentId||'-')} · ${p.stakeLocked?'🔒 TOKEN READY':'⏳ LOCK TOKEN'}</small></div>`).join("");
+  $("pvpLobbyRule").textContent=pvpRoomRuleText(room);
 }
-
-$("createRoomButton").onclick = async () => {
-  if(!renderPvpConfig()) return;
-
-  setMatchButtonsBusy(true);
-  setMatchmakingStatus("searching","กำลังสร้างห้อง...","ระบบกำลังสุ่ม Room Code ที่ไม่ซ้ำ");
-
-  try{
-    await leaveCurrentLobby();
-
-    const code = await createUniqueRoomCode();
-    state.roomCode = code;
-
-    await setDoc(doc(db,"pvp_rooms",code),{
-      code,
-      hostUid:state.uid,
-      languageId:state.language.id,
-      lessonId:state.lesson.id,
-      difficultyId:state.lesson.difficulty,
-      status:"waiting",
-      matchType:"private_auto_code",
-      createdAt:serverTimestamp(),
-      players:{
-        [state.uid]:{
-          uid:state.uid,
-          name:state.player.fullName,
-          studentId:state.player.studentId,
-          progress:0,
-          finished:false,
-          joinedAt:new Date().toISOString()
-        }
-      }
-    });
-
-    setMatchmakingStatus(
-      "waiting",
-      `สร้างห้อง ${code} แล้ว`,
-      "Room Code ถูกสุ่มโดยระบบ กำลังรอผู้เล่นคนที่ 2"
-    );
-
-    listenRoom(code);
-  }catch(error){
-    console.error(error);
-    setMatchButtonsBusy(false);
-    setMatchmakingStatus("error","สร้างห้องไม่สำเร็จ",error.message || "กรุณาลองใหม่");
-  }
-};
-
-$("findRoomButton").onclick = async () => {
-  if(!renderPvpConfig()) return;
-
-  setMatchButtonsBusy(true);
-  setMatchmakingStatus(
-    "searching",
-    "กำลังค้นหาคู่แข่ง...",
-    `ค้นหา Lobby ${state.language.name} ที่กำลังรอผู้เล่น`
-  );
-
-  try{
-    await leaveCurrentLobby();
-
-    // ดึงห้อง waiting แล้วสุ่มลำดับ เพื่อไม่ให้ทุกคนเข้าห้องแรกเหมือนกัน
-    const waitingSnap = await getDocs(
-      query(collection(db,"pvp_rooms"), where("status","==","waiting"))
-    );
-
-    const candidates = waitingSnap.docs
-      .map(d => ({code:d.id, ...d.data()}))
-      .filter(isJoinableRoom)
-      .sort(() => Math.random() - 0.5);
-
-    if(!candidates.length){
-      setMatchButtonsBusy(false);
-      setMatchmakingStatus(
-        "empty",
-        "ยังไม่พบห้องว่าง",
-        `ตอนนี้ยังไม่มีผู้เล่น ${state.language.name} ที่กำลังรอ ลองค้นหาอีกครั้งหรือกดสร้างห้อง`
-      );
-      return;
-    }
-
-    let joinedCode = null;
-
-    // ลองทีละห้องด้วย Transaction ป้องกันผู้เล่นหลายคนแย่งช่องเดียวกัน
-    for(const candidate of candidates){
-      try{
-        const ref = doc(db,"pvp_rooms",candidate.code);
-
-        const joined = await runTransaction(db, async tx => {
-          const snap = await tx.get(ref);
-          if(!snap.exists()) return false;
-
-          const data = snap.data();
-          if(!isJoinableRoom(data)) return false;
-
-          const players = {...(data.players || {})};
-          players[state.uid] = {
-            uid:state.uid,
-            name:state.player.fullName,
-            studentId:state.player.studentId,
-            progress:0,
-            finished:false,
-            joinedAt:new Date().toISOString()
-          };
-
-          tx.update(ref,{
-            players,
-            matchedAt:serverTimestamp()
-          });
-
-          return true;
-        });
-
-        if(joined){
-          joinedCode = candidate.code;
-          break;
-        }
-      }catch(error){
-        console.warn("ข้ามห้องที่ถูกจับคู่ไปแล้ว:", candidate.code, error);
-      }
-    }
-
-    if(!joinedCode){
-      setMatchButtonsBusy(false);
-      setMatchmakingStatus(
-        "empty",
-        "ห้องที่พบถูกจับคู่ไปแล้ว",
-        "มีผู้เล่นอื่นเข้าห้องก่อนคุณ กดค้นหาห้องอีกครั้งได้ทันที"
-      );
-      return;
-    }
-
-    state.roomCode = joinedCode;
-    setMatchmakingStatus(
-      "matched",
-      `พบห้อง ${joinedCode}`,
-      "เข้าห้องสำเร็จแล้ว รอ Host เริ่มการแข่งขัน"
-    );
-
-    listenRoom(joinedCode);
-  }catch(error){
-    console.error(error);
-    setMatchButtonsBusy(false);
-    setMatchmakingStatus("error","ค้นหาห้องไม่สำเร็จ",error.message || "กรุณาลองอีกครั้ง");
-  }
-};
-
 function listenRoom(code){
-  if(state.roomUnsub) state.roomUnsub();
+  if(state.roomUnsub)state.roomUnsub();state.roomCode=code;$("pvpLobby").classList.remove("hidden");$("leaveLobbyButton").classList.remove("hidden");
+  state.roomUnsub=onSnapshot(doc(db,"pvp_rooms",code),async snap=>{if(!snap.exists()){await leaveCurrentLobby();setMatchmakingStatus("closed","ห้องถูกปิดแล้ว","เลือกห้องใหม่ได้ทันที");return;}state.roomData=snap.data();const room=state.roomData;$("roomCodeLabel").textContent=code;$("pvpStatus").textContent=String(room.status||"waiting").toUpperCase();renderLobbyPlayers(room);const full=roomFull(room),host=room.hostUid===state.uid;
+    if(room.status==="waiting"&&full&&!room.players?.[state.uid]?.stakeLocked)ensureMyStakeLocked(room);
+    if(room.status==="waiting"){const ready=allStakesLocked(room);$("pvpLobbyHint").textContent=!full?`รอผู้เล่น ${playerCount(room)}/${room.maxPlayers}`:ready?(host?"พร้อมแล้ว กดเริ่มการแข่งขัน":"พร้อมแล้ว รอ Host เริ่ม"):"สมาชิกครบแล้ว กำลังล็อก Token";$("startPvpButton").classList.toggle("hidden",!(host&&ready));setMatchmakingStatus(full?"matched":"waiting",full?"สมาชิกครบแล้ว":`ห้อง ${code} กำลังรอ`,pvpRoomRuleText(room));}
+    if(room.status==="playing"){setMatchmakingStatus("playing","การแข่งขันกำลังดำเนินอยู่",pvpRoomRuleText(room));syncPvpGameFromRoom(room,code);}
+    if(room.status==="finished"){syncPvpGameFromRoom(room,code);await handlePvpFinishedRoom(room);}setMatchButtonsBusy(true);
+  },e=>{console.error(e);setMatchButtonsBusy(false);setMatchmakingStatus("error","Lobby ขัดข้อง",e.message||"")});
+}
+$("startPvpButton").onclick=async()=>{if(!state.roomCode)return;const ref=doc(db,"pvp_rooms",state.roomCode);try{await runTransaction(db,async tx=>{const snap=await tx.get(ref);if(!snap.exists())return;const r=snap.data();if(r.hostUid!==state.uid||r.status!=="waiting"||!allStakesLocked(r))throw new Error("ห้องยังไม่พร้อม");const players={};for(const [id,p] of Object.entries(r.players||{}))players[id]={...p,progress:0,shotFinished:false,wpm:0,accuracy:100,mistakes:0};tx.update(ref,{status:"playing",shotIndex:0,relayLegs:{A:0,B:0},scores:{A:0,B:0},shotResults:{},players,startedAt:serverTimestamp(),shotStartedAt:serverTimestamp(),lastActivityAt:serverTimestamp()});});}catch(e){alert(e.message)}};
+$("leaveLobbyButton").onclick=leaveCurrentLobby;
 
-  state.roomCode = code;
-  $("pvpLobby").classList.remove("hidden");
-  $("leaveLobbyButton").classList.remove("hidden");
-
-  state.roomUnsub = onSnapshot(doc(db,"pvp_rooms",code), snap => {
-    if(!snap.exists()){
-      state.roomCode = null;
-      state.roomData = null;
-      $("pvpLobby").classList.add("hidden");
-      $("startPvpButton").classList.add("hidden");
-      $("leaveLobbyButton").classList.add("hidden");
-      setMatchButtonsBusy(false);
-      setMatchmakingStatus("closed","ห้องถูกปิดแล้ว","สร้างห้องหรือค้นหาห้องใหม่ได้ทันที");
-      return;
+function pvpElapsed(){return state.pvpStartTime?Math.max(0,(Date.now()-state.pvpStartTime)/1000):0;}
+function pvpAccuracy(){return state.pvpKeys?Math.max(0,(state.pvpCorrectText.length/state.pvpKeys)*100):100;}
+function pvpWpm(){const sec=Math.max(pvpElapsed(),.1);return state.pvpCorrectText.length?((state.pvpCorrectText.length/5)/(sec/60)):0;}
+function pvpProgressPct(){const code=state.pvpTargetCode||state.pvpLesson?.code||"";return code.length?Math.min(100,state.pvpCorrectText.length/code.length*100):0;}
+function aggregatePvpStats(){const a=state.pvpAggregate,includeCurrent=state.pvpTurnSignature&&state.pvpRecordedSignature!==state.pvpTurnSignature&&state.pvpWasActive,chars=a.typedChars+(includeCurrent?state.pvpCorrectText.length:0),keys=a.keys+(includeCurrent?state.pvpKeys:0),seconds=a.seconds+(includeCurrent?pvpElapsed():0),mistakes=a.mistakes+(includeCurrent?state.pvpMistakes:0);return {wpm:chars?((chars/5)/(Math.max(seconds,.1)/60)):0,accuracy:keys?Math.max(0,chars/keys*100):100,mistakes,seconds,chars,keys};}
+function recordCurrentPvpShot(){if(!state.pvpTurnSignature||state.pvpRecordedSignature===state.pvpTurnSignature)return;state.pvpRecordedSignature=state.pvpTurnSignature;if(state.pvpWasActive){state.pvpAggregate.typedChars+=state.pvpCorrectText.length;state.pvpAggregate.keys+=state.pvpKeys;state.pvpAggregate.mistakes+=state.pvpMistakes;state.pvpAggregate.seconds+=pvpElapsed();}}
+function renderPvpStrictCode(){const code=state.pvpTargetCode||state.pvpLesson?.code||"";let html="";for(let i=0;i<code.length;i++){const cls=i<state.pvpCorrectText.length?"correct":i===state.pvpCorrectText.length?"current":"pending",ch=code[i];html+=`<span class="${cls}">${ch==="\n"?"\n":ch===" "?" ":esc(ch)}</span>`;}$("pvpTypingDisplay").innerHTML=html;$("pvpTypingDisplay").querySelector(".current")?.scrollIntoView({block:"nearest"});$("pvpProgress").textContent=`${Math.floor(pvpProgressPct())}%`;}
+function updatePvpStats(){$("pvpTime").textContent=fmtTime(pvpElapsed());$("pvpWpm").textContent=Math.round(pvpWpm());$("pvpAccuracy").textContent=`${pvpAccuracy().toFixed(0)}%`;$("pvpMistakes").textContent=state.pvpMistakes;$("pvpProgress").textContent=`${Math.floor(pvpProgressPct())}%`;}
+function pvpWrong(expected){const stage=$("pvpTypingStage");stage.classList.remove("wrong-shake","wrong-flash");void stage.offsetWidth;stage.classList.add("wrong-shake","wrong-flash");$("pvpGameStatus").textContent=`ผิด · ${expected==="\n"?"Enter":expected===" "?"Space":expected}`;setTimeout(()=>{stage.classList.remove("wrong-shake","wrong-flash");if(!state.pvpFinished)$("pvpGameStatus").textContent="PLAYING"},260);}
+async function createPvpAttempt(){if(state.pvpAttemptId)return;const room=state.roomData;if(!room)return;try{const r=await addDoc(collection(db,"attempts"),{uid:state.uid,studentId:state.player.studentId,fullName:state.player.fullName,educationLevel:state.player.educationLevel,classroom:state.player.classroom,department:state.player.department,language:state.language?.name||room.languageId,languageId:room.languageId,modeName:"PVP",difficulty:difficultyName(room.difficultyId),difficultyId:room.difficultyId,stage:0,lessonId:"multi_shot",levelTitle:`PVP ${room.shotCount} Shot ${room.teamMode}`,roomCode:state.roomCode,teamMode:room.teamMode,shotCount:room.shotCount,tokenWager:Number(room.wager||0),team:myPvpTeam(room),status:"playing",score:0,rewardPoints:0,wpm:0,accuracy:0,mistakes:0,elapsedSeconds:0,createdAt:serverTimestamp()});state.pvpAttemptId=r.id;}catch(e){console.warn("attempt:",e)}}
+async function pushPvpProgress(force=false){if(!state.roomCode||!state.roomData||state.roomData.status!=="playing"||!isMyTurn())return;const now=Date.now();if(!force&&now-state.pvpProgressLastSent<180)return;state.pvpProgressLastSent=now;try{await updateDoc(doc(db,"pvp_rooms",state.roomCode),{[`players.${state.uid}.progress`]:Math.round(pvpProgressPct()*10)/10,[`players.${state.uid}.wpm`]:Math.round(pvpWpm()*100)/100,[`players.${state.uid}.accuracy`]:Math.round(pvpAccuracy()*100)/100,[`players.${state.uid}.mistakes`]:state.pvpMistakes,[`players.${state.uid}.lastUpdateAt`]:serverTimestamp()});}catch(e){console.warn("pvp progress:",e)}}
+function schedulePvpProgress(){clearTimeout(state.pvpProgressTimer);state.pvpProgressTimer=setTimeout(()=>pushPvpProgress(false),90);}
+function renderPvpTeams(room){const a=teamMembers(room,"A"),b=teamMembers(room,"B"),aa=activeUidForTeam(room,"A"),bb=activeUidForTeam(room,"B");const fmt=(arr,active)=>arr.map(p=>`${p.uid===active?'▶ ':''}${esc(p.studentId||p.name)}`).join(' · ')||'-';$("teamAPlayers").innerHTML=fmt(a,aa);$("teamBPlayers").innerHTML=fmt(b,bb);$("pvpShotScore").textContent=`TEAM A ${Number(room.scores?.A||0)} : ${Number(room.scores?.B||0)} TEAM B`;const ap=room.players?.[aa]||{},bp=room.players?.[bb]||{},av=teamProgress(room,"A"),bv=teamProgress(room,"B");$("teamABar").style.width=`${av}%`;$("teamBBar").style.width=`${bv}%`;$("teamAPct").textContent=`${Math.floor(av)}%`;$("teamBPct").textContent=`${Math.floor(bv)}%`;$("pvpTurnInfo").textContent=room.teamMode==="2v2"?`Relay คนละครึ่ง Code · A: ${ap.studentId||'-'} · B: ${bp.studentId||'-'}`:"แข่งกันพิมพ์ Code ชุดเดียวให้จบก่อน";}
+async function enterPvpShot(room,code){
+  const idx=Number(room.shotIndex||0),team=myPvpTeam(room),activeUid=activeUidForTeam(room,team),signature=`${idx}:${activeUid||"none"}`;
+  if(state.pvpActiveRoom===code&&state.pvpTurnSignature===signature)return;
+  const newMatch=state.pvpActiveRoom!==code;
+  if(newMatch){state.pvpAttemptId=null;state.pvpResultSaved=false;state.pvpPayoutClaimed=false;state.pvpAggregate={typedChars:0,keys:0,mistakes:0,seconds:0};state.pvpTurnSignature=null;state.pvpRecordedSignature=null;state.pvpCurrentShot=-1;}else{recordCurrentPvpShot();}
+  const lesson=LESSONS.find(x=>x.id===room.lessonIds?.[idx]);
+  if(!lesson){setMatchmakingStatus("error","ไม่พบโจทย์ PVP","lessonIds ไม่ตรงกับเวอร์ชัน");return;}
+  state.pvpActiveRoom=code;state.pvpCurrentShot=idx;state.pvpTurnSignature=signature;state.pvpRecordedSignature=null;state.pvpLesson=lesson;state.pvpCorrectText="";state.pvpMistakes=0;state.pvpKeys=0;state.pvpProgressLastSent=0;state.pvpFinished=false;clearInterval(state.pvpTimer);clearTimeout(state.pvpProgressTimer);$("pvpTypingInput").value="";
+  const turn=isMyTurn(room);state.pvpWasActive=turn;state.pvpTargetCode=pvpCodeForMyTurn(room,lesson);$("pvpTypingInput").disabled=!turn;state.pvpStartTime=Date.now();
+  const relayLeg=room.teamMode==="2v2"?Number(room.relayLegs?.[team]||0)+1:null;
+  $("pvpChallengeTitle").textContent=`Shot ${idx+1}/${room.shotCount} · Stage ${lesson.stage} · ${lesson.title}${relayLeg?` · ส่วน ${relayLeg}/2`:""}`;
+  $("pvpChallengeDescription").textContent=room.teamMode==="2v2"?"Relay 2v2: สมาชิกแต่ละทีมสลับกันพิมพ์คนละครึ่งของ Code · PVP ไม่มีคำอธิบายหลังจบ":"PVP ไม่มีคำอธิบายหลังจบ · พิมพ์ Code เต็มชุดให้จบก่อน";
+  $("pvpRoomGame").textContent=`Room ${code}`;$("pvpMatchMeta").textContent=`${room.teamMode.toUpperCase()} · ${room.shotCount} Shot · ${Number(room.wager||0)} Token`;$("pvpShotLabel").textContent=`SHOT ${idx+1}/${room.shotCount}`;$("pvpActiveRole").textContent=turn?"YOUR TURN":"WATCHING";$("pvpGameStatus").textContent=turn?"PLAYING":"รอเพื่อนร่วมทีม";$("pvpSaveState").textContent=turn?(room.teamMode==="2v2"?`Relay Part ${relayLeg}/2 · Strict Typing`:"Strict Typing · Realtime"):"Relay Mode · รอรอบของคุณ";
+  renderPvpStrictCode();renderPvpTeams(room);updatePvpStats();showScreen("pvpGameScreen");await createPvpAttempt();state.pvpTimer=setInterval(updatePvpStats,100);if(turn)setTimeout(()=>$("pvpTypingInput").focus({preventScroll:true}),100);
+}
+function syncPvpGameFromRoom(room,code){if(room.status==="playing"){enterPvpShot(room,code).catch(console.error);renderPvpTeams(room);}else if(room.status==="finished")renderPvpTeams(room);}
+async function declarePvpShotFinish(){
+  if(!state.roomCode||state.roomData?.status!=="playing"||!isMyTurn())return;
+  state.pvpFinished=true;clearInterval(state.pvpTimer);clearTimeout(state.pvpProgressTimer);recordCurrentPvpShot();
+  const ref=doc(db,"pvp_rooms",state.roomCode),shot=state.pvpCurrentShot;
+  try{await runTransaction(db,async tx=>{
+    const snap=await tx.get(ref);if(!snap.exists())return;const r=snap.data();if(r.status!=="playing"||Number(r.shotIndex)!==shot)return;
+    const me=r.players?.[state.uid];if(!me)return;
+    // 2v2 Relay: คนแรกพิมพ์ครึ่งแรกเสร็จ -> ส่งไม้ให้เพื่อนร่วมทีม โดยยังไม่ตัดสิน Shot
+    if(r.teamMode==="2v2"&&Number(r.relayLegs?.[me.team]||0)===0){
+      const relayLegs={A:Number(r.relayLegs?.A||0),B:Number(r.relayLegs?.B||0)};relayLegs[me.team]=1;
+      const players={...(r.players||{})};players[state.uid]={...(players[state.uid]||{}),progress:100,relayPartFinished:true,wpm:Math.round(pvpWpm()*100)/100,accuracy:Math.round(pvpAccuracy()*100)/100,mistakes:state.pvpMistakes};
+      const nextUid=teamMembers(r,me.team)[1]?.uid;if(nextUid)players[nextUid]={...(players[nextUid]||{}),progress:0,shotFinished:false};
+      tx.update(ref,{relayLegs,players,lastActivityAt:serverTimestamp()});return;
     }
-
-    state.roomData = snap.data();
-    const ps = Object.entries(state.roomData.players || {});
-
-    $("roomCodeLabel").textContent = code;
-    $("pvpPlayer1").textContent = ps[0]?.[1]?.name || "รอผู้เล่น...";
-    $("pvpPlayer2").textContent = ps[1]?.[1]?.name || "รอผู้เล่น...";
-    $("pvpStatus").textContent = String(state.roomData.status || "waiting").toUpperCase();
-
-    const count = ps.length;
-    const meIsHost = state.roomData.hostUid === state.uid;
-
-    if(count < 2){
-      $("pvpLobbyHint").textContent = "รอผู้เล่นอีก 1 คน";
-      setMatchmakingStatus("waiting",`ห้อง ${code} กำลังรอคู่แข่ง`,`มีผู้เล่น ${count}/2 คน`);
-    } else if(state.roomData.status === "waiting"){
-      $("pvpLobbyHint").textContent = meIsHost ? "ผู้เล่นครบแล้ว กดเริ่มการแข่งขัน" : "ผู้เล่นครบแล้ว รอ Host เริ่ม";
-      setMatchmakingStatus("matched","จับคู่สำเร็จแล้ว",meIsHost ? "กดเริ่มการแข่งขันได้เลย" : "กำลังรอ Host เริ่มเกม");
-    } else if(state.roomData.status === "playing"){
-      $("pvpLobbyHint").textContent = "การแข่งขันกำลังเริ่ม";
-      setMatchmakingStatus("playing","เริ่มการแข่งขันแล้ว","กำลังเข้าสู่เกม PVP");
-      enterPvpGame(state.roomData,code).catch(error=>console.error("enterPvpGame:",error));
-    } else if(state.roomData.status === "finished"){
-      $("pvpLobbyHint").textContent = "การแข่งขันจบแล้ว";
-      updatePvpRoomProgress(state.roomData);
-      handlePvpFinishedRoom(state.roomData).catch(error=>console.error("finish PVP:",error));
-    }
-
-    if(state.roomData.status === "playing") updatePvpRoomProgress(state.roomData);
-
-    $("startPvpButton").classList.toggle(
-      "hidden",
-      !(meIsHost && count === 2 && state.roomData.status === "waiting")
-    );
-
-    // เมื่ออยู่ใน Lobby แล้ว ปิดปุ่มสร้าง/ค้นหา ป้องกันสร้างหลายห้องซ้อน
-    setMatchButtonsBusy(true);
-  }, error => {
-    console.error(error);
-    setMatchButtonsBusy(false);
-    setMatchmakingStatus("error","การเชื่อมต่อ Lobby มีปัญหา",error.message || "");
-  });
+    const key=String(shot),results={...(r.shotResults||{})};if(results[key])return;
+    const scores={A:Number(r.scores?.A||0),B:Number(r.scores?.B||0)};scores[me.team]+=1;results[key]={winnerUid:state.uid,winnerTeam:me.team,finishedAt:new Date().toISOString()};
+    const players={};for(const [id,p] of Object.entries(r.players||{}))players[id]={...p,progress:0,shotFinished:false,relayPartFinished:false};players[state.uid]={...players[state.uid],shotFinished:true,wpm:Math.round(pvpWpm()*100)/100,accuracy:Math.round(pvpAccuracy()*100)/100,mistakes:state.pvpMistakes};
+    if(shot+1>=Number(r.shotCount||1)){tx.update(ref,{scores,shotResults:results,players,winnerTeam:scores.A>scores.B?"A":"B",status:"finished",finishedAt:serverTimestamp(),lastActivityAt:serverTimestamp()});}
+    else{tx.update(ref,{scores,shotResults:results,players,shotIndex:shot+1,relayLegs:{A:0,B:0},shotStartedAt:serverTimestamp(),lastActivityAt:serverTimestamp()});}
+  });}catch(e){console.warn("finish shot:",e);state.pvpFinished=false;}
 }
-
-$("startPvpButton").onclick = async () => {
-  if(!state.roomCode) return;
-
-  await updateDoc(doc(db,"pvp_rooms",state.roomCode),{
-    status:"playing",
-    startedAt:serverTimestamp()
-  });
-};
-
-$("leaveLobbyButton").onclick = async () => {
-  await leaveCurrentLobby();
-};
-
-$("leavePvpButton").onclick = async () => {
-  await forfeitPvpIfPlaying();
-  clearInterval(state.pvpTimer);
-  clearTimeout(state.pvpProgressTimer);
-  state.pvpActiveRoom=null;state.pvpLesson=null;state.pvpFinished=false;state.pvpCorrectText="";
-  await leaveCurrentLobby({deleteEmptyHostRoom:false});
-  showScreen("userPortal");
-};
-
-function buildKeyboard(){
-  const keyboard=$("keyboard"); if(!keyboard)return;
-  keyboard.innerHTML="";
-  const rows=[["`","1","2","3","4","5","6","7","8","9","0","-","=","Backspace"],["Tab","Q","W","E","R","T","Y","U","I","O","P","[","]","\\"],["Caps","A","S","D","F","G","H","J","K","L",";","'","Enter"],["Shift","Z","X","C","V","B","N","M",",",".","/","Shift"],["Space"]];
-  const map=new Map();
-  rows.forEach(row=>{
-    const r=document.createElement("div");r.className="keyboard-row";
-    row.forEach(k=>{
-      const el=document.createElement("div");el.className="key";el.textContent=k==="Space"?"":k;
-      if(["Backspace","Tab","Caps","Enter","Shift"].includes(k))el.classList.add("wide");
-      if(k==="Space")el.classList.add("space");
-      r.appendChild(el);
-      const n=(k==="Space"?" ":k).toLowerCase();if(!map.has(n))map.set(n,[]);map.get(n).push(el);
-    });keyboard.appendChild(r);
-  });
-  const mk=k=>(k==="CapsLock"?"caps":k).toLowerCase();
-  window.addEventListener("keydown",e=>(map.get(mk(e.key))||[]).forEach(x=>x.classList.add("active")));
-  window.addEventListener("keyup",e=>(map.get(mk(e.key))||[]).forEach(x=>x.classList.remove("active")));
-}
-
-
-/* ===== V4.3 COMPLETE PVP REALTIME GAME ===== */
-function pvpElapsed(){
-  if(!state.pvpStartTime)return 0;
-  return Math.max(0,(Date.now()-state.pvpStartTime)/1000);
-}
-function pvpAccuracy(){
-  return state.pvpKeys?Math.max(0,(state.pvpCorrectText.length/state.pvpKeys)*100):100;
-}
-function pvpWpm(){
-  const sec=Math.max(pvpElapsed(),0.1);
-  return state.pvpCorrectText.length?((state.pvpCorrectText.length/5)/(sec/60)):0;
-}
-function pvpProgressPct(){
-  const code=state.pvpLesson?.code||"";
-  return code.length?Math.min(100,(state.pvpCorrectText.length/code.length)*100):0;
-}
-function renderPvpStrictCode(){
-  const code=state.pvpLesson?.code||"";
-  let html="";
-  for(let i=0;i<code.length;i++){
-    const cls=i<state.pvpCorrectText.length?"correct":(i===state.pvpCorrectText.length?"current":"pending");
-    const ch=code[i];
-    html+=`<span class="${cls}">${ch==="\n"?"\n":ch===" "?" ":esc(ch)}</span>`;
-  }
-  $("pvpTypingDisplay").innerHTML=html;
-  $("pvpTypingDisplay").querySelector(".current")?.scrollIntoView({block:"nearest"});
-  const pct=pvpProgressPct();
-  $("myPvpBar").style.width=`${pct}%`;
-  $("myPvpPct").textContent=`${Math.floor(pct)}%`;
-  $("pvpProgress").textContent=`${Math.floor(pct)}%`;
-}
-function updatePvpStats(){
-  $("pvpTime").textContent=fmtTime(pvpElapsed());
-  $("pvpWpm").textContent=Math.round(pvpWpm());
-  $("pvpAccuracy").textContent=`${pvpAccuracy().toFixed(0)}%`;
-  $("pvpMistakes").textContent=state.pvpMistakes;
-  $("pvpProgress").textContent=`${Math.floor(pvpProgressPct())}%`;
-}
-function pvpWrong(expected){
-  const stage=$("pvpTypingStage");
-  stage.classList.remove("wrong-shake","wrong-flash");
-  void stage.offsetWidth;
-  stage.classList.add("wrong-shake","wrong-flash");
-  $("pvpGameStatus").textContent=`ผิด · ${expected==="\n"?"Enter":expected===" "?"Space":expected}`;
-  setTimeout(()=>{stage.classList.remove("wrong-shake","wrong-flash");if(!state.pvpFinished)$("pvpGameStatus").textContent="PLAYING";},260);
-}
-async function createPvpAttempt(){
-  if(state.pvpAttemptId||!state.pvpLesson)return;
-  try{
-    const r=await addDoc(collection(db,"attempts"),{
-      uid:state.uid,studentId:state.player.studentId,fullName:state.player.fullName,
-      educationLevel:state.player.educationLevel,classroom:state.player.classroom,department:state.player.department,
-      language:state.language?.name||state.pvpLesson.language,languageId:state.pvpLesson.language,
-      modeName:"PVP",difficulty:difficultyName(state.pvpLesson.difficulty),difficultyId:state.pvpLesson.difficulty,
-      stage:state.pvpLesson.stage,lessonId:state.pvpLesson.id,levelTitle:state.pvpLesson.title,
-      roomCode:state.roomCode,status:"playing",score:0,rewardPoints:0,wpm:0,accuracy:0,mistakes:0,
-      elapsedSeconds:0,createdAt:serverTimestamp()
-    });
-    state.pvpAttemptId=r.id;
-  }catch(error){console.warn("createPvpAttempt:",error)}
-}
-async function pushPvpProgress(force=false){
-  if(!state.roomCode||!state.roomData||state.pvpFinished)return;
-  const now=Date.now();
-  if(!force&&now-state.pvpProgressLastSent<160)return;
-  state.pvpProgressLastSent=now;
-  const pct=Math.round(pvpProgressPct()*10)/10;
-  try{
-    await updateDoc(doc(db,"pvp_rooms",state.roomCode),{
-      [`players.${state.uid}.progress`]:pct,
-      [`players.${state.uid}.wpm`]:Math.round(pvpWpm()*100)/100,
-      [`players.${state.uid}.accuracy`]:Math.round(pvpAccuracy()*100)/100,
-      [`players.${state.uid}.mistakes`]:state.pvpMistakes,
-      [`players.${state.uid}.lastUpdateAt`]:serverTimestamp()
-    });
-  }catch(error){console.warn("PVP progress:",error)}
-}
-function schedulePvpProgress(){
-  clearTimeout(state.pvpProgressTimer);
-  state.pvpProgressTimer=setTimeout(()=>pushPvpProgress(false),80);
-}
-async function savePvpAttempt(result){
-  if(state.pvpResultSaved)return;
-  state.pvpResultSaved=true;
-  if(!state.pvpAttemptId){await createPvpAttempt();}
-  if(!state.pvpAttemptId)return;
-  try{
-    await updateDoc(doc(db,"attempts",state.pvpAttemptId),{
-      status:"completed",pvpResult:result,score:result==="win"?100:0,rewardPoints:0,
-      wpm:Math.round(pvpWpm()*100)/100,accuracy:Math.round(pvpAccuracy()*100)/100,
-      mistakes:state.pvpMistakes,elapsedSeconds:Math.round(pvpElapsed()*100)/100,
-      finishedAt:serverTimestamp()
-    });
-  }catch(error){console.warn("savePvpAttempt:",error)}
-}
-async function declarePvpFinish(){
-  if(state.pvpFinished||!state.roomCode)return;
-  state.pvpFinished=true;
-  clearInterval(state.pvpTimer);
-  clearTimeout(state.pvpProgressTimer);
-  $("pvpGameStatus").textContent="FINISHING";
-  const ref=doc(db,"pvp_rooms",state.roomCode);
-  try{
-    await runTransaction(db,async tx=>{
-      const snap=await tx.get(ref);
-      if(!snap.exists())return;
-      const data=snap.data();
-      const players={...(data.players||{})};
-      players[state.uid]={...(players[state.uid]||{}),progress:100,finished:true,
-        wpm:Math.round(pvpWpm()*100)/100,accuracy:Math.round(pvpAccuracy()*100)/100,
-        mistakes:state.pvpMistakes,elapsedSeconds:Math.round(pvpElapsed()*100)/100};
-      const winner=data.winnerUid||state.uid;
-      tx.update(ref,{players,winnerUid:winner,status:"finished",finishedAt:serverTimestamp()});
-    });
-  }catch(error){
-    console.warn("declarePvpFinish:",error);
-    state.pvpFinished=false;
-    $("pvpGameStatus").textContent="ERROR";
-  }
-}
-async function handlePvpFinishedRoom(room){
-  if(state.pvpActiveRoom!==state.roomCode)return;
-  const won=room.winnerUid===state.uid;
-  if(!state.pvpFinished){
-    state.pvpFinished=true;
-    clearInterval(state.pvpTimer);
-    clearTimeout(state.pvpProgressTimer);
-  }
-  $("pvpTypingInput").disabled=true;
-  $("pvpGameStatus").textContent=won?"WIN 🏆":"LOSE";
-  $("pvpSaveState").textContent=won?"คุณชนะการแข่งขัน · บันทึกผลแล้ว":"คู่แข่งชนะ · บันทึกผลแล้ว";
-  await savePvpAttempt(won?"win":"loss");
-}
-async function enterPvpGame(room,code){
-  if(state.pvpActiveRoom===code)return;
-  const lesson=LESSONS.find(x=>x.id===room.lessonId);
-  if(!lesson){
-    setMatchmakingStatus("error","ไม่พบโจทย์ PVP","Room นี้ใช้โจทย์ที่ไม่มีในเวอร์ชันปัจจุบัน");
-    return;
-  }
-  state.pvpActiveRoom=code;
-  state.pvpLesson=lesson;
-  state.pvpAttemptId=null;
-  state.pvpFinished=false;
-  state.pvpResultSaved=false;
-  state.pvpCorrectText="";
-  state.pvpMistakes=0;
-  state.pvpKeys=0;
-  state.pvpProgressLastSent=0;
-  clearInterval(state.pvpTimer);
-  clearTimeout(state.pvpProgressTimer);
-  $("pvpTypingInput").disabled=false;
-  $("pvpTypingInput").value="";
-
-  const startMs=room.startedAt?.toMillis?.()||Date.now();
-  state.pvpStartTime=startMs;
-  const entries=Object.entries(room.players||{});
-  const opponent=entries.find(([id])=>id!==state.uid)?.[1]||null;
-  $("pvpChallengeTitle").textContent=`Stage ${lesson.stage} · ${lesson.title}`;
-  $("pvpChallengeDescription").textContent=lesson.description||"พิมพ์ Code ให้ครบก่อนคู่แข่ง";
-  $("pvpRoomGame").textContent=`Room ${code}`;
-  $("pvpOpponentName").textContent=`คู่แข่ง: ${opponent?.name||opponent?.studentId||"-"}`;
-  $("myPvpName").textContent=state.player.fullName||state.player.studentId;
-  $("oppPvpName").textContent=opponent?.name||opponent?.studentId||"OPPONENT";
-  $("myPvpBar").style.width="0%";$("oppPvpBar").style.width=`${Number(opponent?.progress||0)}%`;
-  $("myPvpPct").textContent="0%";$("oppPvpPct").textContent=`${Math.floor(Number(opponent?.progress||0))}%`;
-  $("pvpGameStatus").textContent="PLAYING";
-  $("pvpSaveState").textContent="Realtime · Strict Typing";
-  renderPvpStrictCode();updatePvpStats();
-  showScreen("pvpGameScreen");
-  await createPvpAttempt();
-  state.pvpTimer=setInterval(updatePvpStats,100);
-  setTimeout(()=>$("pvpTypingInput").focus({preventScroll:true}),100);
-}
-function updatePvpRoomProgress(room){
-  if(state.pvpActiveRoom!==state.roomCode)return;
-  const players=room.players||{};
-  const mine=players[state.uid]||{};
-  const oppEntry=Object.entries(players).find(([id])=>id!==state.uid);
-  const opp=oppEntry?.[1]||{};
-  const myPct=Math.max(Number(mine.progress||0),pvpProgressPct());
-  const oppPct=Number(opp.progress||0);
-  $("myPvpBar").style.width=`${Math.min(100,myPct)}%`;
-  $("myPvpPct").textContent=`${Math.floor(myPct)}%`;
-  $("oppPvpBar").style.width=`${Math.min(100,oppPct)}%`;
-  $("oppPvpPct").textContent=`${Math.floor(oppPct)}%`;
-}
-$("pvpTypingStage").onclick=()=>$("pvpTypingInput").focus({preventScroll:true});
-$("pvpTypingInput").addEventListener("keydown",async e=>{
-  if(state.pvpFinished){e.preventDefault();return;}
-  if(["Backspace","Delete","ArrowLeft","ArrowRight","ArrowUp","ArrowDown"].includes(e.key)){
-    e.preventDefault();$("pvpGameStatus").textContent="STRICT · พิมพ์ตัวเดิมใหม่";return;
-  }
-  const raw=keyToInput(e);
-  if(raw===null)return;
-  e.preventDefault();
-  const code=state.pvpLesson?.code||"";
-  const pos=state.pvpCorrectText.length;
-  const expected=code[pos];
-  if(expected===undefined)return;
-  state.pvpKeys++;
-  if(raw==="\t"){
-    if(expected===" "){
-      let count=0;while(code[pos+count]===" "&&count<4)count++;
-      state.pvpCorrectText+=code.slice(pos,pos+count);
-      renderPvpStrictCode();updatePvpStats();schedulePvpProgress();
-      if(state.pvpCorrectText===code)await declarePvpFinish();
-    }else{state.pvpMistakes++;pvpWrong(expected);updatePvpStats();schedulePvpProgress();}
-    return;
-  }
-  if(raw===expected){
-    state.pvpCorrectText+=raw;renderPvpStrictCode();updatePvpStats();schedulePvpProgress();
-    $("pvpGameStatus").textContent="PLAYING";
-    if(state.pvpCorrectText===code)await declarePvpFinish();
-  }else{
-    state.pvpMistakes++;pvpWrong(expected);updatePvpStats();schedulePvpProgress();
-  }
-});
-async function forfeitPvpIfPlaying(){
-  if(!state.roomCode||state.roomData?.status!=="playing"||state.pvpFinished)return;
-  const opponentUid=Object.keys(state.roomData.players||{}).find(id=>id!==state.uid);
-  if(!opponentUid)return;
-  state.pvpFinished=true;clearInterval(state.pvpTimer);clearTimeout(state.pvpProgressTimer);
-  try{
-    await updateDoc(doc(db,"pvp_rooms",state.roomCode),{
-      winnerUid:opponentUid,status:"finished",finishedAt:serverTimestamp(),forfeitUid:state.uid
-    });
-    await savePvpAttempt("forfeit");
-  }catch(error){console.warn("forfeit:",error)}
-}
+async function claimPvpPayout(room){const wager=Number(room.wager||0),my=room.players?.[state.uid];if(!my||wager<=0||my.team!==room.winnerTeam)return 0;const winners=teamMembers(room,room.winnerTeam).length||1,pot=wager*playerCount(room),share=Math.floor(pot/winners),roomRef=doc(db,"pvp_rooms",state.roomCode),userRef=doc(db,"users",state.uid);let paid=0;try{await runTransaction(db,async tx=>{const rs=await tx.get(roomRef);if(!rs.exists())return;const r=rs.data(),claims={...(r.payoutClaims||{})};if(r.status!=="finished"||r.winnerTeam!==my.team||claims[state.uid])return;const us=await tx.get(userRef);if(!us.exists())return;tx.update(userRef,{tokenBalance:Number(us.data().tokenBalance||0)+share,tokenLifetime:Number(us.data().tokenLifetime||0)+0,updatedAt:serverTimestamp()});claims[state.uid]=true;tx.update(roomRef,{payoutClaims:claims});paid=share;});}catch(e){console.warn("payout:",e)}if(paid){await ensureProfileDefaults();if($("userTokens"))$("userTokens").textContent=Number(state.player.tokenBalance||0).toLocaleString();}return paid;}
+async function savePvpAttempt(result,payout=0){if(state.pvpResultSaved)return;state.pvpResultSaved=true;if(!state.pvpAttemptId)await createPvpAttempt();if(!state.pvpAttemptId)return;recordCurrentPvpShot();const a=aggregatePvpStats(),room=state.roomData,wager=Number(room?.wager||0);try{await updateDoc(doc(db,"attempts",state.pvpAttemptId),{status:"completed",pvpResult:result,winnerTeam:room?.winnerTeam||null,team:myPvpTeam(room),score:result==="win"?100:0,rewardPoints:0,tokenWager:wager,tokenPayout:payout,netToken:payout-wager,wpm:Math.round(a.wpm*100)/100,accuracy:Math.round(a.accuracy*100)/100,mistakes:a.mistakes,elapsedSeconds:Math.round(((Date.now()-(room?.startedAt?.toMillis?.()||Date.now()))/1000)*100)/100,finishedAt:serverTimestamp()});}catch(e){console.warn("save pvp:",e)}}
+async function handlePvpFinishedRoom(room){if(state.pvpActiveRoom!==state.roomCode)return;recordCurrentPvpShot();state.pvpFinished=true;clearInterval(state.pvpTimer);clearTimeout(state.pvpProgressTimer);$("pvpTypingInput").disabled=true;const won=myPvpTeam(room)===room.winnerTeam,payout=await claimPvpPayout(room);$("pvpGameStatus").textContent=won?"WIN 🏆":"LOSE";$("pvpSaveState").textContent=won?`ทีมคุณชนะ · รับ ${payout} Token จาก Pot`:`ทีม ${room.winnerTeam} ชนะ · เสีย ${Number(room.wager||0)} Token`;await savePvpAttempt(won?"win":"loss",payout);}
+$("pvpTypingStage").onclick=()=>{if(isMyTurn())$("pvpTypingInput").focus({preventScroll:true})};
+$("pvpTypingInput").addEventListener("keydown",async e=>{if(state.roomData?.status!=="playing"||!isMyTurn()||state.pvpFinished){e.preventDefault();return;}if(["Backspace","Delete","ArrowLeft","ArrowRight","ArrowUp","ArrowDown"].includes(e.key)){e.preventDefault();$("pvpGameStatus").textContent="STRICT · พิมพ์ตัวเดิมใหม่";return;}const raw=keyToInput(e);if(raw===null)return;e.preventDefault();const code=state.pvpTargetCode||state.pvpLesson?.code||"",pos=state.pvpCorrectText.length,expected=code[pos];if(expected===undefined)return;state.pvpKeys++;if(raw==="\t"){if(expected===" "){let count=0;while(code[pos+count]===" "&&count<4)count++;state.pvpCorrectText+=code.slice(pos,pos+count);renderPvpStrictCode();updatePvpStats();schedulePvpProgress();if(state.pvpCorrectText===code)await declarePvpShotFinish();}else{state.pvpMistakes++;pvpWrong(expected);updatePvpStats();}return;}if(raw===expected){state.pvpCorrectText+=raw;renderPvpStrictCode();updatePvpStats();schedulePvpProgress();$("pvpGameStatus").textContent="PLAYING";if(state.pvpCorrectText===code)await declarePvpShotFinish();}else{state.pvpMistakes++;pvpWrong(expected);updatePvpStats();schedulePvpProgress();}});
+async function forfeitPvpIfPlaying(){if(!state.roomCode||state.roomData?.status!=="playing")return;const room=state.roomData,myTeam=myPvpTeam(room),other=myTeam==="A"?"B":"A";try{await updateDoc(doc(db,"pvp_rooms",state.roomCode),{winnerTeam:other,status:"finished",forfeitUid:state.uid,finishedAt:serverTimestamp()});}catch(e){console.warn("forfeit:",e)}}
+$("leavePvpButton").onclick=async()=>{await forfeitPvpIfPlaying();clearInterval(state.pvpTimer);clearTimeout(state.pvpProgressTimer);state.pvpActiveRoom=null;state.pvpLesson=null;state.pvpFinished=false;state.pvpCorrectText="";showScreen("userPortal");};
 
 
 /* ===== Responsive Device UX ===== */
@@ -1776,7 +1378,7 @@ updateDeviceUX();
 
 onAuthStateChanged(auth,async user=>{
   if(!user){state.uid=null;state.player=null;showScreen("authScreen");return;}
-  if(user.email==="pisit_2000@thc-nr.local"){location.replace("./admin.html?v=4.3.0");return;}
+  if(user.email==="pisit_2000@thc-nr.local"){location.replace("./admin.html?v=4.4.0");return;}
   state.uid=user.uid;
   try{
     await routeAuthenticatedStudent();

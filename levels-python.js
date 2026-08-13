@@ -12,7 +12,7 @@ export const PYTHON_LEVELS = [
     "outputExplain": "แสดงข้อความ Hello Python",
     "output": "แสดงข้อความ Hello Python",
     "basePoints": 112,
-    "rewardPoints": 22,
+    "rewardPoints": 12,
     "timeLimit": 45
   },
   {
@@ -28,7 +28,7 @@ export const PYTHON_LEVELS = [
     "outputExplain": "เก็บข้อความในตัวแปรแล้วแสดงผล",
     "output": "เก็บข้อความในตัวแปรแล้วแสดงผล",
     "basePoints": 124,
-    "rewardPoints": 24,
+    "rewardPoints": 13,
     "timeLimit": 49
   },
   {
@@ -44,7 +44,7 @@ export const PYTHON_LEVELS = [
     "outputExplain": "เก็บจำนวนเต็มและแสดงผล",
     "output": "เก็บจำนวนเต็มและแสดงผล",
     "basePoints": 136,
-    "rewardPoints": 26,
+    "rewardPoints": 15,
     "timeLimit": 47
   },
   {
@@ -60,7 +60,7 @@ export const PYTHON_LEVELS = [
     "outputExplain": "คำนวณผลบวก",
     "output": "คำนวณผลบวก",
     "basePoints": 148,
-    "rewardPoints": 28,
+    "rewardPoints": 16,
     "timeLimit": 48
   },
   {
@@ -76,7 +76,7 @@ export const PYTHON_LEVELS = [
     "outputExplain": "คำนวณราคารวม",
     "output": "คำนวณราคารวม",
     "basePoints": 160,
-    "rewardPoints": 30,
+    "rewardPoints": 17,
     "timeLimit": 69
   },
   {
@@ -92,7 +92,7 @@ export const PYTHON_LEVELS = [
     "outputExplain": "แสดงหลายค่าในบรรทัดเดียว",
     "output": "แสดงหลายค่าในบรรทัดเดียว",
     "basePoints": 172,
-    "rewardPoints": 32,
+    "rewardPoints": 18,
     "timeLimit": 72
   },
   {
@@ -108,7 +108,7 @@ export const PYTHON_LEVELS = [
     "outputExplain": "แทรกตัวแปรในข้อความด้วย f-string",
     "output": "แทรกตัวแปรในข้อความด้วย f-string",
     "basePoints": 184,
-    "rewardPoints": 34,
+    "rewardPoints": 20,
     "timeLimit": 66
   },
   {
@@ -124,7 +124,7 @@ export const PYTHON_LEVELS = [
     "outputExplain": "เก็บค่า True/False",
     "output": "เก็บค่า True/False",
     "basePoints": 196,
-    "rewardPoints": 36,
+    "rewardPoints": 21,
     "timeLimit": 53
   },
   {
@@ -140,7 +140,7 @@ export const PYTHON_LEVELS = [
     "outputExplain": "ตรวจเงื่อนไข",
     "output": "ตรวจเงื่อนไข",
     "basePoints": 208,
-    "rewardPoints": 38,
+    "rewardPoints": 22,
     "timeLimit": 63
   },
   {
@@ -156,7 +156,7 @@ export const PYTHON_LEVELS = [
     "outputExplain": "เลือกผลลัพธ์สองทาง",
     "output": "เลือกผลลัพธ์สองทาง",
     "basePoints": 220,
-    "rewardPoints": 40,
+    "rewardPoints": 24,
     "timeLimit": 84
   },
   {
@@ -172,7 +172,7 @@ export const PYTHON_LEVELS = [
     "outputExplain": "ตรวจหลายช่วงคะแนน",
     "output": "ตรวจหลายช่วงคะแนน",
     "basePoints": 232,
-    "rewardPoints": 42,
+    "rewardPoints": 25,
     "timeLimit": 101
   },
   {
@@ -188,7 +188,7 @@ export const PYTHON_LEVELS = [
     "outputExplain": "รวมสองเงื่อนไขด้วย and",
     "output": "รวมสองเงื่อนไขด้วย and",
     "basePoints": 244,
-    "rewardPoints": 44,
+    "rewardPoints": 26,
     "timeLimit": 84
   },
   {
@@ -204,7 +204,7 @@ export const PYTHON_LEVELS = [
     "outputExplain": "ใช้ or เมื่อผ่านได้อย่างใดอย่างหนึ่ง",
     "output": "ใช้ or เมื่อผ่านได้อย่างใดอย่างหนึ่ง",
     "basePoints": 256,
-    "rewardPoints": 46,
+    "rewardPoints": 27,
     "timeLimit": 87
   },
   {
@@ -220,7 +220,7 @@ export const PYTHON_LEVELS = [
     "outputExplain": "สร้าง list",
     "output": "สร้าง list",
     "basePoints": 268,
-    "rewardPoints": 48,
+    "rewardPoints": 29,
     "timeLimit": 70
   },
   {
@@ -236,7 +236,7 @@ export const PYTHON_LEVELS = [
     "outputExplain": "เข้าถึงสมาชิกด้วย index",
     "output": "เข้าถึงสมาชิกด้วย index",
     "basePoints": 280,
-    "rewardPoints": 50,
+    "rewardPoints": 30,
     "timeLimit": 72
   },
   {
@@ -252,7 +252,7 @@ export const PYTHON_LEVELS = [
     "outputExplain": "เพิ่มสมาชิก list",
     "output": "เพิ่มสมาชิก list",
     "basePoints": 292,
-    "rewardPoints": 93,
+    "rewardPoints": 30,
     "timeLimit": 66
   },
   {
@@ -268,7 +268,7 @@ export const PYTHON_LEVELS = [
     "outputExplain": "วนซ้ำสมาชิก",
     "output": "วนซ้ำสมาชิก",
     "basePoints": 304,
-    "rewardPoints": 96,
+    "rewardPoints": 31,
     "timeLimit": 61
   },
   {
@@ -284,7 +284,7 @@ export const PYTHON_LEVELS = [
     "outputExplain": "วนซ้ำช่วงตัวเลข",
     "output": "วนซ้ำช่วงตัวเลข",
     "basePoints": 316,
-    "rewardPoints": 99,
+    "rewardPoints": 32,
     "timeLimit": 53
   },
   {
@@ -300,7 +300,7 @@ export const PYTHON_LEVELS = [
     "outputExplain": "วนซ้ำด้วย while",
     "output": "วนซ้ำด้วย while",
     "basePoints": 328,
-    "rewardPoints": 102,
+    "rewardPoints": 33,
     "timeLimit": 74
   },
   {
@@ -316,7 +316,7 @@ export const PYTHON_LEVELS = [
     "outputExplain": "หยุด loop ด้วย break",
     "output": "หยุด loop ด้วย break",
     "basePoints": 340,
-    "rewardPoints": 105,
+    "rewardPoints": 34,
     "timeLimit": 75
   },
   {
@@ -332,7 +332,7 @@ export const PYTHON_LEVELS = [
     "outputExplain": "ข้ามรอบด้วย continue",
     "output": "ข้ามรอบด้วย continue",
     "basePoints": 352,
-    "rewardPoints": 108,
+    "rewardPoints": 35,
     "timeLimit": 77
   },
   {
@@ -348,7 +348,7 @@ export const PYTHON_LEVELS = [
     "outputExplain": "สร้างและเรียกฟังก์ชัน",
     "output": "สร้างและเรียกฟังก์ชัน",
     "basePoints": 364,
-    "rewardPoints": 111,
+    "rewardPoints": 36,
     "timeLimit": 60
   },
   {
@@ -364,7 +364,7 @@ export const PYTHON_LEVELS = [
     "outputExplain": "ส่ง parameter เข้าฟังก์ชัน",
     "output": "ส่ง parameter เข้าฟังก์ชัน",
     "basePoints": 376,
-    "rewardPoints": 114,
+    "rewardPoints": 37,
     "timeLimit": 74
   },
   {
@@ -380,7 +380,7 @@ export const PYTHON_LEVELS = [
     "outputExplain": "คืนค่าจากฟังก์ชัน",
     "output": "คืนค่าจากฟังก์ชัน",
     "basePoints": 388,
-    "rewardPoints": 117,
+    "rewardPoints": 38,
     "timeLimit": 78
   },
   {
@@ -396,7 +396,7 @@ export const PYTHON_LEVELS = [
     "outputExplain": "กำหนดค่าเริ่มต้น parameter",
     "output": "กำหนดค่าเริ่มต้น parameter",
     "basePoints": 400,
-    "rewardPoints": 120,
+    "rewardPoints": 39,
     "timeLimit": 86
   },
   {
@@ -412,7 +412,7 @@ export const PYTHON_LEVELS = [
     "outputExplain": "ใช้ tuple เก็บค่าคงรูป",
     "output": "ใช้ tuple เก็บค่าคงรูป",
     "basePoints": 412,
-    "rewardPoints": 123,
+    "rewardPoints": 41,
     "timeLimit": 61
   },
   {
@@ -428,7 +428,7 @@ export const PYTHON_LEVELS = [
     "outputExplain": "set ตัดค่าซ้ำ",
     "output": "set ตัดค่าซ้ำ",
     "basePoints": 424,
-    "rewardPoints": 126,
+    "rewardPoints": 42,
     "timeLimit": 66
   },
   {
@@ -444,7 +444,7 @@ export const PYTHON_LEVELS = [
     "outputExplain": "เก็บข้อมูลแบบ key-value",
     "output": "เก็บข้อมูลแบบ key-value",
     "basePoints": 436,
-    "rewardPoints": 129,
+    "rewardPoints": 43,
     "timeLimit": 75
   },
   {
@@ -460,7 +460,7 @@ export const PYTHON_LEVELS = [
     "outputExplain": "วน dictionary",
     "output": "วน dictionary",
     "basePoints": 448,
-    "rewardPoints": 132,
+    "rewardPoints": 44,
     "timeLimit": 96
   },
   {
@@ -476,7 +476,7 @@ export const PYTHON_LEVELS = [
     "outputExplain": "สร้าง list แบบย่อ",
     "output": "สร้าง list แบบย่อ",
     "basePoints": 460,
-    "rewardPoints": 135,
+    "rewardPoints": 45,
     "timeLimit": 69
   },
   {
@@ -492,7 +492,7 @@ export const PYTHON_LEVELS = [
     "outputExplain": "กรองข้อมูลด้วย comprehension",
     "output": "กรองข้อมูลด้วย comprehension",
     "basePoints": 472,
-    "rewardPoints": 138,
+    "rewardPoints": 46,
     "timeLimit": 89
   },
   {
@@ -508,7 +508,7 @@ export const PYTHON_LEVELS = [
     "outputExplain": "ใช้ method ของ string",
     "output": "ใช้ method ของ string",
     "basePoints": 484,
-    "rewardPoints": 141,
+    "rewardPoints": 47,
     "timeLimit": 69
   },
   {
@@ -524,7 +524,7 @@ export const PYTHON_LEVELS = [
     "outputExplain": "แยกและรวมข้อความ",
     "output": "แยกและรวมข้อความ",
     "basePoints": 496,
-    "rewardPoints": 144,
+    "rewardPoints": 48,
     "timeLimit": 84
   },
   {
@@ -540,7 +540,7 @@ export const PYTHON_LEVELS = [
     "outputExplain": "วนพร้อมเลขลำดับ",
     "output": "วนพร้อมเลขลำดับ",
     "basePoints": 508,
-    "rewardPoints": 147,
+    "rewardPoints": 49,
     "timeLimit": 112
   },
   {
@@ -556,7 +556,7 @@ export const PYTHON_LEVELS = [
     "outputExplain": "จับคู่หลาย list",
     "output": "จับคู่หลาย list",
     "basePoints": 520,
-    "rewardPoints": 150,
+    "rewardPoints": 50,
     "timeLimit": 106
   },
   {
@@ -572,7 +572,7 @@ export const PYTHON_LEVELS = [
     "outputExplain": "จัดการข้อผิดพลาด",
     "output": "จัดการข้อผิดพลาด",
     "basePoints": 532,
-    "rewardPoints": 244,
+    "rewardPoints": 52,
     "timeLimit": 86
   },
   {
@@ -588,7 +588,7 @@ export const PYTHON_LEVELS = [
     "outputExplain": "สร้าง error เมื่อข้อมูลไม่ถูกต้อง",
     "output": "สร้าง error เมื่อข้อมูลไม่ถูกต้อง",
     "basePoints": 544,
-    "rewardPoints": 248,
+    "rewardPoints": 53,
     "timeLimit": 129
   },
   {
@@ -604,7 +604,7 @@ export const PYTHON_LEVELS = [
     "outputExplain": "สร้าง class และ object",
     "output": "สร้าง class และ object",
     "basePoints": 556,
-    "rewardPoints": 252,
+    "rewardPoints": 55,
     "timeLimit": 85
   },
   {
@@ -620,7 +620,7 @@ export const PYTHON_LEVELS = [
     "outputExplain": "ใช้ __init__ กำหนดค่า object",
     "output": "ใช้ __init__ กำหนดค่า object",
     "basePoints": 568,
-    "rewardPoints": 256,
+    "rewardPoints": 56,
     "timeLimit": 116
   },
   {
@@ -636,7 +636,7 @@ export const PYTHON_LEVELS = [
     "outputExplain": "สร้าง method ภายใน class",
     "output": "สร้าง method ภายใน class",
     "basePoints": 580,
-    "rewardPoints": 260,
+    "rewardPoints": 57,
     "timeLimit": 150
   },
   {
@@ -652,7 +652,7 @@ export const PYTHON_LEVELS = [
     "outputExplain": "สืบทอด class",
     "output": "สืบทอด class",
     "basePoints": 592,
-    "rewardPoints": 264,
+    "rewardPoints": 58,
     "timeLimit": 160
   },
   {
@@ -668,7 +668,7 @@ export const PYTHON_LEVELS = [
     "outputExplain": "ใช้ property",
     "output": "ใช้ property",
     "basePoints": 604,
-    "rewardPoints": 268,
+    "rewardPoints": 60,
     "timeLimit": 162
   },
   {
@@ -684,7 +684,7 @@ export const PYTHON_LEVELS = [
     "outputExplain": "ใช้ lambda ฟังก์ชันสั้น",
     "output": "ใช้ lambda ฟังก์ชันสั้น",
     "basePoints": 616,
-    "rewardPoints": 272,
+    "rewardPoints": 61,
     "timeLimit": 78
   },
   {
@@ -700,7 +700,7 @@ export const PYTHON_LEVELS = [
     "outputExplain": "แปลงข้อมูลด้วย map",
     "output": "แปลงข้อมูลด้วย map",
     "basePoints": 628,
-    "rewardPoints": 276,
+    "rewardPoints": 62,
     "timeLimit": 90
   },
   {
@@ -716,7 +716,7 @@ export const PYTHON_LEVELS = [
     "outputExplain": "สร้าง generator ด้วย yield",
     "output": "สร้าง generator ด้วย yield",
     "basePoints": 640,
-    "rewardPoints": 280,
+    "rewardPoints": 64,
     "timeLimit": 112
   },
   {
@@ -732,7 +732,7 @@ export const PYTHON_LEVELS = [
     "outputExplain": "ใช้ decorator ครอบฟังก์ชัน",
     "output": "ใช้ decorator ครอบฟังก์ชัน",
     "basePoints": 652,
-    "rewardPoints": 284,
+    "rewardPoints": 65,
     "timeLimit": 153
   },
   {
@@ -748,7 +748,7 @@ export const PYTHON_LEVELS = [
     "outputExplain": "ใช้ dataclass ลด boilerplate",
     "output": "ใช้ dataclass ลด boilerplate",
     "basePoints": 664,
-    "rewardPoints": 288,
+    "rewardPoints": 66,
     "timeLimit": 128
   },
   {
@@ -764,7 +764,7 @@ export const PYTHON_LEVELS = [
     "outputExplain": "ใช้ type hints",
     "output": "ใช้ type hints",
     "basePoints": 676,
-    "rewardPoints": 292,
+    "rewardPoints": 67,
     "timeLimit": 111
   },
   {
@@ -780,7 +780,7 @@ export const PYTHON_LEVELS = [
     "outputExplain": "รู้จัก async/await",
     "output": "รู้จัก async/await",
     "basePoints": 688,
-    "rewardPoints": 296,
+    "rewardPoints": 69,
     "timeLimit": 119
   },
   {
@@ -796,7 +796,7 @@ export const PYTHON_LEVELS = [
     "outputExplain": "ด่านสุดท้ายจำลอง logic เกมตรวจตัวอักษร",
     "output": "ด่านสุดท้ายจำลอง logic เกมตรวจตัวอักษร",
     "basePoints": 700,
-    "rewardPoints": 300,
+    "rewardPoints": 70,
     "timeLimit": 300
   }
 ];

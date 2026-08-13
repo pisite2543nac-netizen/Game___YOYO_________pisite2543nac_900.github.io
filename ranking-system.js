@@ -98,3 +98,12 @@ export function calculateRankMetrics(attempts, activeDayCount = 0) {
     activeDayCount
   };
 }
+
+
+export function rankingClassKey(educationLevel,classroom){
+  return `${String(educationLevel||"").trim()}${String(classroom||"").trim()}`;
+}
+
+export function rankProfiles(profiles,limit=10){
+  return [...profiles].sort((a,b)=>Number(b?.rank?.rating||0)-Number(a?.rank?.rating||0)).slice(0,limit);
+}

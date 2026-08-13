@@ -39,10 +39,16 @@ service cloud.firestore {
         && request.resource.data.players.size() == 1;
 
       allow update: if signedIn()
-        && request.resource.data.hostUid == resource.data.hostUid
         && request.resource.data.code == resource.data.code
         && request.resource.data.players is map
-        && request.resource.data.players.size() <= 2
+        && request.resource.data.players.size() <= 4
+        && (
+          request.resource.data.hostUid == resource.data.hostUid
+          || (
+            request.auth.uid == resource.data.hostUid
+            && request.resource.data.hostUid in request.resource.data.players
+          )
+        )
         && (
           request.auth.uid in resource.data.players
           || (

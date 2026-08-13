@@ -1,0 +1,32 @@
+{
+  "version": "4.4.0",
+  "all_passed": true,
+  "checks": {
+    "node_app.js": true,
+    "node_admin.js": true,
+    "node_zone.js": true,
+    "node_ranking-system.js": true,
+    "node_economy-system.js": true,
+    "node_reward-data.js": true,
+    "node_lessons.js": true,
+    "node_levels-html.js": true,
+    "node_levels-python.js": true,
+    "levels-html.js_50": true,
+    "levels-html.js_max70": true,
+    "levels-python.js_50": true,
+    "levels-python.js_max70": true,
+    "set2_count": true,
+    "set2_plus30": true,
+    "ranking_dual": true,
+    "pvp_multroom": true,
+    "pvp_shots": true,
+    "pvp_2v2_relay": true,
+    "pvp_wager": true,
+    "token_dynamic": true,
+    "code_explanation": true,
+    "rules_4_players": true,
+    "host_transfer": true,
+    "index_js_ids": true
+  },
+  "missing_index_ids": []
+}

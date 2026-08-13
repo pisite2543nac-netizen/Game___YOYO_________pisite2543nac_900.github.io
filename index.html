@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1">
   <title>ระบบเกมพิมพ์ Code | วิทยาลัยเทคนิคนางรอง</title>
-  <link rel="stylesheet" href="./style.css?v=4.3.0">
+  <link rel="stylesheet" href="./style.css?v=4.4.0">
 </head>
 <body>
 <header class="site-header">
@@ -253,72 +253,42 @@
       </div>
     </section>
 
-    <section id="pvpConfig" class="card hidden">
+    <section id="pvpConfig" class="card hidden pvp-v44-config">
       <div class="section-title">
         <div>
-          <span class="section-kicker">PVP MATCHMAKING · REALTIME</span>
-          <h2>จับคู่ PVP ให้เร็วขึ้น</h2>
-          <p class="muted-line">
-            มีเพียง 2 ทางเลือก: สร้างห้องใหม่ หรือให้ระบบค้นหาห้องว่างให้อัตโนมัติ
-            Room Code ทุกห้องสุ่มโดยระบบเท่านั้น ผู้เล่นไม่สามารถตั้ง Code เองได้
-          </p>
+          <span class="section-kicker">PVP MULTI ROOM · 1 / 3 / 5 SHOT · 1V1 / 2V2</span>
+          <h2>PVP Realtime หลายห้องพร้อมกัน</h2>
+          <p class="muted-line">สร้างได้หลาย Room พร้อมกัน Room Code สุ่มจากระบบเท่านั้น เลือกห้องจากรายการหรือกรอก Code ที่ได้รับจากเพื่อน</p>
         </div>
       </div>
 
-      <div class="pvp-match-actions">
-        <button id="createRoomButton" class="pvp-match-card create" type="button">
-          <span class="pvp-match-icon">➕</span>
-          <strong>สร้างห้อง</strong>
-          <small>ระบบสุ่ม Room Code ใหม่ที่ไม่ซ้ำ แล้วเปิด Lobby รอผู้เล่นอีก 1 คน</small>
-          <em>AUTO ROOM CODE</em>
-        </button>
+      <div class="pvp-rule-grid">
+        <label><span>รูปแบบทีม</span><select id="pvpTeamMode"><option value="1v1">1 VS 1</option><option value="2v2">2 VS 2 · Relay สลับผู้พิมพ์</option></select></label>
+        <label><span>จำนวน Shot</span><select id="pvpShotCount"><option value="1">1 Shot</option><option value="3" selected>3 Shot</option><option value="5">5 Shot</option></select></label>
+        <label><span>วาง Token</span><select id="pvpWager"><option value="0">ไม่วาง Token</option><option value="5">5 Token</option><option value="10">10 Token</option><option value="20">20 Token</option><option value="30">30 Token</option><option value="40">40 Token</option><option value="50">50 Token</option></select></label>
+      </div>
+      <div class="pvp-wager-note">Token เป็นแต้มภายในเกมเท่านั้น · เมื่อห้องเต็ม ระบบจะล็อก Token ของผู้เล่นแต่ละคนก่อนเริ่ม · ทีมชนะรับ Pot แบ่งเท่ากัน</div>
 
-        <button id="findRoomButton" class="pvp-match-card find" type="button">
-          <span class="pvp-match-icon">🔎</span>
-          <strong>ค้นหาห้อง</strong>
-          <small>ระบบค้นหา Lobby ที่กำลังรออยู่ แล้วสุ่มเข้าห้องที่ว่างให้อัตโนมัติ</small>
-          <em>RANDOM MATCH</em>
-        </button>
+      <div class="pvp-match-actions three-actions">
+        <button id="createRoomButton" class="pvp-match-card create" type="button"><span class="pvp-match-icon">➕</span><strong>สร้างห้อง</strong><small>สุ่ม Room Code ใหม่จากระบบ</small><em>GENERATE CODE</em></button>
+        <button id="refreshRoomsButton" class="pvp-match-card find" type="button"><span class="pvp-match-icon">📋</span><strong>เลือกห้อง</strong><small>ดูห้องที่กำลังรอทั้งหมด</small><em>MULTI ROOM</em></button>
+        <div class="pvp-code-join-card"><span>เข้าด้วย Room Code</span><div><input id="joinRoomCodeInput" maxlength="6" autocomplete="off" placeholder="ABC234"><button id="joinRoomCodeButton" class="btn secondary" type="button">เข้าห้อง</button></div><small>Code ต้องเป็น Code ที่ระบบสร้างเท่านั้น</small></div>
       </div>
 
-      <div id="matchmakingStatus" class="matchmaking-status">
-        <span class="matchmaking-dot"></span>
-        <strong id="matchmakingStatusText">พร้อมจับคู่</strong>
-        <small id="matchmakingStatusDetail">เลือก “สร้างห้อง” หรือ “ค้นหาห้อง”</small>
+      <div id="matchmakingStatus" class="matchmaking-status"><span class="matchmaking-dot"></span><strong id="matchmakingStatusText">พร้อมใช้งาน</strong><small id="matchmakingStatusDetail">ตั้งค่ากติกา แล้วสร้างหรือเลือกห้อง</small></div>
+
+      <div class="pvp-room-browser">
+        <div class="pvp-room-browser-head"><div><strong>ห้อง PVP ที่กำลังรอ</strong><small>หลายห้องสามารถเล่นพร้อมกันได้</small></div><span id="availableRoomCount">0 ห้อง</span></div>
+        <div id="availablePvpRooms" class="available-pvp-rooms"><div class="empty-card">กำลังโหลดห้อง...</div></div>
       </div>
 
-      <div id="pvpLobby" class="pvp-lobby pvp-lobby-v2 hidden">
-        <div class="room-code-card">
-          <span>ROOM CODE · ระบบสร้างอัตโนมัติ</span>
-          <strong id="roomCodeLabel">------</strong>
-          <small>Code นี้เป็นแบบอ่านอย่างเดียว ผู้เล่นไม่สามารถแก้ไขได้</small>
-        </div>
-
-        <div class="pvp-player-slot">
-          <span>ผู้เล่น 1</span>
-          <strong id="pvpPlayer1">รอผู้เล่น...</strong>
-          <small>HOST</small>
-        </div>
-
-        <div class="pvp-player-slot">
-          <span>ผู้เล่น 2</span>
-          <strong id="pvpPlayer2">รอผู้เล่น...</strong>
-          <small>CHALLENGER</small>
-        </div>
-
-        <div class="pvp-status-slot">
-          <span>สถานะ</span>
-          <strong id="pvpStatus">WAITING</strong>
-          <small id="pvpLobbyHint">กำลังรอผู้เล่น...</small>
-        </div>
+      <div id="pvpLobby" class="pvp-lobby pvp-lobby-v44 hidden">
+        <div class="room-code-card"><span>ROOM CODE · GENERATED</span><strong id="roomCodeLabel">------</strong><small id="pvpLobbyRule">-</small></div>
+        <div id="pvpPlayersGrid" class="pvp-players-grid"></div>
+        <div class="pvp-lobby-score"><span>สถานะ</span><strong id="pvpStatus">WAITING</strong><small id="pvpLobbyHint">กำลังรอผู้เล่น...</small></div>
       </div>
-
-      <div class="pvp-lobby-actions">
-        <button id="startPvpButton" class="btn primary hidden" type="button">เริ่มการแข่งขัน</button>
-        <button id="leaveLobbyButton" class="btn ghost hidden" type="button">ออกจากห้อง</button>
-      </div>
+      <div class="pvp-lobby-actions"><button id="startPvpButton" class="btn primary hidden" type="button">เริ่มการแข่งขัน</button><button id="leaveLobbyButton" class="btn ghost hidden" type="button">ออกจากห้อง</button></div>
     </section>
-
 
     <section class="social-hub-grid">
       <article class="card community-card">
@@ -335,18 +305,21 @@
         </div>
       </article>
 
-      <article class="card leaderboard-card">
+      <article class="card leaderboard-card ranking-dual-card">
         <div class="section-title compact">
           <div>
-            <span class="section-kicker">SEASON LEADERBOARD</span>
-            <h2>อันดับ Ranking 1–10</h2>
-            <p class="muted-line">อันดับของ Season 60 วันปัจจุบัน</p>
+            <span class="section-kicker">DUAL RANKING · 60 DAY SEASON</span>
+            <h2>Ranking รวม / Ranking ห้อง</h2>
+            <p class="muted-line">แรงค์รวมใช้ผู้เล่นทุกคน ส่วนแรงค์ห้องเทียบเฉพาะเพื่อนห้องเดียวกัน</p>
           </div>
           <div id="leaderboardSeason" class="season-chip">SEASON</div>
         </div>
-        <div id="topRankingList" class="top-ranking-list">
-          <div class="empty-card">กำลังโหลดอันดับ...</div>
+        <div class="ranking-mode-switch">
+          <button id="rankingModeOverall" class="ranking-mode-btn active" type="button">🌐 แรงค์รวมทั้งหมด</button>
+          <button id="rankingModeClass" class="ranking-mode-btn" type="button">🏫 แรงค์ห้อง <span id="classRankingLabel">-</span></button>
         </div>
+        <div id="topRankingList" class="top-ranking-list"></div>
+        <div id="classRankingList" class="top-ranking-list hidden"></div>
         <div class="rank-shield-legend" aria-label="ระดับแรงค์">
           <div><span class="rank-shield rank-bronze small"><span class="rank-shield-letter">B</span></span><b>Bronze</b></div>
           <div><span class="rank-shield rank-silver small"><span class="rank-shield-letter">S</span></span><b>Silver</b></div>
@@ -395,31 +368,15 @@
     </section>
   </section>
 
-  <section id="pvpGameScreen" class="card hidden">
-    <div class="game-head">
-      <div><span class="badge">⚔️ PVP</span><h2 id="pvpChallengeTitle">PVP Challenge</h2><p id="pvpChallengeDescription"></p></div>
-      <div class="player-box"><strong id="pvpRoomGame">Room ------</strong><span id="pvpOpponentName">คู่แข่ง: -</span></div>
+  <section id="pvpGameScreen" class="card hidden pvp-game-v44">
+    <div class="game-head"><div><span class="badge">⚔️ PVP</span><h2 id="pvpChallengeTitle">PVP Challenge</h2><p id="pvpChallengeDescription"></p></div><div class="player-box"><strong id="pvpRoomGame">Room ------</strong><span id="pvpMatchMeta">-</span></div></div>
+    <div class="pvp-shot-header"><strong id="pvpShotLabel">SHOT 1/3</strong><span id="pvpShotScore">TEAM A 0 : 0 TEAM B</span><small id="pvpTurnInfo">กำลังเตรียมผู้พิมพ์</small></div>
+    <div class="pvp-team-board">
+      <div class="pvp-team-card team-a"><div class="pvp-team-head"><strong>TEAM A</strong><span id="teamAPlayers">-</span></div><div class="pvp-track"><div id="teamABar"></div></div><strong id="teamAPct">0%</strong></div>
+      <div class="pvp-team-card team-b"><div class="pvp-team-head"><strong>TEAM B</strong><span id="teamBPlayers">-</span></div><div class="pvp-track"><div id="teamBBar"></div></div><strong id="teamBPct">0%</strong></div>
     </div>
-
-    <div class="pvp-progress-board">
-      <div><span id="myPvpName">YOU</span><div class="pvp-track"><div id="myPvpBar"></div></div><strong id="myPvpPct">0%</strong></div>
-      <div><span id="oppPvpName">OPPONENT</span><div class="pvp-track"><div id="oppPvpBar"></div></div><strong id="oppPvpPct">0%</strong></div>
-    </div>
-
-    <div class="game-stats">
-      <div><span>เวลา</span><strong id="pvpTime">00:00</strong></div>
-      <div><span>WPM</span><strong id="pvpWpm">0</strong></div>
-      <div><span>Accuracy</span><strong id="pvpAccuracy">100%</strong></div>
-      <div><span>Mistakes</span><strong id="pvpMistakes">0</strong></div>
-      <div><span>Progress</span><strong id="pvpProgress">0%</strong></div>
-      <div><span>Status</span><strong id="pvpGameStatus">READY</strong></div>
-    </div>
-
-    <div id="pvpTypingStage" class="typing-stage" tabindex="0">
-      <div class="editor-bar"><div class="editor-dots"><i></i><i></i><i></i></div><span>PVP CHALLENGE</span><span>Realtime</span></div>
-      <pre id="pvpTypingDisplay" class="typing-display"></pre>
-      <textarea id="pvpTypingInput" class="hidden-input" spellcheck="false"></textarea>
-    </div>
+    <div class="game-stats"><div><span>เวลา Shot</span><strong id="pvpTime">00:00</strong></div><div><span>WPM</span><strong id="pvpWpm">0</strong></div><div><span>Accuracy</span><strong id="pvpAccuracy">100%</strong></div><div><span>Mistakes</span><strong id="pvpMistakes">0</strong></div><div><span>Progress</span><strong id="pvpProgress">0%</strong></div><div><span>Status</span><strong id="pvpGameStatus">READY</strong></div></div>
+    <div id="pvpTypingStage" class="typing-stage" tabindex="0"><div class="editor-bar"><div class="editor-dots"><i></i><i></i><i></i></div><span>PVP CHALLENGE</span><span id="pvpActiveRole">Realtime</span></div><pre id="pvpTypingDisplay" class="typing-display"></pre><textarea id="pvpTypingInput" class="hidden-input" spellcheck="false"></textarea></div>
     <div class="game-bottom"><button id="leavePvpButton" class="btn danger">ออกจาก PVP</button><span id="pvpSaveState">กำลังเชื่อม...</span></div>
   </section>
 
@@ -523,6 +480,11 @@
       <div><span>Accuracy</span><strong id="resultAccuracy">0%</strong></div>
       <div><span>Time</span><strong id="resultTime">0s</strong></div>
     </div>
+    <section id="resultExplanation" class="result-explanation hidden">
+      <div class="section-title compact"><div><span class="section-kicker">CODE EXPLANATION</span><h3>โค้ดที่พิมพ์ไปใช้ทำอะไร?</h3></div></div>
+      <div class="result-explain-grid"><div><span>หน้าที่</span><p id="resultCodeUsage">-</p></div><div><span>ประโยชน์</span><p id="resultCodeBenefit">-</p></div><div><span>ผลลัพธ์ / สิ่งที่ทำได้</span><p id="resultCodeOutput">-</p></div></div>
+      <pre id="resultCodeSample" class="result-code-sample"></pre>
+    </section>
     <div class="result-actions">
       <button id="playAgainButton" class="btn secondary">เล่น Level เดิมอีกครั้ง</button>
       <button id="nextLevelButton" class="btn primary">Level ถัดไป</button>
@@ -532,7 +494,7 @@
 </main>
 
 <footer><div class="wrap">ระบบเกมพิมพ์ Code · วิทยาลัยเทคนิคนางรอง</div></footer>
-<script type="module" src="./app.js?v=4.3.0"></script>
+<script type="module" src="./app.js?v=4.4.0"></script>
 
   <div id="characterSetupModal" class="character-modal hidden">
     <div class="character-modal-card character-setup-card">
