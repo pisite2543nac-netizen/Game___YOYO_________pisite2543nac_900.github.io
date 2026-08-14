@@ -1,4 +1,4 @@
-# FULL CODE V5.0 — COMPLETE CURRENT SOURCE
+# FULL CODE V5.0 STABLE RESTORE
 
 
 ## index.html
@@ -36,12 +36,16 @@
     <section id="loginPanel" class="auth-panel">
       <span class="section-kicker">STUDENT LOGIN</span>
       <h2>เข้าสู่ระบบผู้เล่น</h2>
-      <p class="muted-line">ใช้เลขประจำตัวนักศึกษาและรหัสผ่านที่สร้างไว้ตอนลงทะเบียน</p>
+      <p class="muted-line">ใช้รหัสผู้ใช้หรือเลขประจำตัวนักศึกษา และรหัสผ่านที่สร้างไว้ตอนลงทะเบียน</p>
+
+      <div id="userAccessStatus" class="user-access-status">
+        รองรับรหัส User ทั้งแบบตัวเลข และตัวอักษร+ตัวเลข เช่น <strong>nkseza2000</strong>
+      </div>
 
       <form id="loginForm" class="form-grid">
         <label>
-          <span>เลขประจำตัวนักศึกษา</span>
-          <input id="loginStudentId" inputmode="numeric" pattern="[0-9]+" required placeholder="กรอกเฉพาะตัวเลข">
+          <span>รหัสผู้ใช้ / เลขประจำตัวนักศึกษา</span>
+          <input id="loginStudentId" inputmode="numeric" autocomplete="username" pattern="[0-9]{8}" minlength="8" maxlength="8" required placeholder="เช่น 11111111">
         </label>
         <label>
           <span>รหัสผ่าน</span>
@@ -60,12 +64,12 @@
     <section id="registerPanel" class="auth-panel hidden">
       <span class="section-kicker">NEW STUDENT ACCOUNT</span>
       <h2>ลงทะเบียนผู้เล่น</h2>
-      <p class="muted-line">ลงทะเบียนครั้งแรกเพียงครั้งเดียว จากนั้นใช้เลขนักศึกษาและรหัสผ่าน Login ได้</p>
+      <p class="muted-line">ลงทะเบียนครั้งแรกเพียงครั้งเดียว จากนั้นใช้รหัสผู้ใช้/เลขนักศึกษาและรหัสผ่าน Login ได้</p>
 
       <form id="registerForm" class="form-grid">
         <label>
-          <span>เลขประจำตัวนักศึกษา</span>
-          <input id="studentId" inputmode="numeric" pattern="[0-9]+" required placeholder="กรอกเฉพาะตัวเลข">
+          <span>รหัสผู้ใช้ / เลขประจำตัวนักศึกษา</span>
+          <input id="studentId" inputmode="numeric" autocomplete="username" pattern="[0-9]{8}" minlength="8" maxlength="8" required placeholder="รหัสนักศึกษา 8 หลัก เช่น 11111111">
         </label>
 
         <label>
@@ -807,9 +811,19 @@
             <p>สมาชิกที่ลงทะเบียนบัญชีเข้าสู่ระบบเกม · Firebase ไม่สามารถแสดงรหัสผ่านเดิมได้ จึงใช้การตั้งรหัสผ่านใหม่แบบปลอดภัยแทน</p>
           </div>
           <div class="admin-user-tools">
-            <button id="migrateInformationUsers" class="btn secondary" type="button">🔄 จัดกลุ่มสาขาวิชาเดิมให้ถูกต้อง</button>
+            <button id="auditStudentAccounts" class="btn ghost" type="button">🔎 ตรวจ Auth / Database</button>
+            <button id="repairStudentDatabase" class="btn secondary" type="button">🛠️ ซ่อมฐานข้อมูล User</button>
+            <button id="migrateInformationUsers" class="btn secondary" type="button">🔄 จัดกลุ่มสาขาวิชาเดิม</button>
             <button id="deleteUsers" class="btn danger">ลบ User ทั้งหมด (Auth + DB)</button>
           </div>
+        </div>
+        <div id="studentAccountAuditCard" class="admin-audit-card">
+          <div>
+            <span class="admin-audit-kicker">USER DATABASE HEALTH</span>
+            <strong id="studentAccountAuditTitle">ยังไม่ได้ตรวจระบบบัญชี</strong>
+            <small id="studentAccountAuditText">กด “ตรวจ Auth / Database” เพื่อเทียบ Firebase Authentication กับ Firestore โดยไม่แก้หรือลบข้อมูล</small>
+          </div>
+          <div id="studentAccountAuditStats" class="admin-audit-stats"></div>
         </div>
         <div class="table-wrap">
           <table>
@@ -4447,6 +4461,25 @@ html,body.social-zone-page{
 
 /* ===== V5.0 AUTH STABLE HOTFIX ===== */
 .auth-recovery-hint{margin-top:10px;padding:9px 11px;border:1px solid #d5e2e8;border-radius:9px;background:#f5fafc;color:#5c707b;font-size:8px;line-height:1.5}
+\n/* ===== V5.0 RESTORE USER ACCESS ===== */\n.user-access-status{margin:0 0 14px;padding:10px 12px;border:1px solid #cfe0ea;border-radius:10px;background:#f1f8fc;color:#476675;font-size:9px;line-height:1.5}\n
+/* =====================================================================
+   V5.0 STABLE RESTORE UI
+   ===================================================================== */
+:root{--v5-ink:#17324a;--v5-muted:#6f8190;--v5-line:#dce5eb;--v5-bg:#f4f7f9;--v5-card:#fff;--v5-blue:#2f6fa7;--v5-blue-dark:#24587f;--v5-green:#3e8b63;--v5-radius:16px;--v5-shadow:0 14px 38px rgba(32,63,82,.09)}
+body:not(.zone47-page){background:linear-gradient(180deg,#f8fafb 0,#f1f5f7 100%);color:var(--v5-ink)}
+.auth-card,.portal-card,.panel,.admin-tab-panel,.metric-card{border-color:var(--v5-line)!important;box-shadow:var(--v5-shadow)!important}
+.auth-card{border-radius:22px!important;background:rgba(255,255,255,.98)!important}
+.auth-tabs{background:#f4f7f9!important;border:1px solid var(--v5-line)!important;border-radius:14px!important;padding:6px!important}
+.auth-tab{border-radius:10px!important;min-height:48px!important}.auth-tab.active{background:var(--v5-blue)!important;color:#fff!important;box-shadow:0 8px 18px rgba(47,111,167,.2)!important}
+.form-grid input,.form-grid select,.form-grid textarea,.admin-shell input,.admin-shell select,.admin-shell textarea{border-color:#cfdbe3!important;border-radius:11px!important;background:#fff!important;min-height:44px;transition:.16s ease}
+.form-grid input:focus,.form-grid select:focus,.form-grid textarea:focus,.admin-shell input:focus,.admin-shell select:focus,.admin-shell textarea:focus{border-color:#6aa1c9!important;box-shadow:0 0 0 4px rgba(62,129,177,.11)!important;outline:none!important}
+.btn{border-radius:10px!important;font-weight:800!important}.btn.primary{background:var(--v5-blue)!important;border-color:var(--v5-blue)!important}.btn.primary:hover{background:var(--v5-blue-dark)!important}.btn.secondary{background:#edf4f8!important;border-color:#bdd2df!important;color:#315d78!important}.btn.ghost{background:#fff!important;border-color:#d7e1e7!important;color:#355269!important}.btn.danger{background:#fff0f0!important;border-color:#e2b9b9!important;color:#a53e3e!important}
+.auth-system-status{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:12px;padding:10px 12px;border:1px solid #d8e7dc;border-radius:11px;background:#f3faf5;color:#426352;font-size:9px}.auth-system-status strong{color:#234c35}.auth-status-dot{width:8px;height:8px;border-radius:50%;background:#49a36d;box-shadow:0 0 0 4px rgba(73,163,109,.12)}
+.portal-head,.admin-topbar{background:rgba(255,255,255,.96)!important;backdrop-filter:blur(12px);border-bottom:1px solid var(--v5-line)!important}
+.table-wrap{border:1px solid var(--v5-line)!important;border-radius:14px!important;overflow:auto!important;background:#fff!important}table{border-collapse:separate!important;border-spacing:0!important}thead th{position:sticky;top:0;z-index:2;background:#f2f6f8!important;color:#415d70!important;border-bottom:1px solid #d7e2e8!important;font-size:8px!important}tbody tr:nth-child(even){background:#fbfcfd}tbody tr:hover{background:#f3f8fb}tbody td{border-bottom:1px solid #edf1f4!important}
+.admin-tabs{gap:5px!important;padding:7px!important;border:1px solid var(--v5-line)!important;border-radius:14px!important;background:#fff!important;box-shadow:0 8px 24px rgba(32,63,82,.05)}.admin-tabs .tab{border-radius:9px!important}.admin-tabs .tab.active{background:#315f7d!important;color:#fff!important}
+.admin-audit-card{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:14px;margin-bottom:12px;border:1px solid #cfe2d6;border-radius:14px;background:linear-gradient(135deg,#f5fbf7,#fff)}.admin-audit-card.warning{border-color:#e8d296;background:linear-gradient(135deg,#fff9e8,#fff)}.admin-audit-card>div:first-child{display:grid;gap:3px}.admin-audit-kicker{font-size:7px;font-weight:900;letter-spacing:.12em;color:#688073}.admin-audit-card strong{font-size:13px;color:#284b3a}.admin-audit-card small{font-size:8px;color:#718078}.admin-audit-stats{display:grid;grid-template-columns:repeat(4,minmax(80px,1fr));gap:7px}.admin-audit-stats>div{min-width:80px;padding:8px 10px;border:1px solid #e0e8e3;border-radius:10px;background:#fff;text-align:center}.admin-audit-stats span,.admin-audit-stats strong{display:block}.admin-audit-stats span{font-size:6px;color:#829087}.admin-audit-stats strong{font-size:15px;color:#315a44}
+@media(max-width:900px){.admin-audit-card{align-items:stretch;flex-direction:column}.admin-audit-stats{grid-template-columns:repeat(2,1fr)}}@media(max-width:640px){.auth-card{border-radius:14px!important}.admin-user-tools{justify-content:stretch}.admin-user-tools .btn{flex:1 1 100%}}
 
 ```
 
@@ -4456,7 +4489,7 @@ html,body.social-zone-page{
 ```js
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-app.js";
 import {
-  getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword,
+  getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, deleteUser,
   signOut, onAuthStateChanged
 } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-auth.js";
 import {
@@ -4497,7 +4530,9 @@ const state = {
   activeQuest:null,questLaunchHandled:false,dailyCheckinTimer:null,dailyCheckinState:null
 };
 
-const studentEmail = id => `${String(id).trim()}@student.thc-nr.local`;
+const normalizeStudentId = value => String(value||"").trim();
+const validStudentId = value => /^\d{8}$/.test(String(value||"").trim());
+const studentEmail = id => `${normalizeStudentId(id)}@student.thc-nr.local`;
 let authRoutePromise=null;
 let authActionInProgress=false;
 const esc = v => String(v ?? "").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;");
@@ -4648,7 +4683,7 @@ $("registerTab").onclick=()=>{$("registerTab").classList.add("active");$("loginT
 document.querySelectorAll("[data-toggle-password]").forEach(btn=>btn.onclick=()=>{const i=$(btn.dataset.togglePassword);i.type=i.type==="password"?"text":"password";btn.textContent=i.type==="password"?"แสดง":"ซ่อน"});
 
 function registerValid(){
-  return /^\d+$/.test($("studentId").value.trim()) &&
+  return validStudentId($("studentId").value) &&
     $("fullName").value.trim() && $("educationLevel").value && $("classroom").value &&
     normalizeAcademicSelection($("department").value,$("major").value).department && $("major").value && $("password").value.length >= 6 &&
     $("password").value === $("confirmPassword").value && $("acceptRules").checked;
@@ -4678,9 +4713,12 @@ $("registerForm").addEventListener("submit",async e=>{
   button.disabled=true;button.textContent="กำลังสมัคร...";
   $("registerMessage").textContent="";
   authActionInProgress=true;
+  let newlyCreatedUser=null;
   try{
-    const sid=$("studentId").value.trim();
+    const sid=normalizeStudentId($("studentId").value);
+    if(!validStudentId(sid))throw new Error("STUDENT_ID_8_DIGITS_REQUIRED");
     const cred=await createUserWithEmailAndPassword(auth,studentEmail(sid),$("password").value);
+    newlyCreatedUser=cred.user;
     state.uid=cred.user.uid;
 
     const academic=normalizeAcademicSelection($("department").value,$("major").value);
@@ -4715,7 +4753,15 @@ $("registerForm").addEventListener("submit",async e=>{
     await routeAuthenticatedStudent();
   }catch(err){
     console.error("register:",err);
-    if(err?.code==="auth/email-already-in-use"){
+    if(newlyCreatedUser){
+      try{
+        const profileSnap=await getDoc(doc(db,"users",newlyCreatedUser.uid));
+        if(!profileSnap.exists())await deleteUser(newlyCreatedUser);
+      }catch(rollbackError){console.warn("registration rollback:",rollbackError)}
+    }
+    if(err?.message==="STUDENT_ID_8_DIGITS_REQUIRED"){
+      $("registerMessage").textContent="รหัสนักศึกษาต้องเป็นตัวเลข 8 หลัก เช่น 11111111";
+    }else if(err?.code==="auth/email-already-in-use"){
       $("registerMessage").textContent="รหัสนักศึกษานี้มีบัญชีอยู่แล้ว กรุณา Login หรือให้ Admin ลบบัญชีเดิม";
     }else if(err?.code==="permission-denied"){
       $("registerMessage").textContent="สมัคร Auth สำเร็จ แต่ Firestore Rules ไม่อนุญาตให้สร้าง Profile กรุณา Publish firestore.rules V5.0";
@@ -4731,7 +4777,7 @@ $("registerForm").addEventListener("submit",async e=>{
 
 $("loginForm").addEventListener("submit",async e=>{
   e.preventDefault();
-  const sid=$("loginStudentId").value.trim();
+  const sid=normalizeStudentId($("loginStudentId").value);
   const password=$("loginPassword").value;
   const button=$("loginForm").querySelector('button[type="submit"]');
   const oldText=button?.textContent||"เข้าสู่ระบบ";
@@ -4739,6 +4785,10 @@ $("loginForm").addEventListener("submit",async e=>{
   $("loginMessage").textContent="";
   authActionInProgress=true;
   try{
+    if(!validStudentId(sid)){
+      $("loginMessage").textContent="กรุณากรอกรหัสนักศึกษาเป็นตัวเลข 8 หลัก เช่น 11111111";
+      return;
+    }
     const cred=await signInWithEmailAndPassword(auth,studentEmail(sid),password);
     state.uid=cred.user.uid;
     await requestLoginFullscreen();
@@ -4750,7 +4800,7 @@ $("loginForm").addEventListener("submit",async e=>{
     }else if(error?.code==="permission-denied"){
       $("loginMessage").textContent="Login Auth สำเร็จ แต่ Firestore Rules ปฏิเสธการอ่านข้อมูล User กรุณา Publish firestore.rules V5.0";
     }else if(error?.message==="USER_PROFILE_NOT_READY"){
-      $("loginMessage").textContent="พบบัญชี Login แต่ไม่พบข้อมูล User ใน Firestore ให้ Admin ตรวจหรือลบบัญชีนี้แล้วสมัครใหม่";
+      $("loginMessage").textContent="พบบัญชี Login แต่สร้าง Profile ซ่อมอัตโนมัติไม่สำเร็จ กรุณาตรวจ Firestore Rules";
     }else{
       $("loginMessage").textContent="เปิดบัญชีไม่สำเร็จ: "+(error?.message||String(error));
     }
@@ -4760,6 +4810,43 @@ $("loginForm").addEventListener("submit",async e=>{
   }
 });
 
+async function repairMissingStudentProfile(studentId){
+  if(!state.uid||!auth.currentUser)return false;
+  const sid=normalizeStudentId(studentId||auth.currentUser.email?.split("@")[0]||"");
+  if(!validStudentId(sid))return false;
+  try{
+    await setDoc(doc(db,"users",state.uid),{
+      uid:state.uid,
+      studentId:sid,
+      fullName:sid,
+      educationLevel:"ปวช.1",
+      classroom:"/1",
+      classKey:classKey("ปวช.1","/1"),
+      department:"ไม่ระบุแผนก",
+      major:"ไม่ระบุสาขาวิชา",
+      role:"student",
+      status:"active",
+      tokenBalance:0,
+      tokenLifetime:0,
+      inventory:[],
+      inventoryCapacity:INVENTORY_CAPACITY,
+      officialProgress:{},
+      officialSubmitted:false,
+      rank:{seasonId:null,rating:0,tierId:"bronze",tierName:"Bronze"},
+      progress:{html:{maxUnlockedStage:1},python:{maxUnlockedStage:1}},
+      character:{...DEFAULT_CHARACTER,displayName:sid},
+      zone:{...DEFAULT_ZONE_STATE},
+      profileNeedsRepair:true,
+      recoveredAt:serverTimestamp(),
+      createdAt:serverTimestamp(),
+      updatedAt:serverTimestamp()
+    },{merge:true});
+    return true;
+  }catch(error){
+    console.error("repair missing profile:",error);
+    return false;
+  }
+}
 async function waitForStudentProfile(maxWaitMs=6000){
   const started=Date.now();
   while(Date.now()-started<maxWaitMs){
@@ -4782,7 +4869,11 @@ async function routeAuthenticatedStudent(){
 
     // Registration can trigger onAuthStateChanged before users/{uid} is written.
     // Wait for the profile document instead of treating it as a failed login.
-    const profileSnap=await waitForStudentProfile(6000);
+    let profileSnap=await waitForStudentProfile(2500);
+    if(!profileSnap){
+      const recovered=await repairMissingStudentProfile(auth.currentUser.email?.split("@")[0]);
+      if(recovered)profileSnap=await waitForStudentProfile(2500);
+    }
     if(!profileSnap)throw new Error("USER_PROFILE_NOT_READY");
 
     await ensureProfileDefaults();
@@ -4841,7 +4932,7 @@ async function saveEditProfile(){
     await updateDoc(doc(db,"users",state.uid),{
       fullName,educationLevel,classroom,classKey:classKey(educationLevel,classroom),
       department:academic.department,major:academic.major,
-      profileAcademicUpdatedAt:serverTimestamp(),updatedAt:serverTimestamp()
+      profileNeedsRepair:false,profileAcademicUpdatedAt:serverTimestamp(),updatedAt:serverTimestamp()
     });
     await setDoc(doc(db,"public_profiles",state.uid),{
       uid:state.uid,studentId:state.player.studentId,fullName,
@@ -4851,7 +4942,7 @@ async function saveEditProfile(){
       character:state.player.character||DEFAULT_CHARACTER,
       updatedAt:serverTimestamp()
     },{merge:true});
-    state.player={...state.player,fullName,educationLevel,classroom,department:academic.department,major:academic.major};
+    state.player={...state.player,fullName,educationLevel,classroom,department:academic.department,major:academic.major,profileNeedsRepair:false};
     $("portalWelcome").textContent=`${fullName} · ${state.player.studentId} · ${educationLevel}${classroom} · ${academic.department} · ${academic.major}`;
     closeEditProfile();
     await updateMyRank();
@@ -4873,7 +4964,7 @@ async function enterPortal(){
   showScreen("userPortal");
   startDailyCheckin();
   $("portalWelcome").textContent=`${state.player.fullName} · ${state.player.studentId} · ${state.player.educationLevel}${state.player.classroom} · ${state.player.department||"ไม่ระบุแผนก"} · ${state.player.major||"ไม่ระบุสาขาวิชา"}`;
-  if(!state.player.department||!state.player.major||state.player.department==="ไม่ระบุแผนก"||state.player.major==="ไม่ระบุสาขาวิชา"){
+  if(state.player.profileNeedsRepair||!state.player.department||!state.player.major||state.player.department==="ไม่ระบุแผนก"||state.player.major==="ไม่ระบุสาขาวิชา"){
     setTimeout(()=>openEditProfile(),350);
   }
   $("userTokens").textContent=Number(state.player.tokenBalance||0).toLocaleString();
@@ -6298,7 +6389,7 @@ onAuthStateChanged(auth,async user=>{
     if(error?.code==="permission-denied"){
       $("loginMessage").textContent="Firebase Rules ปฏิเสธการอ่าน User · กรุณา Publish firestore.rules V5.0";
     }else if(error?.message==="USER_PROFILE_NOT_READY"){
-      $("loginMessage").textContent="บัญชี Authentication มีอยู่ แต่ไม่พบ Profile ใน Firestore · ให้ Admin ลบบัญชีเดิมแล้วสมัครใหม่";
+      $("loginMessage").textContent="บัญชี Authentication มีอยู่ แต่ซ่อม Profile อัตโนมัติไม่สำเร็จ · กรุณาตรวจ Firestore Rules";
     }else{
       $("loginMessage").textContent="เปิดบัญชีไม่สำเร็จ: "+(error?.message||String(error));
     }
@@ -6329,6 +6420,8 @@ import { DEFAULT_TEACHER_QUESTS, clampQuestReward, questDifficultyName, questObj
 const app=initializeApp(firebaseConfig),auth=getAuth(app),db=getFirestore(app),cloudFunctions=getFunctions(app,"asia-southeast1"),$=id=>document.getElementById(id);
 const adminResetStudentPassword=httpsCallable(cloudFunctions,"adminResetStudentPassword");
 const adminDeleteStudentAccount=httpsCallable(cloudFunctions,"adminDeleteStudentAccount");
+const adminAuditStudentAccounts=httpsCallable(cloudFunctions,"adminAuditStudentAccounts");
+const adminRepairStudentDatabase=httpsCallable(cloudFunctions,"adminRepairStudentDatabase");
 let cache={users:[],attempts:[],levels:[],modes:[],official:[],zonePositions:[],zoneModeration:[],zoneMessages:[],zoneArchive:[],rankingSettings:{},teacherQuests:[]},unsubs=[];
 let knownUserIds=null;
 let selectedAdminClass="";
@@ -6370,6 +6463,37 @@ onAuthStateChanged(auth,user=>{
   if(ok){startRealtime();adminRankClock=setInterval(()=>{renderRanking();renderClassrooms();renderDepartments();renderMajors();renderRankingSchedule()},30000);}
 });
 
+
+function renderStudentAccountAudit(data={}){
+  const title=$("studentAccountAuditTitle"),text=$("studentAccountAuditText"),stats=$("studentAccountAuditStats");
+  if(!title||!text||!stats)return;
+  const healthy=Number(data.missingProfiles||0)===0&&Number(data.missingAuth||0)===0&&Number(data.invalidStudentIds||0)===0&&Number(data.duplicateStudentIds||0)===0;
+  title.textContent=healthy?"ระบบบัญชี User ปกติ":"พบข้อมูลที่ควรตรวจ/ซ่อม";
+  text.textContent=healthy
+    ?"Firebase Authentication และ Firestore users สอดคล้องกัน"
+    :`Profile หาย ${Number(data.missingProfiles||0)} · Auth หาย ${Number(data.missingAuth||0)} · รหัสไม่ใช่ 8 หลัก ${Number(data.invalidStudentIds||0)} · รหัสซ้ำ ${Number(data.duplicateStudentIds||0)}`;
+  stats.innerHTML=[
+    ["AUTH",Number(data.authStudentCount||0)],["FIRESTORE",Number(data.firestoreUserCount||0)],
+    ["PROFILE หาย",Number(data.missingProfiles||0)],["AUTH หาย",Number(data.missingAuth||0)]
+  ].map(([k,v])=>`<div><span>${esc(k)}</span><strong>${v}</strong></div>`).join("");
+  $("studentAccountAuditCard")?.classList.toggle("warning",!healthy);
+}
+if($("auditStudentAccounts"))$("auditStudentAccounts").onclick=async()=>{
+  const btn=$("auditStudentAccounts"),old=btn.textContent;btn.disabled=true;btn.textContent="กำลังตรวจ...";
+  try{const result=await adminAuditStudentAccounts({});renderStudentAccountAudit(result.data||{});showAdminToast("ตรวจระบบบัญชีแล้ว","ไม่มีการแก้ไขหรือลบข้อมูล");}
+  catch(error){showAdminToast("ตรวจบัญชีไม่สำเร็จ",error.message||String(error),true)}
+  finally{btn.disabled=false;btn.textContent=old}
+};
+if($("repairStudentDatabase"))$("repairStudentDatabase").onclick=async()=>{
+  if(!confirm("ซ่อมฐานข้อมูล User โดยไม่ล้างคะแนน/Token/Inventory/ประวัติใช้งาน?\\n\\nระบบจะสร้าง Profile ที่หายจากบัญชี Auth, จัด field แผนก/สาขา และ sync public_profiles เท่านั้น"))return;
+  const btn=$("repairStudentDatabase"),old=btn.textContent;btn.disabled=true;btn.textContent="กำลังซ่อม...";
+  try{
+    const result=await adminRepairStudentDatabase({});
+    renderStudentAccountAudit(result.data?.audit||{});
+    showAdminToast("ซ่อมฐานข้อมูลเสร็จ",`สร้าง Profile ${Number(result.data?.createdProfiles||0)} · ปรับ Profile ${Number(result.data?.updatedProfiles||0)}`);
+  }catch(error){showAdminToast("ซ่อมฐานข้อมูลไม่สำเร็จ",error.message||String(error),true)}
+  finally{btn.disabled=false;btn.textContent=old}
+};
 function startRealtime(){
   unsubs.push(onSnapshot(collection(db,"users"),snap=>{
     const next=snap.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>dateValue(b.createdAt)-dateValue(a.createdAt));
@@ -10687,6 +10811,89 @@ exports.adminDeleteStudentAccount=onCall(async request=>{
   return {ok:true,targetUid,studentId};
 });
 
+
+function validStudentId8(value){ return /^\d{8}$/.test(String(value||"").trim()); }
+function studentIdFromAuthEmail(email){
+  const value=String(email||"").toLowerCase(),suffix="@student.thc-nr.local";
+  if(!value.endsWith(suffix))return "";
+  const id=value.slice(0,-suffix.length);return validStudentId8(id)?id:"";
+}
+function normalizeAcademicProfile(data={}){
+  const oldDepartment=String(data.department||"").trim(),oldMajor=String(data.major||"").trim();
+  let department=oldDepartment,major=oldMajor;
+  const raw=oldMajor||oldDepartment,compact=raw.replace(/\s+/g,"");
+  if(["ธุรกิจดิจิทัล","ธุรกิจดิทัล","ดิจิทัลธุรกิจ"].includes(compact))major="ธุรกิจดิจิทัล";
+  else if(["สารสนเทศ","เทคโนโลยีสารสนเทศ"].includes(compact)||["ไอที","IT"].includes(raw))major="เทคโนโลยีสารสนเทศ";
+  if(/สารสนเทศ|ดิจิทัล|ธุรกิจดิทัล/i.test(oldDepartment))department="คอมพิวเตอร์";
+  if(["เทคโนโลยีสารสนเทศ","ธุรกิจดิจิทัล"].includes(major))department="คอมพิวเตอร์";
+  return {department:department||"ไม่ระบุแผนก",major:major||"ไม่ระบุสาขาวิชา"};
+}
+async function listAllAuthUsers(){
+  const rows=[];let pageToken;
+  do{const page=await getAuth().listUsers(1000,pageToken);rows.push(...page.users);pageToken=page.pageToken;}while(pageToken);
+  return rows;
+}
+async function buildStudentAccountAudit(){
+  const [authUsers,userSnap]=await Promise.all([listAllAuthUsers(),db.collection("users").get()]);
+  const authStudents=authUsers.map(u=>({uid:u.uid,studentId:studentIdFromAuthEmail(u.email)})).filter(x=>x.studentId);
+  const firestoreUsers=userSnap.docs.map(d=>({uid:d.id,...d.data()})).filter(x=>x.uid!==ADMIN_UID);
+  const authUidSet=new Set(authStudents.map(x=>x.uid)),firestoreUidSet=new Set(firestoreUsers.map(x=>x.uid));
+  const missingProfiles=authStudents.filter(x=>!firestoreUidSet.has(x.uid));
+  const missingAuth=firestoreUsers.filter(x=>validStudentId8(x.studentId)&&!authUidSet.has(x.uid));
+  const invalid=firestoreUsers.filter(x=>!validStudentId8(x.studentId));
+  const counts=new Map();firestoreUsers.forEach(x=>{const id=String(x.studentId||"");if(id)counts.set(id,(counts.get(id)||0)+1)});
+  const duplicates=[...counts.entries()].filter(([,n])=>n>1).map(([studentId,count])=>({studentId,count}));
+  return {
+    authStudentCount:authStudents.length,firestoreUserCount:firestoreUsers.length,
+    missingProfiles:missingProfiles.length,missingAuth:missingAuth.length,
+    invalidStudentIds:invalid.length,duplicateStudentIds:duplicates.length,
+    missingProfileIds:missingProfiles.slice(0,50).map(x=>x.studentId),
+    missingAuthIds:missingAuth.slice(0,50).map(x=>String(x.studentId||"")),
+    invalidIds:invalid.slice(0,50).map(x=>String(x.studentId||"")),duplicates:duplicates.slice(0,50)
+  };
+}
+exports.adminAuditStudentAccounts=onCall(async request=>{
+  const caller=requireAuth(request);if(caller!==ADMIN_UID)throw new HttpsError("permission-denied","Admin only");
+  return await buildStudentAccountAudit();
+});
+exports.adminRepairStudentDatabase=onCall(async request=>{
+  const caller=requireAuth(request);if(caller!==ADMIN_UID)throw new HttpsError("permission-denied","Admin only");
+  const authUsers=await listAllAuthUsers();
+  const authStudents=authUsers.map(u=>({uid:u.uid,studentId:studentIdFromAuthEmail(u.email)})).filter(x=>x.studentId);
+  let createdProfiles=0,updatedProfiles=0;
+
+  for(const account of authStudents){
+    const ref=db.doc(`users/${account.uid}`),snap=await ref.get();
+    if(!snap.exists){
+      await ref.set({
+        uid:account.uid,studentId:account.studentId,fullName:account.studentId,
+        educationLevel:"ปวช.1",classroom:"/1",classKey:"ปวช.1/1",
+        department:"ไม่ระบุแผนก",major:"ไม่ระบุสาขาวิชา",role:"student",status:"active",
+        tokenBalance:0,tokenLifetime:0,inventory:[],inventoryCapacity:25,
+        officialProgress:{},officialSubmitted:false,progress:{html:{maxUnlockedStage:1},python:{maxUnlockedStage:1}},
+        character:{gender:null,equipped:{}},zone:{x:450,y:690,direction:"right"},
+        profileNeedsRepair:true,recoveredAt:FieldValue.serverTimestamp(),createdAt:FieldValue.serverTimestamp(),updatedAt:FieldValue.serverTimestamp()
+      },{merge:true});createdProfiles++;
+    }
+  }
+
+  const users=await db.collection("users").get();
+  for(const item of users.docs){
+    if(item.id===ADMIN_UID)continue;
+    const data=item.data()||{},academic=normalizeAcademicProfile(data);
+    if(!validStudentId8(data.studentId))continue;
+    const classKey=data.classKey||(data.educationLevel&&data.classroom?`${data.educationLevel}${data.classroom}`:"");
+    await item.ref.set({uid:item.id,department:academic.department,major:academic.major,classKey,updatedAt:FieldValue.serverTimestamp()},{merge:true});
+    await db.doc(`public_profiles/${item.id}`).set({
+      uid:item.id,studentId:data.studentId,fullName:data.fullName||data.studentId,
+      educationLevel:data.educationLevel||"",classroom:data.classroom||"",classKey,
+      department:academic.department,major:academic.major,rank:data.rank||null,character:data.character||null,
+      updatedAt:FieldValue.serverTimestamp()
+    },{merge:true});
+    updatedProfiles++;
+  }
+  return {ok:true,createdProfiles,updatedProfiles,audit:await buildStudentAccountAudit()};
+});
 exports.recordDailyCheckinHeartbeat=onCall(async request=>{
   const uid=requireAuth(request);
   if(uid===ADMIN_UID)return {qualifiedSeconds:3600,rewarded:true,justRewarded:false,admin:true};

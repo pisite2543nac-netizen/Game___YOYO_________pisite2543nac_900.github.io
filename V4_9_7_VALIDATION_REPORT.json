@@ -1,0 +1,18 @@
+{
+  "syntax_app.js": true,
+  "syntax_admin.js": true,
+  "syntax_zone.js": true,
+  "syntax_ranking-system.js": true,
+  "syntax_quest-system.js": true,
+  "syntax_economy-system.js": true,
+  "syntax_functions/index.js": true,
+  "login_accepts_alphanumeric": true,
+  "register_accepts_alphanumeric": true,
+  "numeric_only_js_removed": true,
+  "valid_id_helper": true,
+  "login_example_supported": true,
+  "registration_rollback": true,
+  "orphan_profile_repair": true,
+  "profile_repair_cleared": true,
+  "all_passed": true
+}

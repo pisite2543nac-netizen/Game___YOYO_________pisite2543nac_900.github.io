@@ -1,0 +1,22 @@
+{
+  "syntax_app.js": true,
+  "syntax_admin.js": true,
+  "syntax_zone.js": true,
+  "syntax_ranking-system.js": true,
+  "syntax_quest-system.js": true,
+  "syntax_economy-system.js": true,
+  "syntax_reward-data.js": true,
+  "syntax_character-system.js": true,
+  "syntax_functions/index.js": true,
+  "login_8_digits": true,
+  "register_8_digits": true,
+  "js_8_digits": true,
+  "student_email": true,
+  "auto_profile_repair": true,
+  "admin_audit": true,
+  "admin_repair": true,
+  "ranking_40_40_20": true,
+  "wizard_shop_preserved": true,
+  "inventory_preserved": true,
+  "all_passed": true
+}

@@ -1,4 +1,4 @@
-# V4.9.6 LIVE REPO FULL REPAIR
+# V5.0 LIVE REPO FULL REPAIR
 
 สร้างจาก ZIP GitHub repository ที่ผู้ใช้อัปมาโดยตรง
 
@@ -17,7 +17,7 @@
 - GM ไม่อยู่ใน Ranking
 
 ## วิธี Deploy
-1. อัปไฟล์ทั้งหมดใน ZIP V4.9.6 ไปที่ GitHub Pages root
+1. อัปไฟล์ทั้งหมดใน ZIP V5.0 ไปที่ GitHub Pages root
 2. Firebase Console -> Firestore Rules -> วาง `firestore.rules` -> Publish
 3. ที่เครื่องที่ติด Firebase CLI:
    `firebase login`

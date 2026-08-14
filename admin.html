@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Admin | ระบบเกมพิมพ์ Code</title>
-  <link rel="stylesheet" href="./style.css?v=4.9.6">
+  <link rel="stylesheet" href="./style.css?v=5.0.0">
 </head>
 <body class="admin-page">
   <main class="wrap admin-wrap">
@@ -38,7 +38,7 @@
           <p>ผู้จัดทำ: นายพิสิษฐ์ หุนตระนี ครูพิเศษสอน</p>
         </div>
         <div>
-          <a class="btn gm-zone-entry" href="./zone.html?v=4.9.6">🌙 เข้า 2D Zone · GM</a>
+          <a class="btn gm-zone-entry" href="./zone.html?v=5.0.0">🌙 เข้า 2D Zone · GM</a>
           <a class="btn ghost" href="index.html">หน้าผู้เล่น</a>
           <button id="logoutAdmin" class="btn secondary">ออกจากระบบ</button>
         </div>
@@ -104,9 +104,19 @@
             <p>สมาชิกที่ลงทะเบียนบัญชีเข้าสู่ระบบเกม · Firebase ไม่สามารถแสดงรหัสผ่านเดิมได้ จึงใช้การตั้งรหัสผ่านใหม่แบบปลอดภัยแทน</p>
           </div>
           <div class="admin-user-tools">
-            <button id="migrateInformationUsers" class="btn secondary" type="button">🔄 จัดกลุ่มสาขาวิชาเดิมให้ถูกต้อง</button>
+            <button id="auditStudentAccounts" class="btn ghost" type="button">🔎 ตรวจ Auth / Database</button>
+            <button id="repairStudentDatabase" class="btn secondary" type="button">🛠️ ซ่อมฐานข้อมูล User</button>
+            <button id="migrateInformationUsers" class="btn secondary" type="button">🔄 จัดกลุ่มสาขาวิชาเดิม</button>
             <button id="deleteUsers" class="btn danger">ลบ User ทั้งหมด (Auth + DB)</button>
           </div>
+        </div>
+        <div id="studentAccountAuditCard" class="admin-audit-card">
+          <div>
+            <span class="admin-audit-kicker">USER DATABASE HEALTH</span>
+            <strong id="studentAccountAuditTitle">ยังไม่ได้ตรวจระบบบัญชี</strong>
+            <small id="studentAccountAuditText">กด “ตรวจ Auth / Database” เพื่อเทียบ Firebase Authentication กับ Firestore โดยไม่แก้หรือลบข้อมูล</small>
+          </div>
+          <div id="studentAccountAuditStats" class="admin-audit-stats"></div>
         </div>
         <div class="table-wrap">
           <table>
@@ -386,7 +396,7 @@
           <div class="admin-world-chat-input-row">
             <textarea id="gmWorldChatInput" maxlength="120" rows="2" placeholder="GM พิมพ์ข้อความถึงผู้เล่นทุกคน..."></textarea>
             <button id="sendGmWorldChat" class="btn primary" type="button">ส่งในแชตโลก</button>
-            <a class="btn gm-zone-entry" href="./zone.html?v=4.9.6#world-chat">เข้า World Chat</a>
+            <a class="btn gm-zone-entry" href="./zone.html?v=5.0.0#world-chat">เข้า World Chat</a>
           </div>
         </div>
 
@@ -431,6 +441,6 @@
   </div>
 
   <div id="adminToast" class="admin-toast hidden" aria-live="polite"></div>
-  <script type="module" src="./admin.js?v=4.9.6"></script>
+  <script type="module" src="./admin.js?v=5.0.0"></script>
 </body>
 </html>

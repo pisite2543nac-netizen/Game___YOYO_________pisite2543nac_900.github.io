@@ -1,6 +1,6 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-app.js";
 import {
-  getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword,
+  getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, deleteUser,
   signOut, onAuthStateChanged
 } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-auth.js";
 import {
@@ -8,14 +8,14 @@ import {
   serverTimestamp, query, where, orderBy, limit, onSnapshot, runTransaction
 } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
 import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-functions.js";
-import { firebaseConfig } from "./firebase-config.js?v=4.9.6";
-import { LANGUAGES, LESSONS, DIFFICULTIES } from "./lessons.js?v=4.9.6";
-import { REWARD_ITEMS, RARITY_META, INVENTORY_CAPACITY, SHOP_BUYBACK_RATE } from "./reward-data.js?v=4.9.6";
-import { DEFAULT_CHARACTER, DEFAULT_ZONE_STATE } from "./character-system.js?v=4.9.6";
-import { OFFICIAL_STAGES, OFFICIAL_TOTAL_SCORE } from "./official-data.js?v=4.9.6";
-import { RANKING_CONFIG, seasonIdFromDate, seasonRange, calculateRankMetrics, rankingClassKey, rankingDepartmentKey, rankingMajorKey, rankProfiles } from "./ranking-system.js?v=4.9.6";
-import { TOKEN_REWARD_CONFIG, calculateStageTokenReward, maxTokenForLesson, classKey } from "./economy-system.js?v=4.9.6";
-import { DEFAULT_TEACHER_QUESTS, localDayKey, questObjectiveMet, questObjectiveLabel, clampQuestReward } from "./quest-system.js?v=4.9.6";
+import { firebaseConfig } from "./firebase-config.js?v=5.0.0";
+import { LANGUAGES, LESSONS, DIFFICULTIES } from "./lessons.js?v=5.0.0";
+import { REWARD_ITEMS, RARITY_META, INVENTORY_CAPACITY, SHOP_BUYBACK_RATE } from "./reward-data.js?v=5.0.0";
+import { DEFAULT_CHARACTER, DEFAULT_ZONE_STATE } from "./character-system.js?v=5.0.0";
+import { OFFICIAL_STAGES, OFFICIAL_TOTAL_SCORE } from "./official-data.js?v=5.0.0";
+import { RANKING_CONFIG, seasonIdFromDate, seasonRange, calculateRankMetrics, rankingClassKey, rankingDepartmentKey, rankingMajorKey, rankProfiles } from "./ranking-system.js?v=5.0.0";
+import { TOKEN_REWARD_CONFIG, calculateStageTokenReward, maxTokenForLesson, classKey } from "./economy-system.js?v=5.0.0";
+import { DEFAULT_TEACHER_QUESTS, localDayKey, questObjectiveMet, questObjectiveLabel, clampQuestReward } from "./quest-system.js?v=5.0.0";
 
 const firebaseApp = initializeApp(firebaseConfig);
 const auth = getAuth(firebaseApp);
@@ -41,7 +41,9 @@ const state = {
   activeQuest:null,questLaunchHandled:false,dailyCheckinTimer:null,dailyCheckinState:null
 };
 
-const studentEmail = id => `${String(id).trim()}@student.thc-nr.local`;
+const normalizeStudentId = value => String(value||"").trim();
+const validStudentId = value => /^\d{8}$/.test(String(value||"").trim());
+const studentEmail = id => `${normalizeStudentId(id)}@student.thc-nr.local`;
 let authRoutePromise=null;
 let authActionInProgress=false;
 const esc = v => String(v ?? "").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;");
@@ -192,7 +194,7 @@ $("registerTab").onclick=()=>{$("registerTab").classList.add("active");$("loginT
 document.querySelectorAll("[data-toggle-password]").forEach(btn=>btn.onclick=()=>{const i=$(btn.dataset.togglePassword);i.type=i.type==="password"?"text":"password";btn.textContent=i.type==="password"?"แสดง":"ซ่อน"});
 
 function registerValid(){
-  return /^\d+$/.test($("studentId").value.trim()) &&
+  return validStudentId($("studentId").value) &&
     $("fullName").value.trim() && $("educationLevel").value && $("classroom").value &&
     normalizeAcademicSelection($("department").value,$("major").value).department && $("major").value && $("password").value.length >= 6 &&
     $("password").value === $("confirmPassword").value && $("acceptRules").checked;
@@ -222,9 +224,12 @@ $("registerForm").addEventListener("submit",async e=>{
   button.disabled=true;button.textContent="กำลังสมัคร...";
   $("registerMessage").textContent="";
   authActionInProgress=true;
+  let newlyCreatedUser=null;
   try{
-    const sid=$("studentId").value.trim();
+    const sid=normalizeStudentId($("studentId").value);
+    if(!validStudentId(sid))throw new Error("STUDENT_ID_8_DIGITS_REQUIRED");
     const cred=await createUserWithEmailAndPassword(auth,studentEmail(sid),$("password").value);
+    newlyCreatedUser=cred.user;
     state.uid=cred.user.uid;
 
     const academic=normalizeAcademicSelection($("department").value,$("major").value);
@@ -259,10 +264,18 @@ $("registerForm").addEventListener("submit",async e=>{
     await routeAuthenticatedStudent();
   }catch(err){
     console.error("register:",err);
-    if(err?.code==="auth/email-already-in-use"){
+    if(newlyCreatedUser){
+      try{
+        const profileSnap=await getDoc(doc(db,"users",newlyCreatedUser.uid));
+        if(!profileSnap.exists())await deleteUser(newlyCreatedUser);
+      }catch(rollbackError){console.warn("registration rollback:",rollbackError)}
+    }
+    if(err?.message==="STUDENT_ID_8_DIGITS_REQUIRED"){
+      $("registerMessage").textContent="รหัสนักศึกษาต้องเป็นตัวเลข 8 หลัก เช่น 11111111";
+    }else if(err?.code==="auth/email-already-in-use"){
       $("registerMessage").textContent="รหัสนักศึกษานี้มีบัญชีอยู่แล้ว กรุณา Login หรือให้ Admin ลบบัญชีเดิม";
     }else if(err?.code==="permission-denied"){
-      $("registerMessage").textContent="สมัคร Auth สำเร็จ แต่ Firestore Rules ไม่อนุญาตให้สร้าง Profile กรุณา Publish firestore.rules V4.9.6";
+      $("registerMessage").textContent="สมัคร Auth สำเร็จ แต่ Firestore Rules ไม่อนุญาตให้สร้าง Profile กรุณา Publish firestore.rules V5.0";
     }else{
       $("registerMessage").textContent="ลงทะเบียนไม่สำเร็จ: "+(err?.message||String(err));
     }
@@ -275,7 +288,7 @@ $("registerForm").addEventListener("submit",async e=>{
 
 $("loginForm").addEventListener("submit",async e=>{
   e.preventDefault();
-  const sid=$("loginStudentId").value.trim();
+  const sid=normalizeStudentId($("loginStudentId").value);
   const password=$("loginPassword").value;
   const button=$("loginForm").querySelector('button[type="submit"]');
   const oldText=button?.textContent||"เข้าสู่ระบบ";
@@ -283,6 +296,10 @@ $("loginForm").addEventListener("submit",async e=>{
   $("loginMessage").textContent="";
   authActionInProgress=true;
   try{
+    if(!validStudentId(sid)){
+      $("loginMessage").textContent="กรุณากรอกรหัสนักศึกษาเป็นตัวเลข 8 หลัก เช่น 11111111";
+      return;
+    }
     const cred=await signInWithEmailAndPassword(auth,studentEmail(sid),password);
     state.uid=cred.user.uid;
     await requestLoginFullscreen();
@@ -292,9 +309,9 @@ $("loginForm").addEventListener("submit",async e=>{
     if(["auth/invalid-credential","auth/user-not-found","auth/wrong-password"].includes(error?.code)){
       $("loginMessage").textContent="รหัสนักศึกษาหรือรหัสผ่านไม่ถูกต้อง";
     }else if(error?.code==="permission-denied"){
-      $("loginMessage").textContent="Login Auth สำเร็จ แต่ Firestore Rules ปฏิเสธการอ่านข้อมูล User กรุณา Publish firestore.rules V4.9.6";
+      $("loginMessage").textContent="Login Auth สำเร็จ แต่ Firestore Rules ปฏิเสธการอ่านข้อมูล User กรุณา Publish firestore.rules V5.0";
     }else if(error?.message==="USER_PROFILE_NOT_READY"){
-      $("loginMessage").textContent="พบบัญชี Login แต่ไม่พบข้อมูล User ใน Firestore ให้ Admin ตรวจหรือลบบัญชีนี้แล้วสมัครใหม่";
+      $("loginMessage").textContent="พบบัญชี Login แต่สร้าง Profile ซ่อมอัตโนมัติไม่สำเร็จ กรุณาตรวจ Firestore Rules";
     }else{
       $("loginMessage").textContent="เปิดบัญชีไม่สำเร็จ: "+(error?.message||String(error));
     }
@@ -304,6 +321,43 @@ $("loginForm").addEventListener("submit",async e=>{
   }
 });
 
+async function repairMissingStudentProfile(studentId){
+  if(!state.uid||!auth.currentUser)return false;
+  const sid=normalizeStudentId(studentId||auth.currentUser.email?.split("@")[0]||"");
+  if(!validStudentId(sid))return false;
+  try{
+    await setDoc(doc(db,"users",state.uid),{
+      uid:state.uid,
+      studentId:sid,
+      fullName:sid,
+      educationLevel:"ปวช.1",
+      classroom:"/1",
+      classKey:classKey("ปวช.1","/1"),
+      department:"ไม่ระบุแผนก",
+      major:"ไม่ระบุสาขาวิชา",
+      role:"student",
+      status:"active",
+      tokenBalance:0,
+      tokenLifetime:0,
+      inventory:[],
+      inventoryCapacity:INVENTORY_CAPACITY,
+      officialProgress:{},
+      officialSubmitted:false,
+      rank:{seasonId:null,rating:0,tierId:"bronze",tierName:"Bronze"},
+      progress:{html:{maxUnlockedStage:1},python:{maxUnlockedStage:1}},
+      character:{...DEFAULT_CHARACTER,displayName:sid},
+      zone:{...DEFAULT_ZONE_STATE},
+      profileNeedsRepair:true,
+      recoveredAt:serverTimestamp(),
+      createdAt:serverTimestamp(),
+      updatedAt:serverTimestamp()
+    },{merge:true});
+    return true;
+  }catch(error){
+    console.error("repair missing profile:",error);
+    return false;
+  }
+}
 async function waitForStudentProfile(maxWaitMs=6000){
   const started=Date.now();
   while(Date.now()-started<maxWaitMs){
@@ -326,7 +380,11 @@ async function routeAuthenticatedStudent(){
 
     // Registration can trigger onAuthStateChanged before users/{uid} is written.
     // Wait for the profile document instead of treating it as a failed login.
-    const profileSnap=await waitForStudentProfile(6000);
+    let profileSnap=await waitForStudentProfile(2500);
+    if(!profileSnap){
+      const recovered=await repairMissingStudentProfile(auth.currentUser.email?.split("@")[0]);
+      if(recovered)profileSnap=await waitForStudentProfile(2500);
+    }
     if(!profileSnap)throw new Error("USER_PROFILE_NOT_READY");
 
     await ensureProfileDefaults();
@@ -343,7 +401,7 @@ async function routeAuthenticatedStudent(){
       }catch(error){
         console.warn("mobile route sync skipped:",error);
       }
-      location.replace("./zone.html?v=4.9.6");
+      location.replace("./zone.html?v=5.0.0");
       return;
     }
 
@@ -385,7 +443,7 @@ async function saveEditProfile(){
     await updateDoc(doc(db,"users",state.uid),{
       fullName,educationLevel,classroom,classKey:classKey(educationLevel,classroom),
       department:academic.department,major:academic.major,
-      profileAcademicUpdatedAt:serverTimestamp(),updatedAt:serverTimestamp()
+      profileNeedsRepair:false,profileAcademicUpdatedAt:serverTimestamp(),updatedAt:serverTimestamp()
     });
     await setDoc(doc(db,"public_profiles",state.uid),{
       uid:state.uid,studentId:state.player.studentId,fullName,
@@ -395,7 +453,7 @@ async function saveEditProfile(){
       character:state.player.character||DEFAULT_CHARACTER,
       updatedAt:serverTimestamp()
     },{merge:true});
-    state.player={...state.player,fullName,educationLevel,classroom,department:academic.department,major:academic.major};
+    state.player={...state.player,fullName,educationLevel,classroom,department:academic.department,major:academic.major,profileNeedsRepair:false};
     $("portalWelcome").textContent=`${fullName} · ${state.player.studentId} · ${educationLevel}${classroom} · ${academic.department} · ${academic.major}`;
     closeEditProfile();
     await updateMyRank();
@@ -417,7 +475,7 @@ async function enterPortal(){
   showScreen("userPortal");
   startDailyCheckin();
   $("portalWelcome").textContent=`${state.player.fullName} · ${state.player.studentId} · ${state.player.educationLevel}${state.player.classroom} · ${state.player.department||"ไม่ระบุแผนก"} · ${state.player.major||"ไม่ระบุสาขาวิชา"}`;
-  if(!state.player.department||!state.player.major||state.player.department==="ไม่ระบุแผนก"||state.player.major==="ไม่ระบุสาขาวิชา"){
+  if(state.player.profileNeedsRepair||!state.player.department||!state.player.major||state.player.department==="ไม่ระบุแผนก"||state.player.major==="ไม่ระบุสาขาวิชา"){
     setTimeout(()=>openEditProfile(),350);
   }
   $("userTokens").textContent=Number(state.player.tokenBalance||0).toLocaleString();
@@ -647,7 +705,7 @@ async function maybeLaunchQuestFromUrl(){
   if(!id||state.questLaunchHandled||!state.uid||!state.player)return false;
   state.questLaunchHandled=true;
   if(isMobileOrTabletDevice()){
-    location.replace("./zone.html?v=4.9.6");
+    location.replace("./zone.html?v=5.0.0");
     return true;
   }
   const quest=await resolveTeacherQuest(id);
@@ -962,7 +1020,7 @@ $("nextLevelButton").onclick=async()=>{
   state.lesson=next;state.difficulty=DIFFICULTIES.find(x=>x.id===next.difficulty);
   prepareClassic();showScreen("gameScreen");await requestRealFullscreen();setTimeout(()=>$("typingInput").focus({preventScroll:true}),100);
 };
-$("questZoneButton").onclick=()=>{location.href="./zone.html?v=4.9.6"};
+$("questZoneButton").onclick=()=>{location.href="./zone.html?v=5.0.0"};
 $("portalButton").onclick=async()=>{state.activeQuest=null;history.replaceState(null,"",location.pathname);await ensureProfileDefaults();await enterPortal()};
 
 function renderRewardShop(){
@@ -1231,7 +1289,7 @@ async function saveCharacterGender(gender){
 
   // มือถือ/แท็บเล็ตใช้เฉพาะ 2D Zone หลังเลือกตัวละครเสร็จ
   if(isMobileOrTabletDevice()){
-    location.replace("./zone.html?v=4.9.6");
+    location.replace("./zone.html?v=5.0.0");
   }
 }
 
@@ -1825,7 +1883,7 @@ onAuthStateChanged(auth,async user=>{
   }
 
   if(user.email==="pisit_2000@thc-nr.local"){
-    location.replace("./admin.html?v=4.9.6");
+    location.replace("./admin.html?v=5.0.0");
     return;
   }
 
@@ -1840,9 +1898,9 @@ onAuthStateChanged(auth,async user=>{
     console.error("auth observer route:",error);
     showScreen("authScreen");
     if(error?.code==="permission-denied"){
-      $("loginMessage").textContent="Firebase Rules ปฏิเสธการอ่าน User · กรุณา Publish firestore.rules V4.9.6";
+      $("loginMessage").textContent="Firebase Rules ปฏิเสธการอ่าน User · กรุณา Publish firestore.rules V5.0";
     }else if(error?.message==="USER_PROFILE_NOT_READY"){
-      $("loginMessage").textContent="บัญชี Authentication มีอยู่ แต่ไม่พบ Profile ใน Firestore · ให้ Admin ลบบัญชีเดิมแล้วสมัครใหม่";
+      $("loginMessage").textContent="บัญชี Authentication มีอยู่ แต่ซ่อม Profile อัตโนมัติไม่สำเร็จ · กรุณาตรวจ Firestore Rules";
     }else{
       $("loginMessage").textContent="เปิดบัญชีไม่สำเร็จ: "+(error?.message||String(error));
     }

@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1">
   <title>ระบบเกมพิมพ์ Code | วิทยาลัยเทคนิคนางรอง</title>
-  <link rel="stylesheet" href="./style.css?v=4.9.6">
+  <link rel="stylesheet" href="./style.css?v=5.0.0">
 </head>
 <body>
 <header class="site-header">
@@ -30,12 +30,16 @@
     <section id="loginPanel" class="auth-panel">
       <span class="section-kicker">STUDENT LOGIN</span>
       <h2>เข้าสู่ระบบผู้เล่น</h2>
-      <p class="muted-line">ใช้เลขประจำตัวนักศึกษาและรหัสผ่านที่สร้างไว้ตอนลงทะเบียน</p>
+      <p class="muted-line">ใช้รหัสผู้ใช้หรือเลขประจำตัวนักศึกษา และรหัสผ่านที่สร้างไว้ตอนลงทะเบียน</p>
+
+      <div id="userAccessStatus" class="user-access-status">
+        รองรับรหัส User ทั้งแบบตัวเลข และตัวอักษร+ตัวเลข เช่น <strong>nkseza2000</strong>
+      </div>
 
       <form id="loginForm" class="form-grid">
         <label>
-          <span>เลขประจำตัวนักศึกษา</span>
-          <input id="loginStudentId" inputmode="numeric" pattern="[0-9]+" required placeholder="กรอกเฉพาะตัวเลข">
+          <span>รหัสผู้ใช้ / เลขประจำตัวนักศึกษา</span>
+          <input id="loginStudentId" inputmode="numeric" autocomplete="username" pattern="[0-9]{8}" minlength="8" maxlength="8" required placeholder="เช่น 11111111">
         </label>
         <label>
           <span>รหัสผ่าน</span>
@@ -54,12 +58,12 @@
     <section id="registerPanel" class="auth-panel hidden">
       <span class="section-kicker">NEW STUDENT ACCOUNT</span>
       <h2>ลงทะเบียนผู้เล่น</h2>
-      <p class="muted-line">ลงทะเบียนครั้งแรกเพียงครั้งเดียว จากนั้นใช้เลขนักศึกษาและรหัสผ่าน Login ได้</p>
+      <p class="muted-line">ลงทะเบียนครั้งแรกเพียงครั้งเดียว จากนั้นใช้รหัสผู้ใช้/เลขนักศึกษาและรหัสผ่าน Login ได้</p>
 
       <form id="registerForm" class="form-grid">
         <label>
-          <span>เลขประจำตัวนักศึกษา</span>
-          <input id="studentId" inputmode="numeric" pattern="[0-9]+" required placeholder="กรอกเฉพาะตัวเลข">
+          <span>รหัสผู้ใช้ / เลขประจำตัวนักศึกษา</span>
+          <input id="studentId" inputmode="numeric" autocomplete="username" pattern="[0-9]{8}" minlength="8" maxlength="8" required placeholder="รหัสนักศึกษา 8 หลัก เช่น 11111111">
         </label>
 
         <label>
@@ -541,7 +545,7 @@
 </main>
 
 <footer><div class="wrap">ระบบเกมพิมพ์ Code · วิทยาลัยเทคนิคนางรอง</div></footer>
-<script type="module" src="./app.js?v=4.9.6"></script>
+<script type="module" src="./app.js?v=5.0.0"></script>
 
   <div id="characterSetupModal" class="character-modal hidden">
     <div class="character-modal-card character-setup-card">

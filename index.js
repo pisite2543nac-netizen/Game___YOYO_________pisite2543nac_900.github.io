@@ -86,6 +86,89 @@ exports.adminDeleteStudentAccount=onCall(async request=>{
   return {ok:true,targetUid,studentId};
 });
 
+
+function validStudentId8(value){ return /^\d{8}$/.test(String(value||"").trim()); }
+function studentIdFromAuthEmail(email){
+  const value=String(email||"").toLowerCase(),suffix="@student.thc-nr.local";
+  if(!value.endsWith(suffix))return "";
+  const id=value.slice(0,-suffix.length);return validStudentId8(id)?id:"";
+}
+function normalizeAcademicProfile(data={}){
+  const oldDepartment=String(data.department||"").trim(),oldMajor=String(data.major||"").trim();
+  let department=oldDepartment,major=oldMajor;
+  const raw=oldMajor||oldDepartment,compact=raw.replace(/\s+/g,"");
+  if(["ธุรกิจดิจิทัล","ธุรกิจดิทัล","ดิจิทัลธุรกิจ"].includes(compact))major="ธุรกิจดิจิทัล";
+  else if(["สารสนเทศ","เทคโนโลยีสารสนเทศ"].includes(compact)||["ไอที","IT"].includes(raw))major="เทคโนโลยีสารสนเทศ";
+  if(/สารสนเทศ|ดิจิทัล|ธุรกิจดิทัล/i.test(oldDepartment))department="คอมพิวเตอร์";
+  if(["เทคโนโลยีสารสนเทศ","ธุรกิจดิจิทัล"].includes(major))department="คอมพิวเตอร์";
+  return {department:department||"ไม่ระบุแผนก",major:major||"ไม่ระบุสาขาวิชา"};
+}
+async function listAllAuthUsers(){
+  const rows=[];let pageToken;
+  do{const page=await getAuth().listUsers(1000,pageToken);rows.push(...page.users);pageToken=page.pageToken;}while(pageToken);
+  return rows;
+}
+async function buildStudentAccountAudit(){
+  const [authUsers,userSnap]=await Promise.all([listAllAuthUsers(),db.collection("users").get()]);
+  const authStudents=authUsers.map(u=>({uid:u.uid,studentId:studentIdFromAuthEmail(u.email)})).filter(x=>x.studentId);
+  const firestoreUsers=userSnap.docs.map(d=>({uid:d.id,...d.data()})).filter(x=>x.uid!==ADMIN_UID);
+  const authUidSet=new Set(authStudents.map(x=>x.uid)),firestoreUidSet=new Set(firestoreUsers.map(x=>x.uid));
+  const missingProfiles=authStudents.filter(x=>!firestoreUidSet.has(x.uid));
+  const missingAuth=firestoreUsers.filter(x=>validStudentId8(x.studentId)&&!authUidSet.has(x.uid));
+  const invalid=firestoreUsers.filter(x=>!validStudentId8(x.studentId));
+  const counts=new Map();firestoreUsers.forEach(x=>{const id=String(x.studentId||"");if(id)counts.set(id,(counts.get(id)||0)+1)});
+  const duplicates=[...counts.entries()].filter(([,n])=>n>1).map(([studentId,count])=>({studentId,count}));
+  return {
+    authStudentCount:authStudents.length,firestoreUserCount:firestoreUsers.length,
+    missingProfiles:missingProfiles.length,missingAuth:missingAuth.length,
+    invalidStudentIds:invalid.length,duplicateStudentIds:duplicates.length,
+    missingProfileIds:missingProfiles.slice(0,50).map(x=>x.studentId),
+    missingAuthIds:missingAuth.slice(0,50).map(x=>String(x.studentId||"")),
+    invalidIds:invalid.slice(0,50).map(x=>String(x.studentId||"")),duplicates:duplicates.slice(0,50)
+  };
+}
+exports.adminAuditStudentAccounts=onCall(async request=>{
+  const caller=requireAuth(request);if(caller!==ADMIN_UID)throw new HttpsError("permission-denied","Admin only");
+  return await buildStudentAccountAudit();
+});
+exports.adminRepairStudentDatabase=onCall(async request=>{
+  const caller=requireAuth(request);if(caller!==ADMIN_UID)throw new HttpsError("permission-denied","Admin only");
+  const authUsers=await listAllAuthUsers();
+  const authStudents=authUsers.map(u=>({uid:u.uid,studentId:studentIdFromAuthEmail(u.email)})).filter(x=>x.studentId);
+  let createdProfiles=0,updatedProfiles=0;
+
+  for(const account of authStudents){
+    const ref=db.doc(`users/${account.uid}`),snap=await ref.get();
+    if(!snap.exists){
+      await ref.set({
+        uid:account.uid,studentId:account.studentId,fullName:account.studentId,
+        educationLevel:"ปวช.1",classroom:"/1",classKey:"ปวช.1/1",
+        department:"ไม่ระบุแผนก",major:"ไม่ระบุสาขาวิชา",role:"student",status:"active",
+        tokenBalance:0,tokenLifetime:0,inventory:[],inventoryCapacity:25,
+        officialProgress:{},officialSubmitted:false,progress:{html:{maxUnlockedStage:1},python:{maxUnlockedStage:1}},
+        character:{gender:null,equipped:{}},zone:{x:450,y:690,direction:"right"},
+        profileNeedsRepair:true,recoveredAt:FieldValue.serverTimestamp(),createdAt:FieldValue.serverTimestamp(),updatedAt:FieldValue.serverTimestamp()
+      },{merge:true});createdProfiles++;
+    }
+  }
+
+  const users=await db.collection("users").get();
+  for(const item of users.docs){
+    if(item.id===ADMIN_UID)continue;
+    const data=item.data()||{},academic=normalizeAcademicProfile(data);
+    if(!validStudentId8(data.studentId))continue;
+    const classKey=data.classKey||(data.educationLevel&&data.classroom?`${data.educationLevel}${data.classroom}`:"");
+    await item.ref.set({uid:item.id,department:academic.department,major:academic.major,classKey,updatedAt:FieldValue.serverTimestamp()},{merge:true});
+    await db.doc(`public_profiles/${item.id}`).set({
+      uid:item.id,studentId:data.studentId,fullName:data.fullName||data.studentId,
+      educationLevel:data.educationLevel||"",classroom:data.classroom||"",classKey,
+      department:academic.department,major:academic.major,rank:data.rank||null,character:data.character||null,
+      updatedAt:FieldValue.serverTimestamp()
+    },{merge:true});
+    updatedProfiles++;
+  }
+  return {ok:true,createdProfiles,updatedProfiles,audit:await buildStudentAccountAudit()};
+});
 exports.recordDailyCheckinHeartbeat=onCall(async request=>{
   const uid=requireAuth(request);
   if(uid===ADMIN_UID)return {qualifiedSeconds:3600,rewarded:true,justRewarded:false,admin:true};

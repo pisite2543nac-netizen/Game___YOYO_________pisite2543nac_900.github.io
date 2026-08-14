@@ -5,14 +5,16 @@ import {
   writeBatch, serverTimestamp, onSnapshot, Timestamp, query, orderBy, limit
 } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
 import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-functions.js";
-import { firebaseConfig, ADMIN_USERNAME, ADMIN_EMAIL, ADMIN_UID } from "./firebase-config.js?v=4.9.6";
-import { DEFAULT_MODES, DEFAULT_LEVELS } from "./default-data.js?v=4.9.6";
-import { seasonIdFromDate, seasonRange, calculateRankMetrics, rankingClassKey } from "./ranking-system.js?v=4.9.6";
-import { DEFAULT_TEACHER_QUESTS, clampQuestReward, questDifficultyName, questObjectiveLabel, defaultMinRankForDifficulty, rewardRange } from "./quest-system.js?v=4.9.6";
+import { firebaseConfig, ADMIN_USERNAME, ADMIN_EMAIL, ADMIN_UID } from "./firebase-config.js?v=5.0.0";
+import { DEFAULT_MODES, DEFAULT_LEVELS } from "./default-data.js?v=5.0.0";
+import { seasonIdFromDate, seasonRange, calculateRankMetrics, rankingClassKey } from "./ranking-system.js?v=5.0.0";
+import { DEFAULT_TEACHER_QUESTS, clampQuestReward, questDifficultyName, questObjectiveLabel, defaultMinRankForDifficulty, rewardRange } from "./quest-system.js?v=5.0.0";
 
 const app=initializeApp(firebaseConfig),auth=getAuth(app),db=getFirestore(app),cloudFunctions=getFunctions(app,"asia-southeast1"),$=id=>document.getElementById(id);
 const adminResetStudentPassword=httpsCallable(cloudFunctions,"adminResetStudentPassword");
 const adminDeleteStudentAccount=httpsCallable(cloudFunctions,"adminDeleteStudentAccount");
+const adminAuditStudentAccounts=httpsCallable(cloudFunctions,"adminAuditStudentAccounts");
+const adminRepairStudentDatabase=httpsCallable(cloudFunctions,"adminRepairStudentDatabase");
 let cache={users:[],attempts:[],levels:[],modes:[],official:[],zonePositions:[],zoneModeration:[],zoneMessages:[],zoneArchive:[],rankingSettings:{},teacherQuests:[]},unsubs=[];
 let knownUserIds=null;
 let selectedAdminClass="";
@@ -54,6 +56,37 @@ onAuthStateChanged(auth,user=>{
   if(ok){startRealtime();adminRankClock=setInterval(()=>{renderRanking();renderClassrooms();renderDepartments();renderMajors();renderRankingSchedule()},30000);}
 });
 
+
+function renderStudentAccountAudit(data={}){
+  const title=$("studentAccountAuditTitle"),text=$("studentAccountAuditText"),stats=$("studentAccountAuditStats");
+  if(!title||!text||!stats)return;
+  const healthy=Number(data.missingProfiles||0)===0&&Number(data.missingAuth||0)===0&&Number(data.invalidStudentIds||0)===0&&Number(data.duplicateStudentIds||0)===0;
+  title.textContent=healthy?"ระบบบัญชี User ปกติ":"พบข้อมูลที่ควรตรวจ/ซ่อม";
+  text.textContent=healthy
+    ?"Firebase Authentication และ Firestore users สอดคล้องกัน"
+    :`Profile หาย ${Number(data.missingProfiles||0)} · Auth หาย ${Number(data.missingAuth||0)} · รหัสไม่ใช่ 8 หลัก ${Number(data.invalidStudentIds||0)} · รหัสซ้ำ ${Number(data.duplicateStudentIds||0)}`;
+  stats.innerHTML=[
+    ["AUTH",Number(data.authStudentCount||0)],["FIRESTORE",Number(data.firestoreUserCount||0)],
+    ["PROFILE หาย",Number(data.missingProfiles||0)],["AUTH หาย",Number(data.missingAuth||0)]
+  ].map(([k,v])=>`<div><span>${esc(k)}</span><strong>${v}</strong></div>`).join("");
+  $("studentAccountAuditCard")?.classList.toggle("warning",!healthy);
+}
+if($("auditStudentAccounts"))$("auditStudentAccounts").onclick=async()=>{
+  const btn=$("auditStudentAccounts"),old=btn.textContent;btn.disabled=true;btn.textContent="กำลังตรวจ...";
+  try{const result=await adminAuditStudentAccounts({});renderStudentAccountAudit(result.data||{});showAdminToast("ตรวจระบบบัญชีแล้ว","ไม่มีการแก้ไขหรือลบข้อมูล");}
+  catch(error){showAdminToast("ตรวจบัญชีไม่สำเร็จ",error.message||String(error),true)}
+  finally{btn.disabled=false;btn.textContent=old}
+};
+if($("repairStudentDatabase"))$("repairStudentDatabase").onclick=async()=>{
+  if(!confirm("ซ่อมฐานข้อมูล User โดยไม่ล้างคะแนน/Token/Inventory/ประวัติใช้งาน?\\n\\nระบบจะสร้าง Profile ที่หายจากบัญชี Auth, จัด field แผนก/สาขา และ sync public_profiles เท่านั้น"))return;
+  const btn=$("repairStudentDatabase"),old=btn.textContent;btn.disabled=true;btn.textContent="กำลังซ่อม...";
+  try{
+    const result=await adminRepairStudentDatabase({});
+    renderStudentAccountAudit(result.data?.audit||{});
+    showAdminToast("ซ่อมฐานข้อมูลเสร็จ",`สร้าง Profile ${Number(result.data?.createdProfiles||0)} · ปรับ Profile ${Number(result.data?.updatedProfiles||0)}`);
+  }catch(error){showAdminToast("ซ่อมฐานข้อมูลไม่สำเร็จ",error.message||String(error),true)}
+  finally{btn.disabled=false;btn.textContent=old}
+};
 function startRealtime(){
   unsubs.push(onSnapshot(collection(db,"users"),snap=>{
     const next=snap.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>dateValue(b.createdAt)-dateValue(a.createdAt));
