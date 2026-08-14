@@ -14,6 +14,10 @@ let cache={users:[],attempts:[],levels:[],modes:[],official:[],zonePositions:[],
 let knownUserIds=null;
 let selectedAdminClass="";
 let adminClassSearchTerm="";
+let selectedAdminDepartment="";
+let adminDepartmentSearchTerm="";
+let selectedAdminMajor="";
+let adminMajorSearchTerm="";
 let adminRankClock=null;
 
 const isAdmin=user=>!!user&&user.uid===ADMIN_UID;
@@ -43,7 +47,7 @@ onAuthStateChanged(auth,user=>{
   const ok=isAdmin(user);$("adminLogin").classList.toggle("hidden",ok);$("adminDashboard").classList.toggle("hidden",!ok);
   unsubs.forEach(fn=>fn());unsubs=[];
   clearInterval(adminRankClock);adminRankClock=null;
-  if(ok){startRealtime();adminRankClock=setInterval(()=>{renderRanking();renderClassrooms();renderRankingSchedule()},30000);}
+  if(ok){startRealtime();adminRankClock=setInterval(()=>{renderRanking();renderClassrooms();renderDepartments();renderMajors();renderRankingSchedule()},30000);}
 });
 
 function startRealtime(){
@@ -66,7 +70,7 @@ function startRealtime(){
   const archiveQuery=query(collection(db,"zone_chat_archive"),orderBy("createdAt","desc"),limit(1000));
   unsubs.push(onSnapshot(archiveQuery,snap=>{cache.zoneArchive=snap.docs.map(d=>({id:d.id,...d.data()})).filter(x=>x.zoneId===ACTIVE_ZONE_ID);renderAll()},error=>{cache.zoneArchive=[];console.warn("zone archive:",error)}));
 }
-function renderAll(){renderMetrics();renderResults();renderUsers();renderClassrooms();renderLevels();renderOfficial();renderRanking();renderRankingSchedule();renderTeacherQuests();renderZoneControl();renderZoneChatLog()}
+function renderAll(){renderMetrics();renderResults();renderUsers();renderClassrooms();renderDepartments();renderMajors();renderLevels();renderOfficial();renderRanking();renderRankingSchedule();renderTeacherQuests();renderZoneControl();renderZoneChatLog()}
 function renderMetrics(){
   const completed=cache.attempts.filter(x=>x.status==="completed");
   const avg=completed.length?Math.round(completed.reduce((s,x)=>s+Number(x.score||0),0)/completed.length):0;
@@ -78,8 +82,8 @@ function renderResults(){
     const stage=x.stage??x.levelNo??"-";
     const mode=x.modeName||x.mode||"-";
     const pvp=x.pvpResult?` · ${String(x.pvpResult).toUpperCase()}`:"";
-    return `<tr><td>${formatDate(x.createdAt)}</td><td>${esc(x.studentId)}</td><td><strong>${esc(x.fullName)}</strong></td><td>${esc(x.educationLevel||"")}${esc(x.classroom||"")}</td><td>${esc(x.department)}</td><td>${esc(mode)}${esc(pvp)}</td><td>${esc(stage)}</td><td><span class="status status-${esc(x.status)}">${esc(x.status)}</span></td><td><strong>${Number(x.score||0).toLocaleString()}</strong></td><td>${esc(x.wpm??0)}</td><td>${esc(x.accuracy??0)}%</td><td><button class="mini-delete" data-delete-attempt="${x.id}">ลบ</button></td></tr>`;
-  }).join("")||`<tr><td colspan="12" class="empty">ยังไม่มีผลการเล่น</td></tr>`;
+    return `<tr><td>${formatDate(x.createdAt)}</td><td>${esc(x.studentId)}</td><td><strong>${esc(x.fullName)}</strong></td><td>${esc(x.educationLevel||"")}${esc(x.classroom||"")}</td><td>${esc(x.department||"ไม่ระบุแผนก")}</td><td>${esc(x.major||"ไม่ระบุสาขาวิชา")}</td><td>${esc(mode)}${esc(pvp)}</td><td>${esc(stage)}</td><td><span class="status status-${esc(x.status)}">${esc(x.status)}</span></td><td><strong>${Number(x.score||0).toLocaleString()}</strong></td><td>${esc(x.wpm??0)}</td><td>${esc(x.accuracy??0)}%</td><td><button class="mini-delete" data-delete-attempt="${x.id}">ลบ</button></td></tr>`;
+  }).join("")||`<tr><td colspan="13" class="empty">ยังไม่มีผลการเล่น</td></tr>`;
   document.querySelectorAll("[data-delete-attempt]").forEach(b=>b.onclick=async()=>{if(confirm("ลบผลรายการนี้?"))await deleteDoc(doc(db,"attempts",b.dataset.deleteAttempt))});
 }
 function compareStudentId(a,b){
@@ -88,7 +92,7 @@ function compareStudentId(a,b){
 }
 function renderUsers(){
   const users=[...cache.users].sort(compareStudentId);
-  $("usersBody").innerHTML=users.map(x=>`<tr><td>${formatDate(x.createdAt)}</td><td>${esc(x.studentId)}</td><td><strong>${esc(x.fullName)}</strong></td><td>${esc(x.educationLevel||"")}${esc(x.classroom||"")}</td><td>${esc(x.department)}</td><td><strong>${Number(x.tokenBalance||0).toLocaleString()}</strong></td><td><span class="status status-active">${esc(x.status||"active")}</span></td><td><button class="mini-delete" data-delete-user="${x.id}">ลบข้อมูล</button></td></tr>`).join("")||`<tr><td colspan="8" class="empty">ยังไม่มีสมาชิก</td></tr>`;
+  $("usersBody").innerHTML=users.map(x=>`<tr><td>${formatDate(x.createdAt)}</td><td>${esc(x.studentId)}</td><td><strong>${esc(x.fullName)}</strong></td><td>${esc(x.educationLevel||"")}${esc(x.classroom||"")}</td><td>${esc(x.department||"ไม่ระบุแผนก")}</td><td>${esc(x.major||"ไม่ระบุสาขาวิชา")}</td><td><strong>${Number(x.tokenBalance||0).toLocaleString()}</strong></td><td><span class="status status-active">${esc(x.status||"active")}</span></td><td><button class="mini-delete" data-delete-user="${x.id}">ลบข้อมูล</button></td></tr>`).join("")||`<tr><td colspan="9" class="empty">ยังไม่มีสมาชิก</td></tr>`;
   document.querySelectorAll("[data-delete-user]").forEach(b=>b.onclick=async()=>{if(confirm("ลบข้อมูลสมาชิกจาก Firestore? หมายเหตุ: บัญชี Authentication ต้องลบใน Firebase Console แยกต่างหาก"))await deleteDoc(doc(db,"users",b.dataset.deleteUser))});
 }
 function renderLevels(){
@@ -104,12 +108,13 @@ function renderOfficial(){
     <td>${esc(x.studentId)}</td>
     <td><strong>${esc(x.fullName)}</strong></td>
     <td>${esc(x.educationLevel||"")}${esc(x.classroom||"")}</td>
-    <td>${esc(x.department)}</td>
+    <td>${esc(x.department||"ไม่ระบุแผนก")}</td>
+    <td>${esc(x.major||"ไม่ระบุสาขาวิชา")}</td>
     <td>${esc(x.completedStages||0)}/30</td>
     <td><strong>${Number(x.totalScore||0).toFixed(2)} / ${Number(x.maxScore||40)}</strong></td>
     <td>${Number(x.avgAccuracy||0).toFixed(1)}%</td>
     <td>${Number(x.avgWpm||0).toFixed(1)}</td>
-  </tr>`).join("")||`<tr><td colspan="9" class="empty">ยังไม่มีผู้ส่งงานทางการ</td></tr>`;
+  </tr>`).join("")||`<tr><td colspan="13" class="empty">ยังไม่มีผู้ส่งงานทางการ</td></tr>`;
 }
 
 function tsMillis(v){
@@ -145,17 +150,27 @@ function userPlayedStages(uid){
 }
 function officialForUser(uid){return cache.official.find(x=>x.uid===uid||x.id===uid)||null}
 function classKeyForUser(u){return rankingClassKey(u.educationLevel,u.classroom)||"ไม่ระบุห้อง"}
+function departmentKeyForUser(u){return rankingDepartmentKey(u)}
+function majorKeyForUser(u){return rankingMajorKey(u)}
+function assignScopedPosition(rows,keyName,positionName){
+  const groups=new Map();
+  rows.forEach(r=>{const key=r[keyName];if(!groups.has(key))groups.set(key,[]);groups.get(key).push(r)});
+  for(const list of groups.values()){
+    list.sort((a,b)=>b.rating-a.rating||compareStudentId(a.user,b.user));
+    list.forEach((r,i)=>r[positionName]=i+1);
+  }
+}
 function buildAdminRankingRows(){
   const rows=cache.users.map(u=>{
     const attempts=seasonAttemptsForUser(u.id);
     const days=new Set(attempts.map(a=>a.createdAt?.toDate?.()?.toISOString().slice(0,10)).filter(Boolean)).size;
     const m=calculateRankMetrics(attempts,days);
-    return {user:u,classKey:classKeyForUser(u),...m};
-  }).sort((a,b)=>b.rating-a.rating||String(a.user.studentId||"").localeCompare(String(b.user.studentId||"")));
+    return {user:u,classKey:classKeyForUser(u),departmentKey:departmentKeyForUser(u),majorKey:majorKeyForUser(u),...m};
+  }).sort((a,b)=>b.rating-a.rating||compareStudentId(a.user,b.user));
   rows.forEach((r,i)=>r.globalPosition=i+1);
-  const groups=new Map();
-  rows.forEach(r=>{if(!groups.has(r.classKey))groups.set(r.classKey,[]);groups.get(r.classKey).push(r)});
-  groups.forEach(list=>list.sort((a,b)=>b.rating-a.rating||a.globalPosition-b.globalPosition).forEach((r,i)=>r.classPosition=i+1));
+  assignScopedPosition(rows,"classKey","classPosition");
+  assignScopedPosition(rows,"departmentKey","departmentPosition");
+  assignScopedPosition(rows,"majorKey","majorPosition");
   return rows;
 }
 function adminClassKeys(){
@@ -169,14 +184,32 @@ function roomLevelLabel(room){
   const m=String(room).match(/^(ปวช|ปวส)\.?(\d)/i);
   return m?`${m[1]}.${m[2]}`:"อื่น ๆ";
 }
+function adminDepartmentKeys(){
+  return [...new Set(cache.users.map(departmentKeyForUser))].sort((a,b)=>a.localeCompare(b,"th",{numeric:true,sensitivity:"base"}));
+}
+function adminMajorKeys(){
+  return [...new Set(cache.users.map(majorKeyForUser))].sort((a,b)=>a.localeCompare(b,"th",{numeric:true,sensitivity:"base"}));
+}
 function syncAdminClassSelectors(){
-  const keys=adminClassKeys(),rankSel=$("adminRankingClassFilter");
-  if(rankSel){
-    const old=rankSel.value;
-    rankSel.innerHTML=`<option value="">ทุกห้อง</option>`+keys.map(k=>`<option value="${esc(k)}">${esc(k)}</option>`).join("");
-    rankSel.value=keys.includes(old)?old:"";
+  const classes=adminClassKeys(),classSel=$("adminRankingClassFilter"),departmentSel=$("adminRankingDepartmentFilter"),majorSel=$("adminRankingMajorFilter");
+  if(classSel){
+    const old=classSel.value;
+    classSel.innerHTML=`<option value="">ทุกห้อง</option>`+classes.map(k=>`<option value="${esc(k)}">${esc(k)}</option>`).join("");
+    classSel.value=classes.includes(old)?old:"";
   }
-  if(selectedAdminClass&&!keys.includes(selectedAdminClass))selectedAdminClass="";
+  const departments=adminDepartmentKeys();
+  if(departmentSel){
+    const old=departmentSel.value;
+    departmentSel.innerHTML=`<option value="">ทุกแผนก</option>`+departments.map(k=>`<option value="${esc(k)}">${esc(k)}</option>`).join("");
+    departmentSel.value=departments.includes(old)?old:"";
+  }
+  const majors=adminMajorKeys();
+  if(majorSel){
+    const old=majorSel.value;
+    majorSel.innerHTML=`<option value="">ทุกสาขาวิชา</option>`+majors.map(k=>`<option value="${esc(k)}">${esc(k)}</option>`).join("");
+    majorSel.value=majors.includes(old)?old:"";
+  }
+  if(selectedAdminClass&&!classes.includes(selectedAdminClass))selectedAdminClass="";
 }
 function filteredAdminClassKeys(){
   const keys=adminClassKeys(),q=normalizeRoomSearch(adminClassSearchTerm);
@@ -234,7 +267,7 @@ function renderClassrooms(){
   if(!selectedAdminClass){
     $("adminClassroomTitle").textContent="เลือกห้องด้านบน";
     $("adminClassroomSummary").textContent="ยังไม่ได้เลือกห้อง";
-    $("adminClassroomBody").innerHTML=`<tr><td colspan="10" class="empty">ค้นหาแล้วกดเลือกห้อง เช่น ปวช.2/1</td></tr>`;
+    $("adminClassroomBody").innerHTML=`<tr><td colspan="13" class="empty">ค้นหาแล้วกดเลือกห้อง เช่น ปวช.2/1</td></tr>`;
     return;
   }
 
@@ -247,10 +280,10 @@ function renderClassrooms(){
       <td>${index+1}</td><td><strong>${esc(r.user.studentId||"-")}</strong></td><td>${esc(r.user.fullName||"-")}</td>
       <td>${adminRankShieldHTML(r)}<br><small>${esc(r.tierName)} · ${r.rating}</small></td><td><strong>${stages}</strong></td>
       <td>${normal.toLocaleString()}</td><td><strong>${Number(official?.totalScore||0).toFixed(2)}</strong> / 40</td>
-      <td><strong>#${r.classPosition||"-"}</strong> · ${r.rating}</td><td><strong>#${r.globalPosition}</strong> · ${r.rating}</td>
+      <td><strong>#${r.classPosition||"-"}</strong> · ${r.rating}</td><td><strong>#${r.departmentPosition||"-"}</strong> · ${r.rating}</td><td><strong>#${r.majorPosition||"-"}</strong> · ${r.rating}</td><td><strong>#${r.globalPosition}</strong> · ${r.rating}</td>
       <td>${Number(r.user.tokenBalance||0).toLocaleString()}</td>
     </tr>`;
-  }).join("")||`<tr><td colspan="10" class="empty">ยังไม่มีสมาชิกในห้องนี้</td></tr>`;
+  }).join("")||`<tr><td colspan="13" class="empty">ยังไม่มีสมาชิกในห้องนี้</td></tr>`;
 }
 if($("adminClassSearchInput"))$("adminClassSearchInput").addEventListener("input",e=>{
   adminClassSearchTerm=e.target.value.trim();renderClassrooms();
@@ -262,22 +295,92 @@ if($("clearAdminClassSearch"))$("clearAdminClassSearch").onclick=()=>{
 };
 if($("adminRankingClassFilter"))$("adminRankingClassFilter").onchange=()=>renderRanking();
 
+function filterNamedKeys(keys,term){
+  const q=String(term||"").toLowerCase().replace(/\s+/g,"");
+  return q?keys.filter(k=>String(k).toLowerCase().replace(/\s+/g,"").includes(q)):keys;
+}
+function scopedAdminRow(r,index,scope){
+  const official=officialForUser(r.user.id),normal=userNormalScore(r.user.id),stages=userPlayedStages(r.user.id);
+  const scopeFirst=scope==="department"
+    ?`<td>${esc(r.majorKey)}</td><td>${esc(r.classKey)}</td>`
+    :`<td>${esc(r.departmentKey)}</td><td>${esc(r.classKey)}</td>`;
+  const positions=scope==="department"
+    ?`<td><strong>#${r.departmentPosition||"-"}</strong> · ${r.rating}</td><td><strong>#${r.majorPosition||"-"}</strong> · ${r.rating}</td>`
+    :`<td><strong>#${r.majorPosition||"-"}</strong> · ${r.rating}</td><td><strong>#${r.departmentPosition||"-"}</strong> · ${r.rating}</td>`;
+  return `<tr><td>${index+1}</td><td><strong>${esc(r.user.studentId||"-")}</strong></td><td>${esc(r.user.fullName||"-")}</td>${scopeFirst}
+    <td>${adminRankShieldHTML(r)}<br><small>${esc(r.tierName)} · ${r.rating}</small></td>
+    <td>${stages}</td><td>${normal.toLocaleString()}</td><td><strong>${Number(official?.totalScore||0).toFixed(2)}</strong> / 40</td>
+    ${positions}<td><strong>#${r.classPosition||"-"}</strong> · ${r.rating}</td><td><strong>#${r.globalPosition||"-"}</strong> · ${r.rating}</td>
+    <td>${Number(r.user.tokenBalance||0).toLocaleString()}</td></tr>`;
+}
+function renderDepartments(){
+  if(!$("adminDepartmentBody"))return;
+  const rows=buildAdminRankingRows(),all=adminDepartmentKeys(),keys=filterNamedKeys(all,adminDepartmentSearchTerm);
+  if(selectedAdminDepartment&&!all.includes(selectedAdminDepartment))selectedAdminDepartment="";
+  if(!selectedAdminDepartment&&keys.length===1)selectedAdminDepartment=keys[0];
+  $("adminDepartmentTotal").textContent=`${all.length} แผนก`;
+  $("adminDepartmentSearchResult").textContent=adminDepartmentSearchTerm?`พบ ${keys.length} แผนก`:"แสดงทุกแผนก";
+  $("adminDepartmentCards").innerHTML=keys.map(k=>{
+    const members=rows.filter(r=>r.departmentKey===k);
+    return `<button class="admin-major-button ${k===selectedAdminDepartment?"active":""}" data-admin-department="${esc(k)}"><strong>${esc(k)}</strong><small>${members.length} คน · ${new Set(members.map(r=>r.majorKey)).size} สาขาวิชา</small></button>`;
+  }).join("")||`<div class="admin-room-no-result">ไม่พบแผนก</div>`;
+  document.querySelectorAll("[data-admin-department]").forEach(btn=>btn.onclick=()=>{selectedAdminDepartment=btn.dataset.adminDepartment;renderDepartments()});
+  if(!selectedAdminDepartment){
+    $("adminDepartmentTitle").textContent="เลือกแผนกด้านบน";$("adminDepartmentSummary").textContent="ยังไม่ได้เลือกแผนก";
+    $("adminDepartmentBody").innerHTML=`<tr><td colspan="14" class="empty">เลือกแผนกเพื่อดูรายชื่อ</td></tr>`;return;
+  }
+  const list=rows.filter(r=>r.departmentKey===selectedAdminDepartment).sort((a,b)=>compareStudentId(a.user,b.user));
+  $("adminDepartmentTitle").textContent=selectedAdminDepartment;$("adminDepartmentSummary").textContent=`${list.length} คน · เรียงตามรหัสนักศึกษา`;
+  $("adminDepartmentBody").innerHTML=list.map((r,i)=>scopedAdminRow(r,i,"department")).join("")||`<tr><td colspan="14" class="empty">ยังไม่มีสมาชิก</td></tr>`;
+}
+function renderMajors(){
+  if(!$("adminMajorBody"))return;
+  const rows=buildAdminRankingRows(),all=adminMajorKeys(),keys=filterNamedKeys(all,adminMajorSearchTerm);
+  if(selectedAdminMajor&&!all.includes(selectedAdminMajor))selectedAdminMajor="";
+  if(!selectedAdminMajor&&keys.length===1)selectedAdminMajor=keys[0];
+  $("adminMajorTotal").textContent=`${all.length} สาขาวิชา`;
+  $("adminMajorSearchResult").textContent=adminMajorSearchTerm?`พบ ${keys.length} สาขาวิชา`:"แสดงทุกสาขาวิชา";
+  $("adminMajorCards").innerHTML=keys.map(k=>{
+    const members=rows.filter(r=>r.majorKey===k);
+    return `<button class="admin-major-button ${k===selectedAdminMajor?"active":""}" data-admin-major="${esc(k)}"><strong>${esc(k)}</strong><small>${members.length} คน · ${new Set(members.map(r=>r.departmentKey)).size} แผนก</small></button>`;
+  }).join("")||`<div class="admin-room-no-result">ไม่พบสาขาวิชา</div>`;
+  document.querySelectorAll("[data-admin-major]").forEach(btn=>btn.onclick=()=>{selectedAdminMajor=btn.dataset.adminMajor;renderMajors()});
+  if(!selectedAdminMajor){
+    $("adminMajorTitle").textContent="เลือกสาขาวิชาด้านบน";$("adminMajorSummary").textContent="ยังไม่ได้เลือกสาขาวิชา";
+    $("adminMajorBody").innerHTML=`<tr><td colspan="14" class="empty">เลือกสาขาวิชาเพื่อดูรายชื่อ</td></tr>`;return;
+  }
+  const list=rows.filter(r=>r.majorKey===selectedAdminMajor).sort((a,b)=>compareStudentId(a.user,b.user));
+  $("adminMajorTitle").textContent=selectedAdminMajor;$("adminMajorSummary").textContent=`${list.length} คน · เรียงตามรหัสนักศึกษา`;
+  $("adminMajorBody").innerHTML=list.map((r,i)=>scopedAdminRow(r,i,"major")).join("")||`<tr><td colspan="14" class="empty">ยังไม่มีสมาชิก</td></tr>`;
+}
+if($("adminDepartmentSearchInput"))$("adminDepartmentSearchInput").oninput=e=>{adminDepartmentSearchTerm=e.target.value.trim();renderDepartments()};
+if($("clearAdminDepartmentSearch"))$("clearAdminDepartmentSearch").onclick=()=>{adminDepartmentSearchTerm="";$("adminDepartmentSearchInput").value="";renderDepartments()};
+if($("adminMajorSearchInput"))$("adminMajorSearchInput").oninput=e=>{adminMajorSearchTerm=e.target.value.trim();renderMajors()};
+if($("clearAdminMajorSearch"))$("clearAdminMajorSearch").onclick=()=>{adminMajorSearchTerm="";$("adminMajorSearchInput").value="";renderMajors()};
+if($("adminRankingDepartmentFilter"))$("adminRankingDepartmentFilter").onchange=()=>renderRanking();
+if($("adminRankingMajorFilter"))$("adminRankingMajorFilter").onchange=()=>renderRanking();
+
 function renderRanking(){
   if(!$("rankingBody"))return;
   syncAdminClassSelectors();
-  const seasonId=seasonIdFromDate(new Date()),range=effectiveSeasonRange(),filter=$("adminRankingClassFilter")?.value||"";
+  const seasonId=seasonIdFromDate(new Date()),range=effectiveSeasonRange();
+  const classFilter=$("adminRankingClassFilter")?.value||"";
+  const departmentFilter=$("adminRankingDepartmentFilter")?.value||"";
+  const majorFilter=$("adminRankingMajorFilter")?.value||"";
   $("adminSeasonId").textContent=seasonId;
   $("adminSeasonRange").textContent=`${range.start.toLocaleString("th-TH")} – ${range.end.toLocaleString("th-TH")}`;
   let rows=buildAdminRankingRows();
-  if(filter)rows=rows.filter(r=>r.classKey===filter);
+  if(departmentFilter)rows=rows.filter(r=>r.departmentKey===departmentFilter);
+  if(majorFilter)rows=rows.filter(r=>r.majorKey===majorFilter);
+  if(classFilter)rows=rows.filter(r=>r.classKey===classFilter);
   $("rankingBody").innerHTML=rows.map(r=>`<tr>
-    <td><strong>#${r.globalPosition}</strong></td>
-    <td><strong>#${r.classPosition||"-"}</strong></td>
+    <td><strong>#${r.globalPosition}</strong></td><td><strong>#${r.departmentPosition||"-"}</strong></td>
+    <td><strong>#${r.majorPosition||"-"}</strong></td><td><strong>#${r.classPosition||"-"}</strong></td>
     <td>${esc(r.user.fullName)}<br><small>${esc(r.user.studentId)}</small></td>
-    <td>${esc(r.classKey)}</td>
+    <td><small>${esc(r.departmentKey)}<br>${esc(r.majorKey)}<br>${esc(r.classKey)}</small></td>
     <td>${adminRankShieldHTML(r)} <strong>${esc(r.tierName)}</strong></td>
     <td><strong>${r.rating}</strong></td><td>${r.diligence}</td><td>${r.accuracy}</td><td>${r.speed}</td><td>${r.consistency}</td><td>${r.avgWpm}</td>
-  </tr>`).join("")||`<tr><td colspan="11" class="empty">ยังไม่มีข้อมูล Ranking</td></tr>`;
+  </tr>`).join("")||`<tr><td colspan="13" class="empty">ยังไม่มีข้อมูล Ranking</td></tr>`;
 }
 
 async function persistRanking(){
@@ -285,9 +388,9 @@ async function persistRanking(){
   let batch=writeBatch(db),writes=0;
   for(const r of rows){
     const rank={seasonId,rating:r.rating,tierId:r.tierId,tierName:r.tierName,tierIcon:r.tierIcon,diligence:r.diligence,accuracy:r.accuracy,speed:r.speed,consistency:r.consistency,avgWpm:r.avgWpm,avgAccuracy:r.avgAccuracy,completedAttempts:r.completedAttempts,activeDayCount:r.activeDayCount,updatedAt:new Date().toISOString(),resetBoundaryAt:rankResetBoundaryMs()?new Date(rankResetBoundaryMs()).toISOString():null};
-    batch.set(doc(db,"rankings",`${seasonId}_${r.user.id}`),{seasonId,uid:r.user.id,studentId:r.user.studentId,fullName:r.user.fullName,classKey:r.classKey,globalPosition:r.globalPosition,classPosition:r.classPosition,...rank,updatedAt:serverTimestamp()},{merge:true});writes++;
+    batch.set(doc(db,"rankings",`${seasonId}_${r.user.id}`),{seasonId,uid:r.user.id,studentId:r.user.studentId,fullName:r.user.fullName,classKey:r.classKey,department:r.departmentKey,major:r.majorKey,globalPosition:r.globalPosition,departmentPosition:r.departmentPosition,majorPosition:r.majorPosition,classPosition:r.classPosition,...rank,updatedAt:serverTimestamp()},{merge:true});writes++;
     batch.set(doc(db,"users",r.user.id),{rank,updatedAt:serverTimestamp()},{merge:true});writes++;
-    batch.set(doc(db,"public_profiles",r.user.id),{rank,educationLevel:r.user.educationLevel||"",classroom:r.user.classroom||"",classKey:r.classKey,updatedAt:serverTimestamp()},{merge:true});writes++;
+    batch.set(doc(db,"public_profiles",r.user.id),{rank,educationLevel:r.user.educationLevel||"",classroom:r.user.classroom||"",classKey:r.classKey,department:r.departmentKey,major:r.majorKey,updatedAt:serverTimestamp()},{merge:true});writes++;
     if(writes>=420){await batch.commit();batch=writeBatch(db);writes=0;}
   }
   if(writes)await batch.commit();

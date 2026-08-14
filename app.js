@@ -89,6 +89,8 @@ async function ensureProfileDefaults(){
     };
   }
   if(!d.classKey && d.educationLevel && d.classroom) patch.classKey=classKey(d.educationLevel,d.classroom);
+  if(d.department===undefined) patch.department="ไม่ระบุแผนก";
+  if(d.major===undefined) patch.major="ไม่ระบุสาขาวิชา";
   if(!d.zone) patch.zone = {...DEFAULT_ZONE_STATE};
   if(Object.keys(patch).length) await updateDoc(ref,patch);
   const refreshed = await getDoc(ref);
@@ -102,11 +104,11 @@ document.querySelectorAll("[data-toggle-password]").forEach(btn=>btn.onclick=()=
 function registerValid(){
   return /^\d+$/.test($("studentId").value.trim()) &&
     $("fullName").value.trim() && $("educationLevel").value && $("classroom").value &&
-    $("department").value.trim() && $("password").value.length >= 6 &&
+    $("department").value && $("major").value && $("password").value.length >= 6 &&
     $("password").value === $("confirmPassword").value && $("acceptRules").checked;
 }
 function updateRegister(){ $("registerButton").disabled = !registerValid(); }
-["studentId","fullName","educationLevel","classroom","department","password","confirmPassword","acceptRules"].forEach(id=>$(id).addEventListener("input",updateRegister));
+["studentId","fullName","educationLevel","classroom","department","major","password","confirmPassword","acceptRules"].forEach(id=>$(id).addEventListener("input",updateRegister));
 
 $("registerForm").addEventListener("submit",async e=>{
   e.preventDefault(); if(!registerValid()) return;
@@ -118,7 +120,7 @@ $("registerForm").addEventListener("submit",async e=>{
       uid:state.uid,studentId:sid,fullName:$("fullName").value.trim(),
       educationLevel:$("educationLevel").value,classroom:$("classroom").value,
       classKey:classKey($("educationLevel").value,$("classroom").value),
-      department:$("department").value.trim(),role:"student",status:"active",
+      department:$("department").value,major:$("major").value,role:"student",status:"active",
       tokenBalance:0,tokenLifetime:0,inventory:[],
       officialProgress:{},officialSubmitted:false,
       rank:{seasonId:null,rating:0,tierId:"bronze",tierName:"Bronze"},
@@ -173,7 +175,7 @@ async function routeAuthenticatedStudent(){
 async function enterPortal(){
   await ensureProfileDefaults();
   showScreen("userPortal");
-  $("portalWelcome").textContent=`${state.player.fullName} · ${state.player.studentId} · ${state.player.educationLevel}${state.player.classroom}`;
+  $("portalWelcome").textContent=`${state.player.fullName} · ${state.player.studentId} · ${state.player.educationLevel}${state.player.classroom} · ${state.player.department||"ไม่ระบุแผนก"} · ${state.player.major||"ไม่ระบุสาขาวิชา"}`;
   $("userTokens").textContent=Number(state.player.tokenBalance||0).toLocaleString();
   renderUserRank();
   renderLanguages();
@@ -494,7 +496,7 @@ async function startClassic(){
   state.started=true;state.startTime=performance.now();$("typingStatus").textContent="กำลังเล่น...";
   const r=await addDoc(collection(db,"attempts"),{
     uid:state.uid,studentId:state.player.studentId,fullName:state.player.fullName,
-    educationLevel:state.player.educationLevel,classroom:state.player.classroom,department:state.player.department,
+    educationLevel:state.player.educationLevel,classroom:state.player.classroom,department:state.player.department,major:state.player.major,
     language:state.language.name,languageId:state.language.id,modeName:state.gameMode==="official"?"Official":"Classic",
     difficulty:state.difficulty.name,difficultyId:state.difficulty.id,stage:state.lesson.stage,
     lessonId:state.lesson.id,levelTitle:state.lesson.title,questId:state.activeQuest?.id||null,questTitle:state.activeQuest?.title||null,status:"playing",
@@ -926,6 +928,7 @@ $("submitOfficialButton").onclick=async()=>{
     educationLevel:state.player.educationLevel,
     classroom:state.player.classroom,
     department:state.player.department,
+    major:state.player.major,
     completedStages:30,
     totalScore:Math.round(totalScore*100)/100,
     maxScore:OFFICIAL_TOTAL_SCORE,
@@ -1114,6 +1117,8 @@ async function syncPublicProfile(){
       educationLevel:state.player.educationLevel||"",
       classroom:state.player.classroom||"",
       classKey:classKey(state.player.educationLevel,state.player.classroom),
+      department:state.player.department||"ไม่ระบุแผนก",
+      major:state.player.major||"ไม่ระบุสาขาวิชา",
       rank:state.player.rank||{tierId:"bronze",tierName:"Bronze",rating:0},
       avatarId:state.player.character?.avatarId||"default_student",
       character:{
@@ -1184,23 +1189,50 @@ function rankingRowsHtml(rows,scopeLabel){
   </div>`).join(''):`<div class="empty-card">ยังไม่มีข้อมูล Ranking</div>`;
 }
 function setupRankingModeSwitch(){
-  const overall=$("rankingModeOverall"),room=$("rankingModeClass");
-  if(overall)overall.onclick=()=>{overall.classList.add("active");room?.classList.remove("active");$("topRankingList")?.classList.remove("hidden");$("classRankingList")?.classList.add("hidden")};
-  if(room)room.onclick=()=>{room.classList.add("active");overall?.classList.remove("active");$("classRankingList")?.classList.remove("hidden");$("topRankingList")?.classList.add("hidden")};
+  const buttons={
+    overall:$("rankingModeOverall"),
+    department:$("rankingModeDepartment"),
+    major:$("rankingModeMajor"),
+    room:$("rankingModeClass")
+  };
+  const lists={
+    overall:$("topRankingList"),
+    department:$("departmentRankingList"),
+    major:$("majorRankingList"),
+    room:$("classRankingList")
+  };
+  const show=key=>{
+    Object.entries(buttons).forEach(([k,b])=>b?.classList.toggle("active",k===key));
+    Object.entries(lists).forEach(([k,list])=>list?.classList.toggle("hidden",k!==key));
+  };
+  buttons.overall&&(buttons.overall.onclick=()=>show("overall"));
+  buttons.department&&(buttons.department.onclick=()=>show("department"));
+  buttons.major&&(buttons.major.onclick=()=>show("major"));
+  buttons.room&&(buttons.room.onclick=()=>show("room"));
 }
 function listenTopRanking(){
   if(state.leaderboardUnsub)state.leaderboardUnsub();
   const myClass=classKey(state.player?.educationLevel,state.player?.classroom);
+  const myDepartment=rankingDepartmentKey(state.player);
+  const myMajor=rankingMajorKey(state.player);
   if($("classRankingLabel"))$("classRankingLabel").textContent=myClass||"ห้องของฉัน";
+  if($("departmentRankingLabel"))$("departmentRankingLabel").textContent=myDepartment;
+  if($("majorRankingLabel"))$("majorRankingLabel").textContent=myMajor;
   if($("leaderboardSeason"))$("leaderboardSeason").textContent=seasonIdFromDate(new Date());
   setupRankingModeSwitch();
   state.leaderboardUnsub=onSnapshot(collection(db,"public_profiles"),snap=>{
-    const all=snap.docs.map(d=>({uid:d.id,...d.data()})).filter(x=>x.uid!=="TWUrLjOh3BTa1cBNwDXKk4X2IAg1").map(x=>({...x,rank:effectiveRankForProfile(x)}));
+    const all=snap.docs.map(d=>({uid:d.id,...d.data()}))
+      .filter(x=>x.uid!=="TWUrLjOh3BTa1cBNwDXKk4X2IAg1")
+      .map(x=>({...x,rank:effectiveRankForProfile(x)}));
     const overall=rankProfiles(all,10);
+    const department=rankProfiles(all.filter(x=>rankingDepartmentKey(x)===myDepartment),10);
+    const major=rankProfiles(all.filter(x=>rankingMajorKey(x)===myMajor),10);
     const room=rankProfiles(all.filter(x=>(x.classKey||classKey(x.educationLevel,x.classroom))===myClass),10);
-    if($("topRankingList"))$("topRankingList").innerHTML=rankingRowsHtml(overall,"แรงค์รวม");
-    if($("classRankingList"))$("classRankingList").innerHTML=rankingRowsHtml(room,myClass||"แรงค์ห้อง");
-  },error=>console.warn("dual ranking:",error));
+    $("topRankingList")&&($("topRankingList").innerHTML=rankingRowsHtml(overall,"แรงค์รวม"));
+    $("departmentRankingList")&&($("departmentRankingList").innerHTML=rankingRowsHtml(department,`แผนก ${myDepartment}`));
+    $("majorRankingList")&&($("majorRankingList").innerHTML=rankingRowsHtml(major,`สาขาวิชา ${myMajor}`));
+    $("classRankingList")&&($("classRankingList").innerHTML=rankingRowsHtml(room,myClass||"แรงค์ห้อง"));
+  },error=>console.warn("4-scope ranking:",error));
 }
 function startSocialHub(){
   clearInterval(state.presenceTimer);
@@ -1361,7 +1393,7 @@ function recordCurrentPvpShot(){if(!state.pvpTurnSignature||state.pvpRecordedSig
 function renderPvpStrictCode(){const code=state.pvpTargetCode||state.pvpLesson?.code||"";let html="";for(let i=0;i<code.length;i++){const cls=i<state.pvpCorrectText.length?"correct":i===state.pvpCorrectText.length?"current":"pending",ch=code[i];html+=`<span class="${cls}">${ch==="\n"?"\n":ch===" "?" ":esc(ch)}</span>`;}$("pvpTypingDisplay").innerHTML=html;$("pvpTypingDisplay").querySelector(".current")?.scrollIntoView({block:"nearest"});$("pvpProgress").textContent=`${Math.floor(pvpProgressPct())}%`;}
 function updatePvpStats(){$("pvpTime").textContent=fmtTime(pvpElapsed());$("pvpWpm").textContent=Math.round(pvpWpm());$("pvpAccuracy").textContent=`${pvpAccuracy().toFixed(0)}%`;$("pvpMistakes").textContent=state.pvpMistakes;$("pvpProgress").textContent=`${Math.floor(pvpProgressPct())}%`;}
 function pvpWrong(expected){const stage=$("pvpTypingStage");stage.classList.remove("wrong-shake","wrong-flash");void stage.offsetWidth;stage.classList.add("wrong-shake","wrong-flash");$("pvpGameStatus").textContent=`ผิด · ${expected==="\n"?"Enter":expected===" "?"Space":expected}`;setTimeout(()=>{stage.classList.remove("wrong-shake","wrong-flash");if(!state.pvpFinished)$("pvpGameStatus").textContent="PLAYING"},260);}
-async function createPvpAttempt(){if(state.pvpAttemptId)return;const room=state.roomData;if(!room)return;try{const r=await addDoc(collection(db,"attempts"),{uid:state.uid,studentId:state.player.studentId,fullName:state.player.fullName,educationLevel:state.player.educationLevel,classroom:state.player.classroom,department:state.player.department,language:state.language?.name||room.languageId,languageId:room.languageId,modeName:"PVP",difficulty:difficultyName(room.difficultyId),difficultyId:room.difficultyId,stage:0,lessonId:"multi_shot",levelTitle:`PVP ${room.shotCount} Shot ${room.teamMode}`,roomCode:state.roomCode,teamMode:room.teamMode,shotCount:room.shotCount,tokenWager:Number(room.wager||0),team:myPvpTeam(room),status:"playing",score:0,rewardPoints:0,wpm:0,accuracy:0,mistakes:0,elapsedSeconds:0,createdAt:serverTimestamp()});state.pvpAttemptId=r.id;}catch(e){console.warn("attempt:",e)}}
+async function createPvpAttempt(){if(state.pvpAttemptId)return;const room=state.roomData;if(!room)return;try{const r=await addDoc(collection(db,"attempts"),{uid:state.uid,studentId:state.player.studentId,fullName:state.player.fullName,educationLevel:state.player.educationLevel,classroom:state.player.classroom,department:state.player.department,major:state.player.major,language:state.language?.name||room.languageId,languageId:room.languageId,modeName:"PVP",difficulty:difficultyName(room.difficultyId),difficultyId:room.difficultyId,stage:0,lessonId:"multi_shot",levelTitle:`PVP ${room.shotCount} Shot ${room.teamMode}`,roomCode:state.roomCode,teamMode:room.teamMode,shotCount:room.shotCount,tokenWager:Number(room.wager||0),team:myPvpTeam(room),status:"playing",score:0,rewardPoints:0,wpm:0,accuracy:0,mistakes:0,elapsedSeconds:0,createdAt:serverTimestamp()});state.pvpAttemptId=r.id;}catch(e){console.warn("attempt:",e)}}
 async function pushPvpProgress(force=false){if(!state.roomCode||!state.roomData||state.roomData.status!=="playing"||!isMyTurn())return;const now=Date.now();if(!force&&now-state.pvpProgressLastSent<180)return;state.pvpProgressLastSent=now;try{await updateDoc(doc(db,"pvp_rooms",state.roomCode),{[`players.${state.uid}.progress`]:Math.round(pvpProgressPct()*10)/10,[`players.${state.uid}.wpm`]:Math.round(pvpWpm()*100)/100,[`players.${state.uid}.accuracy`]:Math.round(pvpAccuracy()*100)/100,[`players.${state.uid}.mistakes`]:state.pvpMistakes,[`players.${state.uid}.lastUpdateAt`]:serverTimestamp()});}catch(e){console.warn("pvp progress:",e)}}
 function schedulePvpProgress(){clearTimeout(state.pvpProgressTimer);state.pvpProgressTimer=setTimeout(()=>pushPvpProgress(false),90);}
 function renderPvpTeams(room){const a=teamMembers(room,"A"),b=teamMembers(room,"B"),aa=activeUidForTeam(room,"A"),bb=activeUidForTeam(room,"B");const fmt=(arr,active)=>arr.map(p=>`${p.uid===active?'▶ ':''}${esc(p.studentId||p.name)}`).join(' · ')||'-';$("teamAPlayers").innerHTML=fmt(a,aa);$("teamBPlayers").innerHTML=fmt(b,bb);$("pvpShotScore").textContent=`TEAM A ${Number(room.scores?.A||0)} : ${Number(room.scores?.B||0)} TEAM B`;const ap=room.players?.[aa]||{},bp=room.players?.[bb]||{},av=teamProgress(room,"A"),bv=teamProgress(room,"B");$("teamABar").style.width=`${av}%`;$("teamBBar").style.width=`${bv}%`;$("teamAPct").textContent=`${Math.floor(av)}%`;$("teamBPct").textContent=`${Math.floor(bv)}%`;$("pvpTurnInfo").textContent=room.teamMode==="2v2"?`Relay คนละครึ่ง Code · A: ${ap.studentId||'-'} · B: ${bp.studentId||'-'}`:"แข่งกันพิมพ์ Code ชุดเดียวให้จบก่อน";}

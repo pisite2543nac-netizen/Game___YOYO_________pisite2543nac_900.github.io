@@ -56,6 +56,8 @@
         <button class="tab active" data-tab="resultsTab">ผลการเล่น</button>
         <button class="tab" data-tab="usersTab">สมาชิก User</button>
         <button class="tab" data-tab="classroomsTab">🏫 แยกตามห้อง</button>
+        <button class="tab" data-tab="departmentsTab">🏢 แยกตามแผนก</button>
+        <button class="tab" data-tab="majorsTab">🎓 แยกตามสาขาวิชา</button>
         <button class="tab" data-tab="levelsTab">จัดการโจทย์ Code</button>
         <button class="tab" data-tab="officialTab">คะแนนทางการ</button>
         <button class="tab" data-tab="rankingTab">Ranking</button>
@@ -81,7 +83,7 @@
             <thead>
               <tr>
                 <th>วันเวลา</th><th>เลขนักศึกษา</th><th>ชื่อ</th><th>ชั้น</th>
-                <th>แผนก</th><th>โหมด</th><th>Level</th><th>สถานะ</th>
+                <th>แผนก</th><th>สาขาวิชา</th><th>โหมด</th><th>Level</th><th>สถานะ</th>
                 <th>Score</th><th>WPM</th><th>Accuracy</th><th>จัดการ</th>
               </tr>
             </thead>
@@ -101,7 +103,7 @@
         <div class="table-wrap">
           <table>
             <thead>
-              <tr><th>วันเวลา</th><th>เลขนักศึกษา</th><th>ชื่อ-นามสกุล</th><th>ชั้น/ห้อง</th><th>แผนกวิชา</th><th>แต้ม</th><th>สถานะ</th><th>จัดการ</th></tr>
+              <tr><th>วันเวลา</th><th>เลขนักศึกษา</th><th>ชื่อ-นามสกุล</th><th>ชั้น/ห้อง</th><th>แผนก</th><th>สาขาวิชา</th><th>แต้ม</th><th>สถานะ</th><th>จัดการ</th></tr>
             </thead>
             <tbody id="usersBody"></tbody>
           </table>
@@ -143,10 +145,48 @@
           <table class="admin-classroom-table">
             <thead><tr>
               <th>#</th><th>รหัสนักศึกษา</th><th>ชื่อ-นามสกุล</th><th>โล่ Rank</th><th>ด่านที่เล่น</th>
-              <th>Score ธรรมดา</th><th>Score ทางการ</th><th>Rank ในห้อง</th><th>Rank รวม</th><th>Token</th>
+              <th>Score ธรรมดา</th><th>Score ทางการ</th><th>Rank ห้อง</th><th>Rank แผนก</th><th>Rank สาขาวิชา</th><th>Rank รวม</th><th>Token</th>
             </tr></thead>
             <tbody id="adminClassroomBody"></tbody>
           </table>
+        </div>
+      </section>
+
+      <section id="departmentsTab" class="admin-tab-panel hidden">
+        <div class="panel-title">
+          <div>
+            <h2>🏢 นักศึกษาแยกตามแผนก</h2>
+            <p>เช่น คอมพิวเตอร์ หรือ อิเล็กทรอนิกส์ · เลือกแผนกแล้วดูสมาชิกและ Rank ภายในแผนก</p>
+          </div>
+        </div>
+        <div class="admin-major-search-card">
+          <div class="admin-major-search-box"><span>🔎</span><input id="adminDepartmentSearchInput" type="search" placeholder="ค้นหาแผนก เช่น คอมพิวเตอร์"><button id="clearAdminDepartmentSearch" class="btn ghost" type="button">ล้าง</button></div>
+          <div class="admin-major-search-meta"><strong id="adminDepartmentSearchResult">ทุกแผนก</strong><span id="adminDepartmentTotal">0 แผนก</span></div>
+        </div>
+        <div id="adminDepartmentCards" class="admin-major-directory"></div>
+        <div class="admin-selected-major"><div><span>แผนกที่เลือก</span><strong id="adminDepartmentTitle">เลือกแผนกด้านบน</strong></div><span id="adminDepartmentSummary">-</span></div>
+        <div class="table-wrap admin-department-table-wrap">
+          <table><thead><tr><th>#</th><th>รหัสนักศึกษา</th><th>ชื่อ</th><th>สาขาวิชา</th><th>ระดับ/ห้อง</th><th>โล่ Rank</th><th>ด่าน</th><th>Score ปกติ</th><th>Score ทางการ</th><th>Rank แผนก</th><th>Rank สาขา</th><th>Rank ห้อง</th><th>Rank รวม</th><th>Token</th></tr></thead>
+          <tbody id="adminDepartmentBody"></tbody></table>
+        </div>
+      </section>
+
+      <section id="majorsTab" class="admin-tab-panel hidden">
+        <div class="panel-title">
+          <div>
+            <h2>🎓 นักศึกษาแยกตามสาขาวิชา</h2>
+            <p>เช่น สารสนเทศและธุรกิจดิจิทัล · เลือกสาขาวิชาแล้วดูสมาชิกและ Rank ภายในสาขาวิชา</p>
+          </div>
+        </div>
+        <div class="admin-major-search-card">
+          <div class="admin-major-search-box"><span>🔎</span><input id="adminMajorSearchInput" type="search" placeholder="ค้นหาสาขาวิชา เช่น สารสนเทศและธุรกิจดิจิทัล"><button id="clearAdminMajorSearch" class="btn ghost" type="button">ล้าง</button></div>
+          <div class="admin-major-search-meta"><strong id="adminMajorSearchResult">ทุกสาขาวิชา</strong><span id="adminMajorTotal">0 สาขาวิชา</span></div>
+        </div>
+        <div id="adminMajorCards" class="admin-major-directory"></div>
+        <div class="admin-selected-major"><div><span>สาขาวิชาที่เลือก</span><strong id="adminMajorTitle">เลือกสาขาวิชาด้านบน</strong></div><span id="adminMajorSummary">-</span></div>
+        <div class="table-wrap admin-major-table-wrap">
+          <table><thead><tr><th>#</th><th>รหัสนักศึกษา</th><th>ชื่อ</th><th>แผนก</th><th>ระดับ/ห้อง</th><th>โล่ Rank</th><th>ด่าน</th><th>Score ปกติ</th><th>Score ทางการ</th><th>Rank สาขา</th><th>Rank แผนก</th><th>Rank ห้อง</th><th>Rank รวม</th><th>Token</th></tr></thead>
+          <tbody id="adminMajorBody"></tbody></table>
         </div>
       </section>
 
@@ -193,7 +233,7 @@
             <thead>
               <tr>
                 <th>วันส่ง</th><th>เลขนักศึกษา</th><th>ชื่อ</th><th>ชั้น/ห้อง</th>
-                <th>แผนก</th><th>ทำครบ</th><th>คะแนน /40</th><th>Accuracy</th><th>WPM</th>
+                <th>แผนก</th><th>สาขาวิชา</th><th>ทำครบ</th><th>คะแนน /40</th><th>Accuracy</th><th>WPM</th>
               </tr>
             </thead>
             <tbody id="officialBody"></tbody>
@@ -204,7 +244,7 @@
       <section id="rankingTab" class="admin-tab-panel hidden">
         <div class="panel-title">
           <div>
-            <h2>Ranking · รวมทั้งหมด / รายห้อง</h2>
+            <h2>Ranking · รวม / แผนก / สาขาวิชา / ห้อง</h2>
             <p>คำนวณจากความขยัน 35% · Accuracy 30% · Speed 20% · Consistency 15% และรองรับวันรีแรงค์ที่ Admin กำหนดเอง</p>
           </div>
           <div class="button-row">
@@ -230,7 +270,9 @@
         <div class="ranking-season-banner">
           <span>Season</span><strong id="adminSeasonId">-</strong>
           <span id="adminSeasonRange">-</span>
-          <label class="admin-ranking-filter"><span>แสดง</span><select id="adminRankingClassFilter"><option value="">ทุกห้อง</option></select></label>
+          <label class="admin-ranking-filter"><span>แผนก</span><select id="adminRankingDepartmentFilter"><option value="">ทุกแผนก</option></select></label>
+          <label class="admin-ranking-filter"><span>สาขาวิชา</span><select id="adminRankingMajorFilter"><option value="">ทุกสาขาวิชา</option></select></label>
+          <label class="admin-ranking-filter"><span>ห้อง</span><select id="adminRankingClassFilter"><option value="">ทุกห้อง</option></select></label>
         </div>
         <div class="table-wrap">
           <table>

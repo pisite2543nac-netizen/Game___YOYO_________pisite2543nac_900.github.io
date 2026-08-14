@@ -107,3 +107,14 @@ export function rankingClassKey(educationLevel,classroom){
 export function rankProfiles(profiles,limit=10){
   return [...profiles].sort((a,b)=>Number(b?.rank?.rating||0)-Number(a?.rank?.rating||0)).slice(0,limit);
 }
+
+
+export function rankingDepartmentKey(user){
+  const value=String(user?.department||"").trim();
+  return value||"ไม่ระบุแผนก";
+}
+
+export function rankingMajorKey(user){
+  const value=String(user?.major||"").trim();
+  return value||"ไม่ระบุสาขาวิชา";
+}

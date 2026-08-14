@@ -89,8 +89,20 @@
         </label>
 
         <label>
-          <span>แผนกวิชา</span>
-          <input id="department" required placeholder="เช่น เทคโนโลยีสารสนเทศ">
+          <span>แผนก</span>
+          <select id="department" required>
+            <option value="">-- เลือกแผนก --</option>
+            <option value="คอมพิวเตอร์">คอมพิวเตอร์</option>
+            <option value="อิเล็กทรอนิกส์">อิเล็กทรอนิกส์</option>
+          </select>
+        </label>
+
+        <label>
+          <span>สาขาวิชา</span>
+          <select id="major" required>
+            <option value="">-- เลือกสาขาวิชา --</option>
+            <option value="สารสนเทศและธุรกิจดิจิทัล">สารสนเทศและธุรกิจดิจิทัล</option>
+          </select>
         </label>
 
         <label>
@@ -318,17 +330,21 @@
       <article class="card leaderboard-card ranking-dual-card">
         <div class="section-title compact">
           <div>
-            <span class="section-kicker">DUAL RANKING · 60 DAY SEASON</span>
-            <h2>Ranking รวม / Ranking ห้อง</h2>
-            <p class="muted-line">แรงค์รวมใช้ผู้เล่นทุกคน ส่วนแรงค์ห้องเทียบเฉพาะเพื่อนห้องเดียวกัน</p>
+            <span class="section-kicker">4-SCOPE RANKING · 60 DAY SEASON</span>
+            <h2>Ranking รวม / แผนก / สาขาวิชา / ห้อง</h2>
+            <p class="muted-line">คะแนน Rank เดียวกัน แต่จัดอันดับแยกตามกลุ่มของผู้เล่นเพื่อให้เปรียบเทียบได้ยุติธรรมขึ้น</p>
           </div>
           <div id="leaderboardSeason" class="season-chip">SEASON</div>
         </div>
-        <div class="ranking-mode-switch">
-          <button id="rankingModeOverall" class="ranking-mode-btn active" type="button">🌐 แรงค์รวมทั้งหมด</button>
-          <button id="rankingModeClass" class="ranking-mode-btn" type="button">🏫 แรงค์ห้อง <span id="classRankingLabel">-</span></button>
+        <div class="ranking-mode-switch ranking-mode-switch-four">
+          <button id="rankingModeOverall" class="ranking-mode-btn active" type="button">🌐 รวมทั้งหมด</button>
+          <button id="rankingModeDepartment" class="ranking-mode-btn" type="button">🏢 แผนก <span id="departmentRankingLabel">-</span></button>
+          <button id="rankingModeMajor" class="ranking-mode-btn" type="button">🎓 สาขาวิชา <span id="majorRankingLabel">-</span></button>
+          <button id="rankingModeClass" class="ranking-mode-btn" type="button">🏫 ห้อง <span id="classRankingLabel">-</span></button>
         </div>
         <div id="topRankingList" class="top-ranking-list"></div>
+        <div id="departmentRankingList" class="top-ranking-list hidden"></div>
+        <div id="majorRankingList" class="top-ranking-list hidden"></div>
         <div id="classRankingList" class="top-ranking-list hidden"></div>
         <div class="rank-shield-legend" aria-label="ระดับแรงค์">
           <div><span class="rank-shield rank-bronze small"><span class="rank-shield-letter">B</span></span><b>Bronze</b></div>

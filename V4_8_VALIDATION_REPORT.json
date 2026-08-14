@@ -1,0 +1,22 @@
+{
+  "syntax_app.js": true,
+  "syntax_admin.js": true,
+  "syntax_zone.js": true,
+  "syntax_quest-system.js": true,
+  "syntax_ranking-system.js": true,
+  "syntax_economy-system.js": true,
+  "registration_department_select": true,
+  "registration_major_select": true,
+  "registration_requires_major": true,
+  "major_stored": true,
+  "ranking_helpers": true,
+  "user_4_rank_tabs": true,
+  "user_4_rank_logic": true,
+  "admin_department_tab": true,
+  "admin_major_tab": true,
+  "admin_4_scope_positions": true,
+  "admin_rank_filters": true,
+  "admin_scoped_renderers": true,
+  "v47_zone_preserved": true,
+  "all_passed": true
+}
