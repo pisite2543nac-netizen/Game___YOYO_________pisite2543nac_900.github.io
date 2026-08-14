@@ -1,0 +1,12 @@
+{
+  "syntax": {
+    "app.js": true,
+    "admin.js": true,
+    "zone.js": true,
+    "ranking-system.js": true,
+    "quest-system.js": true,
+    "economy-system.js": true,
+    "functions/index.js": true
+  },
+  "all_passed": true
+}
