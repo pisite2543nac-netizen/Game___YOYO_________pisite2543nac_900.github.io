@@ -108,7 +108,7 @@
           <select id="major" required>
             <option value="">-- เลือกสาขาวิชา --</option>
             <option value="เทคโนโลยีสารสนเทศ">เทคโนโลยีสารสนเทศ</option>
-            <option value="สารสนเทศและธุรกิจดิจิทัล">สารสนเทศและธุรกิจดิจิทัล</option>
+            <option value="ธุรกิจดิจิทัล">ธุรกิจดิจิทัล</option>
           </select>
         </label>
 
@@ -149,6 +149,7 @@
         <p id="portalWelcome">-</p>
       </div>
       <div class="portal-head-actions">
+          <button id="openEditProfileButton" class="btn ghost" type="button">✏️ แก้ไขข้อมูลส่วนตัว</button>
         <button id="openCharacterProfileButton" class="btn character-profile-entry" type="button">🧍 ดูตัวละคร</button>
         <a href="zone.html" class="btn zone-entry-main">🌙 2D Zone</a>
         <button id="logoutUserButton" class="btn ghost">ออกจากระบบ</button>
@@ -352,7 +353,7 @@
           <div>
             <span class="section-kicker">4-SCOPE RANKING · 60 DAY SEASON</span>
             <h2>Ranking รวม / แผนก / สาขาวิชา / ห้อง</h2>
-            <p class="muted-line">คะแนน Rank เดียวกัน แต่จัดอันดับแยกตามกลุ่มของผู้เล่นเพื่อให้เปรียบเทียบได้ยุติธรรมขึ้น</p>
+            <p class="muted-line">คะแนน Rank คำนวณจาก WPM 40% + Accuracy 40% + เวลาจบเร็ว 20% แล้วจัดอันดับแยกตามแต่ละกลุ่ม</p>
           </div>
           <div id="leaderboardSeason" class="season-chip">SEASON</div>
         </div>
@@ -634,6 +635,64 @@
     </div>
   </div>
 
+
+  <div id="editProfileModal" class="modal hidden">
+    <div class="modal-card user-profile-edit-card">
+      <button id="closeEditProfileButton" class="modal-close" type="button">✕</button>
+      <span class="section-kicker">USER PROFILE</span>
+      <h2>แก้ไขข้อมูลส่วนตัว</h2>
+      <p class="muted-line">ปรับแผนกและสาขาวิชาให้ถูกต้อง ระบบจะใช้ข้อมูลนี้กับ Ranking และหน้า Admin ทั้งหมด</p>
+
+      <div class="user-profile-edit-grid">
+        <label>
+          <span>รหัสนักศึกษา</span>
+          <input id="editProfileStudentId" disabled>
+        </label>
+        <label>
+          <span>ชื่อ-นามสกุล</span>
+          <input id="editProfileFullName" required>
+        </label>
+        <label>
+          <span>ระดับชั้น</span>
+          <select id="editProfileEducationLevel" required>
+            <option value="ปวช.1">ปวช.1</option><option value="ปวช.2">ปวช.2</option><option value="ปวช.3">ปวช.3</option>
+            <option value="ปวส.1">ปวส.1</option><option value="ปวส.2">ปวส.2</option>
+          </select>
+        </label>
+        <label>
+          <span>ห้อง</span>
+          <select id="editProfileClassroom" required>
+            <option value="/1">/1</option><option value="/2">/2</option><option value="/3">/3</option>
+            <option value="/4">/4</option><option value="/5">/5</option><option value="/6">/6</option>
+          </select>
+        </label>
+        <label>
+          <span>แผนก</span>
+          <select id="editProfileDepartment" required>
+            <option value="คอมพิวเตอร์">คอมพิวเตอร์</option>
+            <option value="อิเล็กทรอนิกส์">อิเล็กทรอนิกส์</option>
+          </select>
+        </label>
+        <label>
+          <span>สาขาวิชา</span>
+          <select id="editProfileMajor" required>
+            <option value="เทคโนโลยีสารสนเทศ">เทคโนโลยีสารสนเทศ</option>
+            <option value="ธุรกิจดิจิทัล">ธุรกิจดิจิทัล</option>
+          </select>
+        </label>
+      </div>
+
+      <div class="user-profile-edit-note">
+        ถ้าเลือกสาขาเทคโนโลยีสารสนเทศหรือธุรกิจดิจิทัล ระบบจะกำหนดแผนกเป็น <strong>คอมพิวเตอร์</strong> อัตโนมัติ
+      </div>
+
+      <div class="modal-actions">
+        <button id="saveEditProfileButton" class="btn primary" type="button">บันทึกข้อมูล</button>
+        <button id="cancelEditProfileButton" class="btn ghost" type="button">ยกเลิก</button>
+      </div>
+    </div>
+  </div>
+
 </body>
 </html>
 ```
@@ -748,8 +807,8 @@
             <p>สมาชิกที่ลงทะเบียนบัญชีเข้าสู่ระบบเกม · Firebase ไม่สามารถแสดงรหัสผ่านเดิมได้ จึงใช้การตั้งรหัสผ่านใหม่แบบปลอดภัยแทน</p>
           </div>
           <div class="admin-user-tools">
-            <button id="migrateInformationUsers" class="btn secondary" type="button">🔄 ย้ายข้อมูลสารสนเทศ → สาขาวิชา</button>
-            <button id="deleteUsers" class="btn danger">ลบข้อมูลทั้งหมด</button>
+            <button id="migrateInformationUsers" class="btn secondary" type="button">🔄 จัดกลุ่มสาขาวิชาเดิมให้ถูกต้อง</button>
+            <button id="deleteUsers" class="btn danger">ลบ User ทั้งหมด (Auth + DB)</button>
           </div>
         </div>
         <div class="table-wrap">
@@ -4355,6 +4414,22 @@ html,body.social-zone-page{
 .admin-data-migration-note.needs-fix span{color:#846e31}
 .data-fix-hint{display:inline-block;margin-top:3px;padding:2px 5px;border-radius:999px;background:#fff1c7;color:#8a6510;font-size:6px;font-weight:800}
 
+
+/* ===== V4.9.4 USER PROFILE REPAIR ===== */
+.user-profile-edit-card{width:min(760px,calc(100vw - 28px))}
+.user-profile-edit-card h2{margin:6px 0}
+.user-profile-edit-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:16px 0}
+.user-profile-edit-grid label{display:grid;gap:6px}.user-profile-edit-grid label>span{font-size:9px;font-weight:800;color:#4c5d69}
+.user-profile-edit-grid input,.user-profile-edit-grid select{min-height:46px;border:1px solid #ccd7df;border-radius:10px;background:#fff;padding:0 11px;font:inherit}
+.user-profile-edit-grid input:disabled{background:#f0f3f5;color:#687781}
+.user-profile-edit-note{margin:4px 0 14px;padding:10px 12px;border-radius:10px;background:#eef6fa;color:#436174;font-size:9px;line-height:1.55}
+@media(max-width:650px){.user-profile-edit-grid{grid-template-columns:1fr}}
+
+
+/* ===== V4.9.4 TYPING PERFORMANCE RANK ===== */
+.rank-formula-note{display:flex;gap:7px;flex-wrap:wrap}
+.rank-formula-note span{padding:5px 8px;border-radius:999px;background:#eef4f7;color:#3d6072;font-size:8px;font-weight:800}
+
 ```
 
 
@@ -4468,6 +4543,36 @@ function maxUnlocked(languageId){
   return Number(state.player?.progress?.[languageId]?.maxUnlockedStage || 1);
 }
 
+function normalizeLegacyMajorValue(raw){
+  const value=String(raw||"").trim();
+  const compact=value.replace(/\s+/g,"");
+  if(["ธุรกิจดิจิทัล","ธุรกิจดิทัล","ดิจิทัลธุรกิจ"].includes(compact))return {value:"ธุรกิจดิจิทัล",kind:"digital"};
+  if(["สารสนเทศ","เทคโนโลยีสารสนเทศ","ไอที","IT"].includes(value)||["สารสนเทศ","เทคโนโลยีสารสนเทศ"].includes(compact))return {value:"เทคโนโลยีสารสนเทศ",kind:"information"};
+  // ค่าเก่าที่ไม่ตรง 2 กลุ่มหลักจะเก็บเป็นสาขาแยกของตัวเอง ไม่รวมมั่วกับกลุ่มอื่น
+  return {value:value||"ไม่ระบุสาขาวิชา",kind:"separate"};
+}
+function isLegacyAcademicValue(raw){
+  const v=String(raw||"").trim();
+  return /สารสนเทศ|ดิจิทัล|ดิจิทัล|ธุรกิจดิทัล|เทคโนโลยีสารสนเทศ/i.test(v);
+}
+async function createStudentProfileDocument(user,data){
+  const ref=doc(db,"users",user.uid);
+  const academic=normalizeAcademicSelection(data.department,data.major);
+  await setDoc(ref,{
+    uid:user.uid,
+    studentId:data.studentId,
+    fullName:data.fullName,
+    educationLevel:data.educationLevel,
+    classroom:data.classroom,
+    classKey:classKey(data.educationLevel,data.classroom),
+    department:academic.department,
+    major:academic.major,
+    role:"student",status:"active",
+    tokenBalance:0,tokenLifetime:0,inventory:[],
+    character:{...DEFAULT_CHARACTER,equipped:{...DEFAULT_CHARACTER.equipped}},
+    createdAt:serverTimestamp(),updatedAt:serverTimestamp()
+  },{merge:true});
+}
 async function ensureProfileDefaults(){
   if(!state.uid) return;
   const ref = doc(db,"users",state.uid);
@@ -4503,13 +4608,13 @@ async function ensureProfileDefaults(){
   if(!d.classKey && d.educationLevel && d.classroom) patch.classKey=classKey(d.educationLevel,d.classroom);
   const oldDepartment=String(d.department||"").trim();
   const oldMajor=String(d.major||"").trim();
-  const informationValues=["เทคโนโลยีสารสนเทศ","สารสนเทศและธุรกิจดิจิทัล","เทคโนโลยีสารสนเทศและธุรกิจดิจิทัล"];
-  if(informationValues.includes(oldDepartment)){
+  const normalizedMajor=normalizeLegacyMajorValue(oldMajor||oldDepartment);
+  if(isLegacyAcademicValue(oldDepartment)){
     patch.department="คอมพิวเตอร์";
-    if(!oldMajor||oldMajor==="ไม่ระบุสาขาวิชา") patch.major=oldDepartment;
+    if(!oldMajor||oldMajor==="ไม่ระบุสาขาวิชา") patch.major=normalizedMajor.value;
   }else{
-    if(d.department===undefined) patch.department="ไม่ระบุแผนก";
-    if(d.major===undefined) patch.major="ไม่ระบุสาขาวิชา";
+    if(d.department===undefined){patch.department="ไม่ระบุแผนก";academicProfileComplete=false;}
+    if(d.major===undefined){patch.major="ไม่ระบุสาขาวิชา";academicProfileComplete=false;}
   }
   if(!d.zone) patch.zone = {...DEFAULT_ZONE_STATE};
   if(Object.keys(patch).length) await updateDoc(ref,patch);
@@ -4524,14 +4629,20 @@ document.querySelectorAll("[data-toggle-password]").forEach(btn=>btn.onclick=()=
 function registerValid(){
   return /^\d+$/.test($("studentId").value.trim()) &&
     $("fullName").value.trim() && $("educationLevel").value && $("classroom").value &&
-    $("department").value && $("major").value && $("password").value.length >= 6 &&
+    normalizeAcademicSelection($("department").value,$("major").value).department && $("major").value && $("password").value.length >= 6 &&
     $("password").value === $("confirmPassword").value && $("acceptRules").checked;
+}
+function normalizeAcademicSelection(department,major){
+  const m=String(major||"").trim();
+  let d=String(department||"").trim();
+  if(["เทคโนโลยีสารสนเทศ","ธุรกิจดิจิทัล"].includes(m))d="คอมพิวเตอร์";
+  return {department:d,major:m};
 }
 function updateRegister(){ $("registerButton").disabled = !registerValid(); }
 ["studentId","fullName","educationLevel","classroom","department","major","password","confirmPassword","acceptRules"].forEach(id=>$(id).addEventListener("input",updateRegister));
 function syncDepartmentFromMajor(){
   const major=$("major")?.value||"";
-  if(["เทคโนโลยีสารสนเทศ","สารสนเทศและธุรกิจดิจิทัล"].includes(major)){
+  if(["เทคโนโลยีสารสนเทศ","ธุรกิจดิจิทัล"].includes(major)&&$("department")){
     $("department").value="คอมพิวเตอร์";
   }
   updateRegister();
@@ -4550,8 +4661,8 @@ $("registerForm").addEventListener("submit",async e=>{
       uid:state.uid,studentId:sid,fullName:$("fullName").value.trim(),
       educationLevel:$("educationLevel").value,classroom:$("classroom").value,
       classKey:classKey($("educationLevel").value,$("classroom").value),
-      department:["เทคโนโลยีสารสนเทศ","สารสนเทศและธุรกิจดิจิทัล"].includes($("major").value)?"คอมพิวเตอร์":$("department").value,
-      major:$("major").value,role:"student",status:"active",
+      department:normalizeAcademicSelection($("department").value,$("major").value).department,
+      major:normalizeAcademicSelection($("department").value,$("major").value).major,role:"student",status:"active",
       tokenBalance:0,tokenLifetime:0,inventory:[],inventoryCapacity:INVENTORY_CAPACITY,
       officialProgress:{},officialSubmitted:false,
       rank:{seasonId:null,rating:0,tierId:"bronze",tierName:"Bronze"},
@@ -4604,11 +4715,74 @@ async function routeAuthenticatedStudent(){
   await enterPortal();
 }
 
+function profileMajorOptions(current){
+  const defaults=["เทคโนโลยีสารสนเทศ","ธุรกิจดิจิทัล"];
+  const values=[...new Set([current,...defaults].filter(Boolean))];
+  $("editProfileMajor").innerHTML=values.map(v=>`<option value="${esc(v)}">${esc(v)}</option>`).join("");
+}
+function openEditProfile(){
+  if(!state.player)return;
+  $("editProfileStudentId").value=state.player.studentId||"";
+  $("editProfileFullName").value=state.player.fullName||"";
+  $("editProfileEducationLevel").value=state.player.educationLevel||"ปวช.1";
+  $("editProfileClassroom").value=state.player.classroom||"/1";
+  $("editProfileDepartment").value=state.player.department==="อิเล็กทรอนิกส์"?"อิเล็กทรอนิกส์":"คอมพิวเตอร์";
+  profileMajorOptions(state.player.major);
+  $("editProfileMajor").value=state.player.major||"เทคโนโลยีสารสนเทศ";
+  $("editProfileModal").classList.remove("hidden");
+}
+function closeEditProfile(){
+  $("editProfileModal").classList.add("hidden");
+}
+async function saveEditProfile(){
+  if(!state.uid||!state.player)return;
+  const fullName=$("editProfileFullName").value.trim();
+  const educationLevel=$("editProfileEducationLevel").value;
+  const classroom=$("editProfileClassroom").value;
+  const academic=normalizeAcademicSelection($("editProfileDepartment").value,$("editProfileMajor").value);
+  if(!fullName||!educationLevel||!classroom||!academic.department||!academic.major){
+    alert("กรุณากรอกข้อมูลให้ครบ");return;
+  }
+  const btn=$("saveEditProfileButton"),old=btn.textContent;btn.disabled=true;btn.textContent="กำลังบันทึก...";
+  try{
+    await updateDoc(doc(db,"users",state.uid),{
+      fullName,educationLevel,classroom,classKey:classKey(educationLevel,classroom),
+      department:academic.department,major:academic.major,
+      profileAcademicUpdatedAt:serverTimestamp(),updatedAt:serverTimestamp()
+    });
+    await setDoc(doc(db,"public_profiles",state.uid),{
+      uid:state.uid,studentId:state.player.studentId,fullName,
+      educationLevel,classroom,classKey:classKey(educationLevel,classroom),
+      department:academic.department,major:academic.major,
+      rank:state.player.rank||null,
+      character:state.player.character||DEFAULT_CHARACTER,
+      updatedAt:serverTimestamp()
+    },{merge:true});
+    state.player={...state.player,fullName,educationLevel,classroom,department:academic.department,major:academic.major};
+    $("portalWelcome").textContent=`${fullName} · ${state.player.studentId} · ${educationLevel}${classroom} · ${academic.department} · ${academic.major}`;
+    closeEditProfile();
+    await updateMyRank();
+    listenTopRanking();
+  }catch(error){
+    console.error("save profile:",error);alert("บันทึกข้อมูลไม่สำเร็จ: "+(error.message||error));
+  }finally{btn.disabled=false;btn.textContent=old}
+}
+$("openEditProfileButton")&&($("openEditProfileButton").onclick=openEditProfile);
+$("closeEditProfileButton")&&($("closeEditProfileButton").onclick=closeEditProfile);
+$("cancelEditProfileButton")&&($("cancelEditProfileButton").onclick=closeEditProfile);
+$("saveEditProfileButton")&&($("saveEditProfileButton").onclick=saveEditProfile);
+$("editProfileMajor")&&($("editProfileMajor").onchange=()=>{
+  if(["เทคโนโลยีสารสนเทศ","ธุรกิจดิจิทัล"].includes($("editProfileMajor").value))$("editProfileDepartment").value="คอมพิวเตอร์";
+});
+
 async function enterPortal(){
   await ensureProfileDefaults();
   showScreen("userPortal");
   startDailyCheckin();
   $("portalWelcome").textContent=`${state.player.fullName} · ${state.player.studentId} · ${state.player.educationLevel}${state.player.classroom} · ${state.player.department||"ไม่ระบุแผนก"} · ${state.player.major||"ไม่ระบุสาขาวิชา"}`;
+  if(!state.player.department||!state.player.major||state.player.department==="ไม่ระบุแผนก"||state.player.major==="ไม่ระบุสาขาวิชา"){
+    setTimeout(()=>openEditProfile(),350);
+  }
   $("userTokens").textContent=Number(state.player.tokenBalance||0).toLocaleString();
   renderUserRank();
   renderLanguages();
@@ -6040,6 +6214,7 @@ import { DEFAULT_TEACHER_QUESTS, clampQuestReward, questDifficultyName, questObj
 
 const app=initializeApp(firebaseConfig),auth=getAuth(app),db=getFirestore(app),cloudFunctions=getFunctions(app,"asia-southeast1"),$=id=>document.getElementById(id);
 const adminResetStudentPassword=httpsCallable(cloudFunctions,"adminResetStudentPassword");
+const adminDeleteStudentAccount=httpsCallable(cloudFunctions,"adminDeleteStudentAccount");
 let cache={users:[],attempts:[],levels:[],modes:[],official:[],zonePositions:[],zoneModeration:[],zoneMessages:[],zoneArchive:[],rankingSettings:{},teacherQuests:[]},unsubs=[];
 let knownUserIds=null;
 let selectedAdminClass="";
@@ -6121,26 +6296,26 @@ function compareStudentId(a,b){
   const av=String(a?.studentId??""),bv=String(b?.studentId??"");
   return av.localeCompare(bv,"th",{numeric:true,sensitivity:"base"});
 }
-const INFORMATION_MAJOR_VALUES=[
-  "เทคโนโลยีสารสนเทศ",
-  "สารสนเทศและธุรกิจดิจิทัล",
-  "เทคโนโลยีสารสนเทศและธุรกิจดิจิทัล"
-];
+const MAIN_MAJOR_VALUES=["เทคโนโลยีสารสนเทศ","ธุรกิจดิจิทัล"];
+function normalizeLegacyMajorValue(raw){
+  const value=String(raw||"").trim();
+  const compact=value.replace(/\s+/g,"");
+  if(["ธุรกิจดิจิทัล","ธุรกิจดิทัล","ดิจิทัลธุรกิจ"].includes(compact))return {value:"ธุรกิจดิจิทัล",kind:"digital"};
+  if(["สารสนเทศ","เทคโนโลยีสารสนเทศ"].includes(compact)||value==="ไอที"||value==="IT")return {value:"เทคโนโลยีสารสนเทศ",kind:"information"};
+  // ค่าอื่น เช่นข้อความผสม จะคงค่าเดิมไว้เป็นสาขาแยก ไม่บังคับรวมเข้ากับ 2 กลุ่มหลัก
+  return {value:value||"ไม่ระบุสาขาวิชา",kind:"separate"};
+}
+function legacyAcademicLooksLikeMajor(raw){return /สารสนเทศ|ดิจิทัล|ธุรกิจดิทัล/i.test(String(raw||""))}
 function normalizedUserAcademicData(user={}){
   const department=String(user.department||"").trim();
   const major=String(user.major||"").trim();
-  if(INFORMATION_MAJOR_VALUES.includes(department)){
-    return {
-      department:"คอมพิวเตอร์",
-      major:(!major||major==="ไม่ระบุสาขาวิชา")?department:major,
-      needsMigration:true
-    };
+  if(legacyAcademicLooksLikeMajor(department)){
+    const source=major&&major!=="ไม่ระบุสาขาวิชา"?major:department;
+    const normalized=normalizeLegacyMajorValue(source);
+    return {department:"คอมพิวเตอร์",major:normalized.value,kind:normalized.kind,needsMigration:true};
   }
-  return {
-    department:department||"ไม่ระบุแผนก",
-    major:major||"ไม่ระบุสาขาวิชา",
-    needsMigration:false
-  };
+  const normalized=normalizeLegacyMajorValue(major);
+  return {department:department||"ไม่ระบุแผนก",major:normalized.value,kind:normalized.kind,needsMigration:major!==normalized.value};
 }
 function usersNeedingAcademicMigration(){
   return cache.users.filter(u=>normalizedUserAcademicData(u).needsMigration);
@@ -6152,8 +6327,8 @@ function renderUsers(){
   if(note){
     note.classList.toggle("needs-fix",need.length>0);
     note.innerHTML=need.length
-      ?`<strong>พบ User เดิม ${need.length} คนที่เก็บ “สารสนเทศ” ไว้ในช่องแผนก</strong><span>กด “ย้ายข้อมูลสารสนเทศ → สาขาวิชา” เพื่อแก้ Firestore จริง</span>`
-      :`<strong>ข้อมูล User ถูกโครงสร้างแล้ว</strong><span>แผนก = คอมพิวเตอร์ · สารสนเทศอยู่ในช่องสาขาวิชา</span>`;
+      ?`<strong>พบ User เดิม ${need.length} คนที่ต้องจัดแผนก/สาขาวิชาใหม่</strong><span>กดปุ่มจัดกลุ่มเพื่อแก้ Firestore จริง · ธุรกิจดิจิทัลและสารสนเทศจะไม่ถูกรวมกัน</span>`
+      :`<strong>ข้อมูล User ถูกโครงสร้างแล้ว</strong><span>แผนก = คอมพิวเตอร์ · สาขาวิชาแยกเป็น เทคโนโลยีสารสนเทศ / ธุรกิจดิจิทัล / ค่าอื่นแยกตามเดิม</span>`;
   }
   $("usersBody").innerHTML=users.map(x=>{
     const academic=normalizedUserAcademicData(x);
@@ -6172,8 +6347,14 @@ function renderUsers(){
   }).join("")||`<tr><td colspan="10" class="empty">ยังไม่มีสมาชิก</td></tr>`;
 
   document.querySelectorAll("[data-delete-user]").forEach(b=>b.onclick=async()=>{
-    if(confirm("ลบข้อมูลสมาชิกจาก Firestore? หมายเหตุ: บัญชี Authentication ต้องลบใน Firebase Console แยกต่างหาก"))
-      await deleteDoc(doc(db,"users",b.dataset.deleteUser));
+    const user=cache.users.find(x=>x.id===b.dataset.deleteUser);if(!user)return;
+    if(!confirm(`ลบบัญชี ${user.studentId||""} - ${user.fullName||""}?\n\nระบบจะลบทั้ง Firebase Authentication และข้อมูล Firestore ที่เกี่ยวข้อง\nหลังลบแล้วรหัสนักศึกษานี้สามารถสมัครใหม่ได้`))return;
+    b.disabled=true;const oldText=b.textContent;b.textContent="กำลังลบ...";
+    try{
+      const result=await adminDeleteStudentAccount({targetUid:user.id});
+      showAdminToast("ลบบัญชีสำเร็จ",`${user.studentId||""} สมัครใหม่ได้แล้ว`);
+    }catch(error){showAdminToast("ลบบัญชีไม่สำเร็จ",error.message||String(error),true);}
+    finally{b.disabled=false;b.textContent=oldText;}
   });
   document.querySelectorAll("[data-reset-password]").forEach(btn=>btn.onclick=()=>{
     const user=cache.users.find(x=>x.id===btn.dataset.resetPassword);if(!user)return;
@@ -6190,7 +6371,7 @@ if($("migrateInformationUsers"))$("migrateInformationUsers").onclick=async()=>{
     showAdminToast("ไม่พบข้อมูลที่ต้องย้าย","User ทุกคนแยกแผนก/สาขาวิชาถูกต้องแล้ว");
     return;
   }
-  if(!confirm(`พบ ${targets.length} User\n\nระบบจะเปลี่ยน:\nแผนก → คอมพิวเตอร์\nสาขาวิชา → ค่า “สารสนเทศ” เดิม\n\nยืนยันแก้ข้อมูล Firestore?`))return;
+  if(!confirm(`พบ ${targets.length} User\n\nระบบจะเปลี่ยน:\nแผนก → คอมพิวเตอร์\nสารสนเทศ → เทคโนโลยีสารสนเทศ\nธุรกิจดิจิทัล → ธุรกิจดิจิทัล\nค่าอื่น → เก็บแยกตามค่าเดิม\n\nยืนยันแก้ข้อมูล Firestore?`))return;
   const button=$("migrateInformationUsers"),oldText=button.textContent;
   button.disabled=true;button.textContent="กำลังย้ายข้อมูล...";
   try{
@@ -6308,7 +6489,7 @@ function buildAdminRankingRows(){
   const rows=cache.users.map(u=>{
     const attempts=seasonAttemptsForUser(u.id);
     const days=new Set(attempts.map(a=>a.createdAt?.toDate?.()?.toISOString().slice(0,10)).filter(Boolean)).size;
-    const m=calculateRankMetrics(attempts,days);
+    const m=calculateRankMetrics(attempts);
     return {user:u,classKey:classKeyForUser(u),departmentKey:departmentKeyForUser(u),majorKey:majorKeyForUser(u),...m};
   }).sort((a,b)=>b.rating-a.rating||compareStudentId(a.user,b.user));
   rows.forEach((r,i)=>r.globalPosition=i+1);
@@ -6523,8 +6704,8 @@ function renderRanking(){
     <td>${esc(r.user.fullName)}<br><small>${esc(r.user.studentId)}</small></td>
     <td><small>${esc(r.departmentKey)}<br>${esc(r.majorKey)}<br>${esc(r.classKey)}</small></td>
     <td>${adminRankShieldHTML(r)} <strong>${esc(r.tierName)}</strong></td>
-    <td><strong>${r.rating}</strong></td><td>${r.diligence}</td><td>${r.accuracy}</td><td>${r.speed}</td><td>${r.consistency}</td><td>${r.avgWpm}</td>
-  </tr>`).join("")||`<tr><td colspan="13" class="empty">ยังไม่มีข้อมูล Ranking</td></tr>`;
+    <td><strong>${r.rating}</strong></td><td>${r.speed}</td><td>${r.accuracy}</td><td>${r.completionTime}</td><td>${r.avgWpm}</td><td>${r.avgAccuracy}</td><td>${r.avgSeconds?`${r.avgSeconds}s`:"-"}</td>
+  </tr>`).join("")||`<tr><td colspan="15" class="empty">ยังไม่มีข้อมูล Ranking</td></tr>`;
 }
 
 async function persistRanking(){
@@ -6903,7 +7084,19 @@ $("levelForm").addEventListener("submit",async e=>{e.preventDefault();const n=Nu
 $("seedDefaults").onclick=async()=>{if(!confirm("คืนค่า 4 โหมดและ 12 Level เริ่มต้น?"))return;const batch=writeBatch(db);DEFAULT_MODES.forEach(x=>{const {id,...data}=x;batch.set(doc(db,"game_modes",id),{...data,id,isActive:true},{merge:true})});DEFAULT_LEVELS.forEach(x=>batch.set(doc(db,"levels",`level_${String(x.levelNo).padStart(2,"0")}`),{...x,isActive:true},{merge:true}));await batch.commit()};
 async function deleteCollectionDocs(name){const rows=await getDocs(collection(db,name));let batch=writeBatch(db),count=0;for(const item of rows.docs){batch.delete(item.ref);if(++count>=450){await batch.commit();batch=writeBatch(db);count=0}}if(count)await batch.commit()}
 $("deleteResults").onclick=async()=>{if(confirm("ยืนยันลบผลทั้งหมด?"))await deleteCollectionDocs("attempts")};
-$("deleteUsers").onclick=async()=>{if(confirm("ยืนยันลบข้อมูลสมาชิกทั้งหมดจาก Firestore? บัญชี Authentication จะไม่ถูกลบ"))await deleteCollectionDocs("users")};
+$("deleteUsers").onclick=async()=>{
+  const users=cache.users.filter(u=>u.id!==ADMIN_UID);
+  if(!users.length)return;
+  if(!confirm(`ยืนยันลบ User ทั้งหมด ${users.length} คน?\n\nจะลบทั้ง Authentication + Firestore และทุกคนสามารถสมัครใหม่ได้`))return;
+  const typed=prompt('พิมพ์ DELETE ALL เพื่อยืนยัน');if(typed!=="DELETE ALL")return;
+  const btn=$("deleteUsers"),old=btn.textContent;btn.disabled=true;
+  let ok=0,failed=0;
+  for(const user of users){
+    btn.textContent=`กำลังลบ ${ok+failed+1}/${users.length}`;
+    try{await adminDeleteStudentAccount({targetUid:user.id});ok++;}catch(error){failed++;console.warn("delete user",user.id,error)}
+  }
+  btn.disabled=false;btn.textContent=old;showAdminToast("ลบ User ทั้งหมดเสร็จ",`สำเร็จ ${ok} · ไม่สำเร็จ ${failed}`,failed>0);
+};
 function downloadFile(name,text,type){const blob=new Blob([text],{type}),url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download=name;a.click();URL.revokeObjectURL(url)}
 $("exportCsv").onclick=()=>{const h=["date","student_id","name","level","classroom","department","mode","game_level","status","score","wpm","accuracy","mistakes","time_seconds"],q=v=>`"${String(v??"").replaceAll('"','""')}"`,rows=cache.attempts.map(x=>[formatDate(x.createdAt),x.studentId,x.fullName,x.educationLevel,x.classroom,x.department,x.modeName,(x.stage??x.levelNo),x.status,x.score,x.wpm,x.accuracy,x.mistakes,x.elapsedSeconds].map(q).join(","));downloadFile("code_typing_results.csv","\ufeff"+h.join(",")+"\n"+rows.join("\n"),"text/csv;charset=utf-8")};
 $("exportJson").onclick=()=>downloadFile("code_typing_backup.json",JSON.stringify({
@@ -7045,7 +7238,7 @@ function listenModeration(){
 }
 
 async function loadProfile(){
-  if(isGM()){profile={uid,studentId:"GM",fullName:"GM",rank:GM_RANK,tokenBalance:0,inventory:[],character:{gender:"male",equipped:{}},zone:{}};me.x=450;return true}
+  if(isGM()){profile={uid,studentId:"GM",fullName:"GM",rank:null,tokenBalance:0,inventory:[],character:{gender:"male",equipped:{}},zone:{}};me.x=450;return true}
   try{
     const snap=await getDoc(doc(db,"users",uid));if(!snap.exists()){showGate("ไม่พบ User","กรุณาลงทะเบียนใหม่");return false}
     profile={uid,...snap.data()};
@@ -7060,7 +7253,7 @@ async function syncPublicProfile(){
     const gm=isGM();
     await setDoc(doc(db,"public_profiles",uid),{
       uid,studentId:gm?"GM":profile.studentId,fullName:gm?"GM":profile.fullName,isAdmin:gm,role:gm?"GM":"USER",
-      rank:gm?GM_RANK:(profile.rank||null),
+      rank:gm?null:(profile.rank||null),
       character:gm?{gender:"male",equipped:{}}:{gender:profile.character?.gender||"male",equipped:equipped(profile.character)},
       updatedAt:serverTimestamp()
     },{merge:true});
@@ -7069,7 +7262,7 @@ async function syncPublicProfile(){
 async function publishPresence(){
   try{
     await setDoc(doc(db,"presence",uid),{
-      uid,studentId:isGM()?"GM":profile.studentId,isAdmin:isGM(),rank:isGM()?GM_RANK:(profile.rank||null),
+      uid,studentId:isGM()?"GM":profile.studentId,isAdmin:isGM(),rank:isGM()?null:(profile.rank||null),
       area:"zone",online:true,lastSeenAt:serverTimestamp()
     },{merge:true});
   }catch(error){console.warn("presence",error)}
@@ -7080,7 +7273,7 @@ async function publishPosition(force=false){
   try{
     await setDoc(doc(db,"zone_positions",uid),{
       uid,studentId:isGM()?"GM":profile.studentId,isAdmin:isGM(),role:isGM()?"GM":"USER",
-      rank:isGM()?GM_RANK:(profile.rank||null),
+      rank:isGM()?null:(profile.rank||null),
       character:isGM()?{gender:"male",equipped:{}}:{gender:profile.character?.gender||"male",equipped:equipped(profile.character)},
       zoneId:ZONE_ID,x:Math.round(me.x*10)/10,y:WALK_Y,direction:me.direction,moving:me.moving,online:true,updatedAt:serverTimestamp()
     },{merge:true});
@@ -7408,7 +7601,7 @@ function drawRankShield(c,x,y,rank){const r=rankMeta(rank);c.save();c.translate(
 function drawName(c,p,gm){
   const label=gm?"GM":String(p.studentId||"USER");c.font="800 14px system-ui";const w=Math.max(gm?76:105,c.measureText(label).width+45);
   c.fillStyle=gm?"rgba(91,22,49,.95)":"rgba(9,28,39,.9)";rr(c,-w/2,-143,w,29,8);c.fill();c.strokeStyle=gm?"#ebc34e":"rgba(255,255,255,.1)";c.lineWidth=2;c.stroke();
-  c.fillStyle="#fff";c.textAlign="center";c.fillText(label,0,-124);drawRankShield(c,-w/2+16,-130,gm?GM_RANK:p.rank);drawBubble(c,p);
+  c.fillStyle="#fff";c.textAlign="center";c.fillText(label,0,-124);if(!gm)drawRankShield(c,-w/2+16,-130,p.rank);drawBubble(c,p);
 }
 function drawBubble(c,p){
   const m=messagesByUid.get(p.uid);if(!m?.text)return;const dt=m.createdAt?.toDate?.();if(dt&&Date.now()-dt.getTime()>BUBBLE_MS)return;
@@ -7442,7 +7635,7 @@ function drawFrame(now){
   ctx.setTransform(1,0,0,1,0,0);ctx.fillStyle="#102c3d";ctx.fillRect(0,0,canvas.width,canvas.height);
   ctx.setTransform(dpr*zoom,0,0,dpr*zoom,-cameraX*dpr*zoom,0);drawWorld(now);
   const list=[...players.values()].map(p=>({...p,x:p.currentX,y:WALK_Y}));
-  list.push({uid,studentId:isGM()?"GM":profile.studentId,isAdmin:isGM(),rank:isGM()?GM_RANK:profile.rank,character:isGM()?{gender:"male",equipped:{}}:{gender:profile.character?.gender,equipped:equipped(profile.character)},x:me.x,y:WALK_Y,direction:me.direction,moving:me.moving});
+  list.push({uid,studentId:isGM()?"GM":profile.studentId,isAdmin:isGM(),rank:isGM()?null:profile.rank,character:isGM()?{gender:"male",equipped:{}}:{gender:profile.character?.gender,equipped:equipped(profile.character)},x:me.x,y:WALK_Y,direction:me.direction,moving:me.moving});
   for(const p of list)drawCharacter(ctx,p,p.x,p.y,now);
 }
 function loop(now){const dt=Math.min(.04,(now-lastFrame)/1000);lastFrame=now;updateMovement(dt);smoothRemote(dt);updateCamera(dt);drawFrame(now);requestAnimationFrame(loop)}
@@ -7454,8 +7647,8 @@ canvas.onclick=e=>{
   let selected=null,best=999;for(const p of players.values()){const d=Math.abs(p.currentX-pt.x);if(d<65&&d<best){selected=p;best=d}}if(selected)openPlayerCard(selected);
 };
 function openPlayerCard(p){
-  const gm=isGMPlayer(p);$("zonePlayerCardId").textContent=gm?"GM":String(p.studentId||"USER");$("zonePlayerCardShield").innerHTML=rankShieldHTML(gm?GM_RANK:p.rank);
-  $("zonePlayerCardRank").textContent=gm?"GAME MASTER":`${p.rank?.tierName||"Bronze"} · ${Number(p.rank?.rating||0)} Rating`;
+  const gm=isGMPlayer(p);$("zonePlayerCardId").textContent=gm?"GM":String(p.studentId||"USER");$("zonePlayerCardShield").innerHTML=gm?"":rankShieldHTML(p.rank);
+  $("zonePlayerCardRank").textContent=gm?"ADMIN · GM":`${p.rank?.tierName||"Bronze"} · ${Number(p.rank?.rating||0)} Rating`;
   $("zonePlayerCardItemTitle").textContent=gm?"GM EXCLUSIVE":"ไอเท็มที่กำลังสวม";
   const list=gm?GM_ITEMS:equippedItems(p.character).map(x=>x.item);
   $("zonePlayerCardItems").innerHTML=list.length?list.map(i=>`<div><span>${i.icon||"✨"}</span><small>${esc(i.name||"Item")}</small></div>`).join(""):`<div class="empty">ยังไม่ได้สวมไอเท็ม</div>`;
@@ -7484,7 +7677,7 @@ onAuthStateChanged(auth,async user=>{
   if(!user){showGate("กรุณา Login ก่อน","2D Zone ใช้บัญชีที่ลงทะเบียนแล้ว");return}
   uid=user.uid;if(!(await loadProfile()))return;if(!(await checkModeration()))return;
   hideGate();$("zoneMyStudentId").textContent=isGM()?"GM":profile.studentId;$("zoneChatIdentity").textContent=isGM()?"GM":profile.studentId;
-  $("zoneMyShield").innerHTML=rankShieldHTML(isGM()?GM_RANK:profile.rank);$("zoneTokenBalance").textContent=isGM()?"∞":Number(profile.tokenBalance||0).toLocaleString();
+  $("zoneMyShield").innerHTML=isGM()?"":rankShieldHTML(profile.rank);$("zoneTokenBalance").textContent=isGM()?"∞":Number(profile.tokenBalance||0).toLocaleString();
   if(isGM()){$("openAdminPanel").classList.remove("hidden");$("leaveZoneButton").href="./admin.html";$("zoneChatInput").placeholder="GM พิมพ์ข้อความหรือประกาศ..."}
   resizeCanvas();updateClock();clockTimer=setInterval(updateClock,1000);startZoneDailyCheckin();await loadQuestProgress();
   listenModeration();listenPositions();listenMessages();listenTeacherQuests();listenRankingNotice();expiryTimer=setInterval(refreshMessages,60000);
@@ -7495,207 +7688,22 @@ onAuthStateChanged(auth,async user=>{
 ```
 
 
-## quest-system.js
-
-```js
-export const QUEST_CONFIG = {
-  dailyLimit: 3,
-  rankOrder: ["bronze","silver","gold","platinum","diamond","master"],
-  activeLimitByRank: {
-    bronze:1,
-    silver:1,
-    gold:2,
-    platinum:2,
-    diamond:3,
-    master:3
-  },
-  rewardRanges: {
-    easy:{min:2,max:5},
-    medium:{min:10,max:15},
-    hard:{min:15,max:20}
-  },
-  defaultMinRank: {
-    easy:"bronze",
-    medium:"silver",
-    hard:"platinum"
-  }
-};
-
-export const DEFAULT_TEACHER_QUESTS = [
-  {
-    id:"q_easy_html_03",
-    title:"ฝึก HTML พื้นฐาน",
-    description:"ผ่าน HTML Stage 3 ให้สำเร็จ",
-    languageId:"html",
-    stage:3,
-    difficulty:"easy",
-    objectiveType:"pass",
-    targetValue:0,
-    rewardToken:4,
-    minRank:"bronze",
-    active:true
-  },
-  {
-    id:"q_easy_python_05",
-    title:"Python แม่นยำ",
-    description:"ผ่าน Python Stage 5 ด้วย Accuracy อย่างน้อย 95%",
-    languageId:"python",
-    stage:5,
-    difficulty:"easy",
-    objectiveType:"accuracy",
-    targetValue:95,
-    rewardToken:5,
-    minRank:"bronze",
-    active:true
-  },
-  {
-    id:"q_medium_html_20",
-    title:"HTML Speed Challenge",
-    description:"ผ่าน HTML Stage 20 ภายใน 100 วินาที",
-    languageId:"html",
-    stage:20,
-    difficulty:"medium",
-    objectiveType:"time",
-    targetValue:100,
-    rewardToken:12,
-    minRank:"silver",
-    active:true
-  },
-  {
-    id:"q_medium_python_24",
-    title:"Python Precision",
-    description:"ผ่าน Python Stage 24 ด้วย Accuracy อย่างน้อย 97%",
-    languageId:"python",
-    stage:24,
-    difficulty:"medium",
-    objectiveType:"accuracy",
-    targetValue:97,
-    rewardToken:14,
-    minRank:"silver",
-    active:true
-  },
-  {
-    id:"q_hard_html_40",
-    title:"HTML Master Run",
-    description:"ผ่าน HTML Stage 40 ภายใน 150 วินาที",
-    languageId:"html",
-    stage:40,
-    difficulty:"hard",
-    objectiveType:"time",
-    targetValue:150,
-    rewardToken:18,
-    minRank:"platinum",
-    active:true
-  },
-  {
-    id:"q_hard_python_45",
-    title:"Python Perfect Code",
-    description:"ผ่าน Python Stage 45 ด้วย Accuracy อย่างน้อย 99%",
-    languageId:"python",
-    stage:45,
-    difficulty:"hard",
-    objectiveType:"accuracy",
-    targetValue:99,
-    rewardToken:20,
-    minRank:"platinum",
-    active:true
-  }
-  ,{id:"q_easy_html_08",title:"HTML Warm Up",description:"ผ่าน HTML Stage 8 ให้สำเร็จ",languageId:"html",stage:8,difficulty:"easy",objectiveType:"pass",targetValue:0,rewardToken:5,minRank:"bronze",active:true}
-  ,{id:"q_easy_python_10",title:"Python Warm Up",description:"ผ่าน Python Stage 10 ให้สำเร็จ",languageId:"python",stage:10,difficulty:"easy",objectiveType:"pass",targetValue:0,rewardToken:5,minRank:"bronze",active:true}
-  ,{id:"q_medium_html_28",title:"HTML Accuracy Run",description:"ผ่าน HTML Stage 28 ด้วย Accuracy 97%",languageId:"html",stage:28,difficulty:"medium",objectiveType:"accuracy",targetValue:97,rewardToken:15,minRank:"silver",active:true}
-  ,{id:"q_medium_python_30",title:"Python Speed Run",description:"ผ่าน Python Stage 30 ภายใน 130 วินาที",languageId:"python",stage:30,difficulty:"medium",objectiveType:"time",targetValue:130,rewardToken:15,minRank:"silver",active:true}
-  ,{id:"q_hard_html_48",title:"HTML Final Master",description:"ผ่าน HTML Stage 48 ด้วย Accuracy 99%",languageId:"html",stage:48,difficulty:"hard",objectiveType:"accuracy",targetValue:99,rewardToken:20,minRank:"platinum",active:true}
-  ,{id:"q_hard_python_50",title:"Python Final Master",description:"ผ่าน Python Stage 50 ภายใน 180 วินาที",languageId:"python",stage:50,difficulty:"hard",objectiveType:"time",targetValue:180,rewardToken:20,minRank:"platinum",active:true}
-
-];
-
-export function localDayKey(date=new Date()){
-  const y=date.getFullYear();
-  const m=String(date.getMonth()+1).padStart(2,"0");
-  const d=String(date.getDate()).padStart(2,"0");
-  return `${y}-${m}-${d}`;
-}
-
-export function normalizeRankId(rank){
-  const id=String(rank?.tierId||rank||"bronze").toLowerCase();
-  return QUEST_CONFIG.rankOrder.includes(id)?id:"bronze";
-}
-
-export function rankIndex(rank){
-  return QUEST_CONFIG.rankOrder.indexOf(normalizeRankId(rank));
-}
-
-export function activeQuestLimit(rank){
-  return QUEST_CONFIG.activeLimitByRank[normalizeRankId(rank)]||1;
-}
-
-export function canAccessQuest(rank,quest){
-  const required=quest?.minRank||QUEST_CONFIG.defaultMinRank[quest?.difficulty]||"bronze";
-  return rankIndex(rank)>=rankIndex(required);
-}
-
-export function rewardRange(difficulty){
-  return QUEST_CONFIG.rewardRanges[difficulty]||QUEST_CONFIG.rewardRanges.easy;
-}
-
-export function clampQuestReward(difficulty,value){
-  const range=rewardRange(difficulty);
-  const n=Math.round(Number(value||range.min));
-  return Math.max(range.min,Math.min(range.max,n));
-}
-
-export function questDifficultyName(difficulty){
-  return difficulty==="hard"?"ยาก":difficulty==="medium"?"ปานกลาง":"ง่าย";
-}
-
-export function questObjectiveLabel(quest){
-  if(!quest)return "-";
-  if(quest.objectiveType==="time")return `ผ่านภายใน ${Number(quest.targetValue||0)} วินาที`;
-  if(quest.objectiveType==="accuracy")return `Accuracy อย่างน้อย ${Number(quest.targetValue||0)}%`;
-  return "ผ่านด่านให้สำเร็จ";
-}
-
-export function questObjectiveMet(quest,result){
-  if(!quest||!result)return false;
-  if(String(result.languageId)!==String(quest.languageId))return false;
-  if(Number(result.stage)!==Number(quest.stage))return false;
-  if(quest.objectiveType==="time")return Number(result.elapsedSeconds)<=Number(quest.targetValue||0);
-  if(quest.objectiveType==="accuracy")return Number(result.accuracy)>=Number(quest.targetValue||0);
-  return true;
-}
-
-export function defaultMinRankForDifficulty(difficulty){
-  return QUEST_CONFIG.defaultMinRank[difficulty]||"bronze";
-}
-
-```
-
-
 ## ranking-system.js
 
 ```js
 export const RANKING_CONFIG = {
   seasonDays: null,
-  automaticReset: false,
-
   weights: {
-    diligence: 0.35,
-    accuracy: 0.30,
-    speed: 0.20,
-    consistency: 0.15
+    speed: 0.40,
+    accuracy: 0.40,
+    completionTime: 0.20
   },
-
-  // WPM เทียบกับช่วงคะแนนความเร็ว 0-100
-  speedReferenceWpm: 80,
-
-  tiers: [
-    {id:"bronze", name:"Bronze", icon:"🥉", min:0},
-    {id:"silver", name:"Silver", icon:"🥈", min:35},
-    {id:"gold", name:"Gold", icon:"🥇", min:55},
-    {id:"platinum", name:"Platinum", icon:"💠", min:70},
-    {id:"diamond", name:"Diamond", icon:"💎", min:82},
-    {id:"master", name:"Master", icon:"👑", min:92}
-  ]
+  targets: {
+    // WPM ตั้ง 80 เป็นคะแนนความเร็วเต็ม 100
+    targetWpm: 80,
+    // เวลามาตรฐานสำหรับ normalization; ยิ่งต่ำยิ่งได้คะแนนมาก
+    referenceSeconds: 180
+  }
 };
 
 export function seasonIdFromDate(date = new Date()) {
@@ -7709,71 +7717,76 @@ export function seasonRange(date = new Date()) {
   };
 }
 
-export function calculateRankMetrics(attempts, activeDayCount = 0) {
-  const completed = attempts.filter(a => a.status === "completed");
-  const total = completed.length;
+export function calculateRankMetrics(attempts=[]){
+  const completed=(attempts||[]).filter(a=>{
+    const status=String(a.status||"").toLowerCase();
+    return status==="completed"||status==="complete"||status==="passed"||status==="success";
+  });
 
-  const avgAccuracy = total
-    ? completed.reduce((s,a)=>s + Number(a.accuracy || 0), 0) / total
-    : 0;
-
-  const avgWpm = total
-    ? completed.reduce((s,a)=>s + Number(a.wpm || 0), 0) / total
-    : 0;
-
-  // ความขยัน: จำนวนด่าน + จำนวนวันที่กลับมาใช้งาน
-  const attemptFactor = Math.min(100, total * 2.5);
-  const dayFactor = Math.min(100, activeDayCount * 4);
-  const diligence = attemptFactor * 0.65 + dayFactor * 0.35;
-
-  // ความเร็ว: ไม่ให้ความเร็วสูงอย่างเดียวชนะ Accuracy
-  const speed = Math.min(100, (avgWpm / RANKING_CONFIG.speedReferenceWpm) * 100);
-
-  // ความสม่ำเสมอ: Accuracy กระจายน้อย + มีหลายรอบ
-  let consistency = 0;
-  if (total) {
-    const mean = avgAccuracy;
-    const variance = completed.reduce((s,a)=>{
-      const d = Number(a.accuracy || 0) - mean;
-      return s + d*d;
-    },0) / total;
-    const std = Math.sqrt(variance);
-    const stability = Math.max(0, 100 - std * 2);
-    const volume = Math.min(100, total * 4);
-    consistency = stability * 0.7 + volume * 0.3;
+  if(!completed.length){
+    return {
+      rating:0,
+      tierId:"bronze",
+      tierName:"Bronze",
+      speed:0,
+      accuracy:0,
+      completionTime:0,
+      avgWpm:0,
+      avgAccuracy:0,
+      avgSeconds:0,
+      bestWpm:0,
+      bestAccuracy:0,
+      bestSeconds:0,
+      completedAttempts:0
+    };
   }
 
-  const accuracy = Math.max(0, Math.min(100, avgAccuracy));
+  const wpms=completed.map(a=>Number(a.wpm||0)).filter(Number.isFinite);
+  const accuracies=completed.map(a=>Number(a.accuracy||0)).filter(Number.isFinite);
+  const seconds=completed.map(a=>{
+    const raw=Number(a.elapsedSeconds ?? a.elapsed ?? a.timeSeconds ?? a.durationSeconds ?? 0);
+    return Number.isFinite(raw)&&raw>0?raw:null;
+  }).filter(v=>v!==null);
 
-  const rating = Math.round(
-    diligence * RANKING_CONFIG.weights.diligence +
-    accuracy * RANKING_CONFIG.weights.accuracy +
-    speed * RANKING_CONFIG.weights.speed +
-    consistency * RANKING_CONFIG.weights.consistency
+  const avg=a=>a.length?a.reduce((x,y)=>x+y,0)/a.length:0;
+  const avgWpm=avg(wpms);
+  const avgAccuracy=avg(accuracies);
+  const avgSeconds=avg(seconds);
+
+  // 40 คะแนนจากความเร็ว: 80 WPM = เต็ม 100 ใน component นี้
+  const speed=Math.max(0,Math.min(100,(avgWpm/RANKING_CONFIG.targets.targetWpm)*100));
+
+  // 40 คะแนนจาก Accuracy โดยตรง
+  const accuracy=Math.max(0,Math.min(100,avgAccuracy));
+
+  // 20 คะแนนจากเวลา: ใช้ inverse ratio ยิ่งเร็วคะแนนยิ่งสูง
+  // 90 sec = 100, 180 sec = 50, 360 sec = 25 โดยไม่ให้เกิน 100
+  const completionTime=avgSeconds>0
+    ?Math.max(0,Math.min(100,(90/avgSeconds)*100))
+    :0;
+
+  const rating=Math.round(
+    speed*RANKING_CONFIG.weights.speed +
+    accuracy*RANKING_CONFIG.weights.accuracy +
+    completionTime*RANKING_CONFIG.weights.completionTime
   );
 
-  const tiers = [...RANKING_CONFIG.tiers].sort((a,b)=>b.min-a.min);
-  const tier = tiers.find(t => rating >= t.min) || RANKING_CONFIG.tiers[0];
-
+  const tier=rankTierFromRating(rating);
   return {
     rating,
-    tierId: tier.id,
-    tierName: tier.name,
-    tierIcon: tier.icon,
-    diligence: Math.round(diligence),
-    accuracy: Math.round(accuracy),
-    speed: Math.round(speed),
-    consistency: Math.round(consistency),
-    avgWpm: Math.round(avgWpm * 10) / 10,
-    avgAccuracy: Math.round(avgAccuracy * 10) / 10,
-    completedAttempts: total,
-    activeDayCount
+    tierId:tier.id,
+    tierName:tier.name,
+    speed:Math.round(speed),
+    accuracy:Math.round(accuracy),
+    completionTime:Math.round(completionTime),
+    avgWpm:Math.round(avgWpm*10)/10,
+    avgAccuracy:Math.round(avgAccuracy*100)/100,
+    avgSeconds:Math.round(avgSeconds*10)/10,
+    bestWpm:wpms.length?Math.max(...wpms):0,
+    bestAccuracy:accuracies.length?Math.max(...accuracies):0,
+    bestSeconds:seconds.length?Math.min(...seconds):0,
+    completedAttempts:completed.length
   };
-}
-
-
-export function rankingClassKey(educationLevel,classroom){
-  return `${String(educationLevel||"").trim()}${String(classroom||"").trim()}`;
 }
 
 export function rankProfiles(profiles,limit=10){
@@ -7781,192 +7794,28 @@ export function rankProfiles(profiles,limit=10){
 }
 
 
-const LEGACY_INFORMATION_MAJOR_VALUES=[
-  "เทคโนโลยีสารสนเทศ",
-  "สารสนเทศและธุรกิจดิจิทัล",
-  "เทคโนโลยีสารสนเทศและธุรกิจดิจิทัล"
-];
-
+function normalizeLegacyAcademicMajor(raw){
+  const value=String(raw||"").trim();
+  const compact=value.replace(/\s+/g,"");
+  if(["ธุรกิจดิจิทัล","ธุรกิจดิทัล","ดิจิทัลธุรกิจ"].includes(compact))return "ธุรกิจดิจิทัล";
+  if(["สารสนเทศ","เทคโนโลยีสารสนเทศ"].includes(compact)||value==="ไอที"||value==="IT")return "เทคโนโลยีสารสนเทศ";
+  return value||"ไม่ระบุสาขาวิชา";
+}
+function legacyAcademicLooksLikeMajor(raw){
+  return /สารสนเทศ|ดิจิทัล|ธุรกิจดิทัล/i.test(String(raw||""));
+}
 export function rankingDepartmentKey(user){
   const department=String(user?.department||"").trim();
-  if(LEGACY_INFORMATION_MAJOR_VALUES.includes(department)) return "คอมพิวเตอร์";
+  if(legacyAcademicLooksLikeMajor(department)) return "คอมพิวเตอร์";
   return department||"ไม่ระบุแผนก";
 }
-
 export function rankingMajorKey(user){
   const department=String(user?.department||"").trim();
   const major=String(user?.major||"").trim();
-  if(LEGACY_INFORMATION_MAJOR_VALUES.includes(department) && (!major||major==="ไม่ระบุสาขาวิชา")){
-    return department;
-  }
-  return major||"ไม่ระบุสาขาวิชา";
+  if(major&&major!=="ไม่ระบุสาขาวิชา")return normalizeLegacyAcademicMajor(major);
+  if(legacyAcademicLooksLikeMajor(department))return normalizeLegacyAcademicMajor(department);
+  return "ไม่ระบุสาขาวิชา";
 }
-
-```
-
-
-## economy-system.js
-
-```js
-export const TOKEN_REWARD_CONFIG = {
-  maxPerStage: 70,
-  weights: { accuracy: 0.70, speed: 0.30 },
-  speedTargets: { easy: 28, medium: 42, hard: 58 },
-  minimumPerformanceFactor: 0.35,
-  wagerOptions: [0,5,10,20,30,40,50]
-};
-
-export function clamp(value,min,max){ return Math.max(min,Math.min(max,value)); }
-
-export function maxTokenForLesson(lesson){
-  return Math.min(TOKEN_REWARD_CONFIG.maxPerStage, Math.max(1, Number(lesson?.rewardPoints||0)));
-}
-
-export function calculateStageTokenReward(lesson,wpm,accuracy){
-  const maxToken=maxTokenForLesson(lesson);
-  const difficulty=lesson?.difficulty||"easy";
-  const target=TOKEN_REWARD_CONFIG.speedTargets[difficulty]||40;
-  const accuracyFactor=clamp(Number(accuracy||0)/100,0,1);
-  const speedFactor=clamp(Number(wpm||0)/target,0,1);
-  const weighted=accuracyFactor*TOKEN_REWARD_CONFIG.weights.accuracy + speedFactor*TOKEN_REWARD_CONFIG.weights.speed;
-  const factor=Math.max(TOKEN_REWARD_CONFIG.minimumPerformanceFactor,weighted);
-  const earned=Math.min(maxToken,Math.max(1,Math.round(maxToken*factor)));
-  return {earned,maxToken,accuracyFactor,speedFactor,targetWpm:target,performanceFactor:factor};
-}
-
-export function classKey(educationLevel,classroom){
-  return `${String(educationLevel||"").trim()}${String(classroom||"").trim()}`;
-}
-
-export function set2Price(baseCost){ return Math.round(Number(baseCost||0)*1.30); }
-
-```
-
-
-## reward-data.js
-
-```js
-export const REWARD_ITEMS = [
-  {id:"cap_blue",name:"หมวก Coder ฟ้า",icon:"🧢",cost:200,type:"wearable",slot:"head",rarity:"common",visual:"cap",description:"หมวกเรียบง่ายสำหรับผู้เริ่มต้น"},
-  {id:"shirt_blue",name:"เสื้อ Code ฟ้า",icon:"👕",cost:280,type:"wearable",slot:"top",rarity:"common",visual:"shirt_blue",description:"เสื้อสีฟ้าสไตล์ Coder"},
-  {id:"sneaker_white",name:"รองเท้าขาว",icon:"👟",cost:360,type:"wearable",slot:"shoes",rarity:"common",visual:"shoe_white",description:"รองเท้าพื้นฐานดูสะอาด"},
-
-  {id:"thai_sash",name:"ผ้าคาดไทย",icon:"🎗️",cost:560,type:"wearable",slot:"top",rarity:"rare",visual:"thai_sash",description:"ผ้าคาดลายไทยเพิ่มความโดดเด่น"},
-  {id:"student_bag",name:"กระเป๋านักเรียน",icon:"🎒",cost:680,type:"wearable",slot:"back",rarity:"rare",visual:"backpack",description:"กระเป๋าสะพายสำหรับตัวละคร"},
-  {id:"round_glasses",name:"แว่นทรงกลม",icon:"👓",cost:800,type:"wearable",slot:"face",rarity:"rare",visual:"glasses",description:"แว่นสำหรับสายวิชาการ"},
-
-  {id:"coder_jacket",name:"แจ็กเก็ต Cyber Coder",icon:"🧥",cost:1280,type:"wearable",slot:"top",rarity:"epic",visual:"cyber_jacket",description:"แจ็กเก็ตไซเบอร์มีขอบเรืองแสง"},
-  {id:"neon_headset",name:"หูฟัง Neon",icon:"🎧",cost:1520,type:"wearable",slot:"head",rarity:"epic",visual:"neon_headset",description:"หูฟัง Neon สำหรับสายเกม"},
-  {id:"code_tablet",name:"แท็บเล็ต Code",icon:"📱",cost:1760,type:"wearable",slot:"hand",rarity:"epic",visual:"tablet",description:"แท็บเล็ตเรืองแสงถือในมือ"},
-
-  {id:"gold_crown",name:"มงกุฎทอง Coder",icon:"👑",cost:2800,type:"wearable",slot:"head",rarity:"legendary",visual:"gold_crown",description:"มงกุฎทองสำหรับผู้เล่นระดับสูง"},
-  {id:"royal_cape",name:"ผ้าคลุม Royal Code",icon:"🦸",cost:3360,type:"wearable",slot:"back",rarity:"legendary",visual:"royal_cape",description:"ผ้าคลุมใหญ่พร้อมขอบทอง"},
-  {id:"gold_aura",name:"ออร่าสีทอง",icon:"✨",cost:4000,type:"wearable",slot:"aura",rarity:"legendary",visual:"gold_aura",description:"ออร่าทองล้อมรอบตัวละคร"},
-
-  {id:"dragon_wings",name:"ปีกมังกร Cyber",icon:"🐉",cost:6000,type:"wearable",slot:"back",rarity:"mythic",visual:"dragon_wings",description:"ปีกมังกรเรืองแสงขนาดใหญ่"},
-  {id:"master_halo",name:"วงแหวน Master",icon:"🌟",cost:7200,type:"wearable",slot:"aura",rarity:"mythic",visual:"master_halo",description:"วงแหวนพลังระดับ Master"},
-  {id:"phoenix_pet",name:"สัตว์เลี้ยง Phoenix",icon:"🔥",cost:9600,type:"wearable",slot:"pet",rarity:"mythic",visual:"phoenix_pet",description:"Phoenix ไฟลอยข้างตัวละคร"},
-  {id:"throne_effect",name:"บัลลังก์ Code Emperor",icon:"🏆",cost:14400,type:"wearable",slot:"aura",rarity:"mythic",visual:"throne",description:"เอฟเฟกต์สูงสุดของร้าน Token"},
-
-  // ===== ITEM SET 2 · PREMIUM +30% =====
-  // cost = baseCost × 1.30 ตามกติกาชุดที่ 2
-  {id:"set2_mystic_staff",name:"คฑา Mystic Code",icon:"🪄",baseCost:2400,cost:2496,type:"wearable",slot:"hand",rarity:"epic",set:"set2",visual:"mystic_staff",description:"คฑาพลังโค้ด มีประกายเวท ชุด 2 ราคา +30%"},
-  {id:"set2_katana",name:"ดาบ Katana Coder",icon:"🗡️",baseCost:3000,cost:3120,type:"wearable",slot:"hand",rarity:"epic",set:"set2",visual:"katana",description:"ดาบคาตานะแสงสำหรับนักพิมพ์สายเร็ว ชุด 2 ราคา +30%"},
-  {id:"set2_cyber_spear",name:"หอก Cyber Spear",icon:"🔱",baseCost:3800,cost:3952,type:"wearable",slot:"hand",rarity:"legendary",set:"set2",visual:"cyber_spear",description:"หอกพลังงานยาวพร้อมแสง Neon ชุด 2 ราคา +30%"},
-
-  {id:"set2_samurai_armor",name:"ชุด Samurai Coder",icon:"🥋",baseCost:5000,cost:5200,type:"wearable",slot:"top",rarity:"legendary",set:"set2",visual:"samurai_armor",description:"เกราะซามูไรแดงดำขอบทอง ชุด 2 ราคา +30%"},
-  {id:"set2_mage_robe",name:"ชุด Arcane Programmer",icon:"🧙",baseCost:6000,cost:6240,type:"wearable",slot:"top",rarity:"legendary",set:"set2",visual:"mage_robe",description:"เสื้อคลุมจอมเวทสายโปรแกรม ชุด 2 ราคา +30%"},
-  {id:"set2_dragon_armor",name:"ชุด Dragon Core",icon:"🛡️",baseCost:8000,cost:8320,type:"wearable",slot:"top",rarity:"mythic",set:"set2",visual:"dragon_armor",description:"เกราะมังกรพร้อมแกนพลังงาน ชุด 2 ราคา +30%"},
-
-  {id:"set2_cat_pet",name:"สัตว์เลี้ยง Code Cat",icon:"🐈",baseCost:2500,cost:2600,type:"wearable",slot:"pet",rarity:"epic",set:"set2",visual:"cat_pet",description:"แมวคู่หูนักเขียนโค้ด ชุด 2 ราคา +30%"},
-  {id:"set2_wolf_pet",name:"สัตว์เลี้ยง Neon Wolf",icon:"🐺",baseCost:4500,cost:4680,type:"wearable",slot:"pet",rarity:"legendary",set:"set2",visual:"wolf_pet",description:"หมาป่า Neon วิ่งตามตัวละคร ชุด 2 ราคา +30%"},
-  {id:"set2_tiger_pet",name:"สัตว์เลี้ยง Siam Tiger",icon:"🐯",baseCost:7000,cost:7280,type:"wearable",slot:"pet",rarity:"legendary",set:"set2",visual:"tiger_pet",description:"เสือคู่ใจที่ดูโดดเด่นใน Zone ชุด 2 ราคา +30%"},
-  {id:"set2_mini_dragon",name:"สัตว์เลี้ยง Mini Dragon",icon:"🐲",baseCost:11000,cost:11440,type:"wearable",slot:"pet",rarity:"mythic",set:"set2",visual:"mini_dragon",description:"มังกรจิ๋วบินข้างตัวละคร ชุด 2 ราคา +30%"},
-
-  {id:"set2_spirit_wings",name:"ปีก Spirit Guardian",icon:"🪽",baseCost:9500,cost:9880,type:"wearable",slot:"back",rarity:"mythic",set:"set2",visual:"spirit_wings",description:"ปีกวิญญาณสีฟ้าขนาดใหญ่ ชุด 2 ราคา +30%"},
-  {id:"set2_storm_aura",name:"Storm Code Aura",icon:"⚡",baseCost:12500,cost:13000,type:"wearable",slot:"aura",rarity:"mythic",set:"set2",visual:"storm_aura",description:"สายฟ้าหมุนรอบตัวละคร ชุด 2 ราคา +30%"}
-  // ===== V4.9.4 NEW COLLECTION =====
-  {id:"armor_silver_guard",name:"เกราะ Silver Guard",icon:"🛡️",cost:2800,type:"wearable",slot:"top",rarity:"epic",visual:"silver_armor",description:"เกราะเงินสำหรับนักรบสายโค้ด"},
-  {id:"armor_gold_guard",name:"เกราะ Golden Guardian",icon:"🛡️",cost:5200,type:"wearable",slot:"top",rarity:"legendary",visual:"gold_armor",description:"เกราะทองพร้อมขอบเรืองแสง"},
-  {id:"crown_violet",name:"มงกุฎม่วง Arcane",icon:"👑",cost:4200,type:"wearable",slot:"head",rarity:"legendary",visual:"violet_crown",description:"มงกุฎพลังเวทสีม่วง"},
-  {id:"crown_dragon_king",name:"มงกุฎราชามังกร",icon:"👑",cost:7600,type:"wearable",slot:"head",rarity:"mythic",visual:"dragon_crown",description:"มงกุฎระดับสูงลายมังกรทอง"},
-  {id:"spell_fire_orb",name:"คาถา Fire Orb",icon:"🔮",cost:2600,type:"wearable",slot:"hand",rarity:"epic",visual:"fire_orb",description:"ลูกแก้วเวทไฟลอยในมือ"},
-  {id:"spell_arcane_book",name:"คัมภีร์ Arcane Code",icon:"📖",cost:3600,type:"wearable",slot:"hand",rarity:"legendary",visual:"arcane_book",description:"คัมภีร์เวทสำหรับจอมเวทโค้ด"},
-  {id:"sword_gold",name:"ดาบทอง Golden Blade",icon:"⚔️",cost:4800,type:"wearable",slot:"hand",rarity:"legendary",visual:"gold_sword",description:"ดาบทองประกายสำหรับตัวละคร"},
-  {id:"sword_purple",name:"ดาบม่วง Void Blade",icon:"🗡️",cost:5600,type:"wearable",slot:"hand",rarity:"legendary",visual:"purple_sword",description:"ดาบพลัง Void สีม่วง"},
-  {id:"pet_golden_dragon",name:"มังกรทอง",icon:"🐉",cost:11800,type:"wearable",slot:"pet",rarity:"mythic",visual:"golden_dragon",description:"มังกรทองบินตามตัวละคร"},
-  {id:"pet_white_cat",name:"แมวขาว Coder",icon:"🐈",cost:2200,type:"wearable",slot:"pet",rarity:"epic",visual:"white_cat",description:"แมวขาวคู่หูสายโค้ด"},
-  {id:"pet_royal_tiger",name:"เสือ Royal Tiger",icon:"🐯",cost:6800,type:"wearable",slot:"pet",rarity:"legendary",visual:"royal_tiger",description:"เสือคู่หูสีทองดำ"},
-  {id:"pet_cyber_monkey",name:"ลิง Cyber Monkey",icon:"🐒",cost:3400,type:"wearable",slot:"pet",rarity:"epic",visual:"cyber_monkey",description:"ลิงจอมซนถือชิปโค้ด"},
-  {id:"pet_owl_teacher",name:"นกฮูกนักปราชญ์",icon:"🦉",cost:4100,type:"wearable",slot:"pet",rarity:"legendary",visual:"wise_owl",description:"นกฮูกนักปราชญ์บินข้างตัว"},
-  {id:"cape_night_coder",name:"ผ้าคลุม Night Coder",icon:"🦸",cost:3300,type:"wearable",slot:"back",rarity:"epic",visual:"night_cape",description:"ผ้าคลุมสีเข้มสำหรับโหมดกลางคืน"},
-  {id:"aura_dragon_flame",name:"Dragon Flame Aura",icon:"🔥",cost:8200,type:"wearable",slot:"aura",rarity:"mythic",visual:"dragon_flame_aura",description:"เปลวไฟมังกรวนรอบตัวละคร"},
-
-
-];
-
-export const RARITY_META = {
-  common:{name:"COMMON",order:1},
-  rare:{name:"RARE",order:2},
-  epic:{name:"EPIC",order:3},
-  legendary:{name:"LEGENDARY",order:4},
-  mythic:{name:"MYTHIC",order:5}
-};
-
-export const INVENTORY_CAPACITY = 25;
-export const SHOP_BUYBACK_RATE = 0.30;
-
-```
-
-
-## character-system.js
-
-```js
-export const DEFAULT_CHARACTER = {
-  avatarId: "base_student",
-  gender: null,
-  displayName: "",
-  equipped: {
-    head: null,
-    face: null,
-    top: null,
-    bottom: null,
-    shoes: null,
-    back: null,
-    hand: null,
-    aura: null,
-    pet: null
-  }
-};
-
-export const DEFAULT_ZONE_STATE = {
-  zoneId: "thai_social_zone_v4_1",
-  x: 520,
-  y: 700,
-  direction: "right",
-  lastSeenAt: null
-};
-
-```
-
-
-## firebase-config.js
-
-```js
-export const firebaseConfig = {
-  apiKey: "AIzaSyAScKt0szL6-KpA0KqQlROq2v59vBbBrxc",
-  authDomain: "thc-nr.firebaseapp.com",
-  projectId: "thc-nr",
-  storageBucket: "thc-nr.firebasestorage.app",
-  messagingSenderId: "839632570247",
-  appId: "1:839632570247:web:4c2d2413270df99dd7f522",
-  measurementId: "G-LWCNWGSZTS"
-};
-
-export const ADMIN_USERNAME = "Pisit_2000";
-export const ADMIN_EMAIL = "pisit_2000@thc-nr.local";
-
-export const ADMIN_UID = "TWUrLjOh3BTa1cBNwDXKk4X2IAg1";
 
 ```
 
@@ -8176,104 +8025,4 @@ service cloud.firestore {
   }
 }
 
-```
-
-
-## functions/index.js
-
-```js
-const {onCall,HttpsError}=require("firebase-functions/v2/https");
-const {setGlobalOptions}=require("firebase-functions/v2");
-const {initializeApp}=require("firebase-admin/app");
-const {getAuth}=require("firebase-admin/auth");
-const {getFirestore,FieldValue,Timestamp}=require("firebase-admin/firestore");
-
-initializeApp();
-setGlobalOptions({region:"asia-southeast1",maxInstances:10});
-const db=getFirestore();
-const ADMIN_UID="TWUrLjOh3BTa1cBNwDXKk4X2IAg1";
-
-function requireAuth(request){
-  if(!request.auth)throw new HttpsError("unauthenticated","กรุณา Login ก่อน");
-  return request.auth.uid;
-}
-function bangkokDayKey(date=new Date()){
-  return new Intl.DateTimeFormat("en-CA",{timeZone:"Asia/Bangkok",year:"numeric",month:"2-digit",day:"2-digit"}).format(date);
-}
-
-exports.adminResetStudentPassword=onCall(async request=>{
-  const caller=requireAuth(request);
-  if(caller!==ADMIN_UID)throw new HttpsError("permission-denied","Admin only");
-  const targetUid=String(request.data?.targetUid||"").trim();
-  const newPassword=String(request.data?.newPassword||"");
-  if(!targetUid)throw new HttpsError("invalid-argument","ไม่พบ UID");
-  if(newPassword.length<6||newPassword.length>64)throw new HttpsError("invalid-argument","รหัสผ่านต้อง 6–64 ตัวอักษร");
-  await getAuth().updateUser(targetUid,{password:newPassword});
-  return {ok:true,targetUid};
-});
-
-exports.recordDailyCheckinHeartbeat=onCall(async request=>{
-  const uid=requireAuth(request);
-  if(uid===ADMIN_UID)return {qualifiedSeconds:3600,rewarded:true,justRewarded:false,admin:true};
-  if(request.data?.visible!==true||request.data?.fullscreen!==true)
-    throw new HttpsError("failed-precondition","ต้องเปิดหน้าเว็บและโหมดเต็มหน้าจอ");
-  const now=new Date(),dayKey=bangkokDayKey(now);
-  const userRef=db.doc(`users/${uid}`),checkRef=db.doc(`users/${uid}/daily_checkins/${dayKey}`);
-  let response={qualifiedSeconds:0,rewarded:false,justRewarded:false};
-  await db.runTransaction(async tx=>{
-    const [userSnap,checkSnap]=await Promise.all([tx.get(userRef),tx.get(checkRef)]);
-    if(!userSnap.exists)throw new HttpsError("not-found","ไม่พบ User profile");
-    const old=checkSnap.exists?checkSnap.data():{};
-    const last=old.lastHeartbeatAt?.toDate?.();
-    let add=0;
-    if(last){
-      const gap=(now.getTime()-last.getTime())/1000;
-      // เพิ่มเวลาเฉพาะ heartbeat ต่อเนื่อง ไม่เปิดช่องให้กระโดดเวลาจากการปิดหน้าเว็บนาน ๆ
-      if(gap>=35&&gap<=90)add=Math.min(65,Math.floor(gap));
-    }
-    const qualified=Math.min(3600,Number(old.qualifiedSeconds||0)+add);
-    let rewarded=old.rewarded===true,justRewarded=false;
-    const update={uid,dayKey,qualifiedSeconds:qualified,lastHeartbeatAt:Timestamp.fromDate(now),updatedAt:Timestamp.fromDate(now)};
-    if(!checkSnap.exists)update.createdAt=Timestamp.fromDate(now);
-    if(qualified>=3600&&!rewarded){
-      rewarded=true;justRewarded=true;update.rewarded=true;update.rewardedAt=Timestamp.fromDate(now);
-      const user=userSnap.data();
-      tx.update(userRef,{tokenBalance:Number(user.tokenBalance||0)+10,tokenLifetime:Number(user.tokenLifetime||0)+10,updatedAt:FieldValue.serverTimestamp()});
-    }else update.rewarded=rewarded;
-    tx.set(checkRef,update,{merge:true});
-    response={qualifiedSeconds:qualified,rewarded,justRewarded,dayKey};
-  });
-  return response;
-});
-
-```
-
-
-## functions/package.json
-
-```json
-{
-  "name": "code-typing-backend",
-  "private": true,
-  "main": "index.js",
-  "engines": {
-    "node": "20"
-  },
-  "dependencies": {
-    "firebase-admin": "^13.0.0",
-    "firebase-functions": "^6.0.0"
-  }
-}
-```
-
-
-## firebase.json
-
-```json
-{
-  "functions": {
-    "source": "functions",
-    "runtime": "nodejs20"
-  }
-}
 ```

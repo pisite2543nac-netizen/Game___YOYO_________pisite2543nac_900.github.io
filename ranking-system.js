@@ -1,25 +1,16 @@
 export const RANKING_CONFIG = {
   seasonDays: null,
-  automaticReset: false,
-
   weights: {
-    diligence: 0.35,
-    accuracy: 0.30,
-    speed: 0.20,
-    consistency: 0.15
+    speed: 0.40,
+    accuracy: 0.40,
+    completionTime: 0.20
   },
-
-  // WPM เทียบกับช่วงคะแนนความเร็ว 0-100
-  speedReferenceWpm: 80,
-
-  tiers: [
-    {id:"bronze", name:"Bronze", icon:"🥉", min:0},
-    {id:"silver", name:"Silver", icon:"🥈", min:35},
-    {id:"gold", name:"Gold", icon:"🥇", min:55},
-    {id:"platinum", name:"Platinum", icon:"💠", min:70},
-    {id:"diamond", name:"Diamond", icon:"💎", min:82},
-    {id:"master", name:"Master", icon:"👑", min:92}
-  ]
+  targets: {
+    // WPM ตั้ง 80 เป็นคะแนนความเร็วเต็ม 100
+    targetWpm: 80,
+    // เวลามาตรฐานสำหรับ normalization; ยิ่งต่ำยิ่งได้คะแนนมาก
+    referenceSeconds: 180
+  }
 };
 
 export function seasonIdFromDate(date = new Date()) {
@@ -33,71 +24,76 @@ export function seasonRange(date = new Date()) {
   };
 }
 
-export function calculateRankMetrics(attempts, activeDayCount = 0) {
-  const completed = attempts.filter(a => a.status === "completed");
-  const total = completed.length;
+export function calculateRankMetrics(attempts=[]){
+  const completed=(attempts||[]).filter(a=>{
+    const status=String(a.status||"").toLowerCase();
+    return status==="completed"||status==="complete"||status==="passed"||status==="success";
+  });
 
-  const avgAccuracy = total
-    ? completed.reduce((s,a)=>s + Number(a.accuracy || 0), 0) / total
-    : 0;
-
-  const avgWpm = total
-    ? completed.reduce((s,a)=>s + Number(a.wpm || 0), 0) / total
-    : 0;
-
-  // ความขยัน: จำนวนด่าน + จำนวนวันที่กลับมาใช้งาน
-  const attemptFactor = Math.min(100, total * 2.5);
-  const dayFactor = Math.min(100, activeDayCount * 4);
-  const diligence = attemptFactor * 0.65 + dayFactor * 0.35;
-
-  // ความเร็ว: ไม่ให้ความเร็วสูงอย่างเดียวชนะ Accuracy
-  const speed = Math.min(100, (avgWpm / RANKING_CONFIG.speedReferenceWpm) * 100);
-
-  // ความสม่ำเสมอ: Accuracy กระจายน้อย + มีหลายรอบ
-  let consistency = 0;
-  if (total) {
-    const mean = avgAccuracy;
-    const variance = completed.reduce((s,a)=>{
-      const d = Number(a.accuracy || 0) - mean;
-      return s + d*d;
-    },0) / total;
-    const std = Math.sqrt(variance);
-    const stability = Math.max(0, 100 - std * 2);
-    const volume = Math.min(100, total * 4);
-    consistency = stability * 0.7 + volume * 0.3;
+  if(!completed.length){
+    return {
+      rating:0,
+      tierId:"bronze",
+      tierName:"Bronze",
+      speed:0,
+      accuracy:0,
+      completionTime:0,
+      avgWpm:0,
+      avgAccuracy:0,
+      avgSeconds:0,
+      bestWpm:0,
+      bestAccuracy:0,
+      bestSeconds:0,
+      completedAttempts:0
+    };
   }
 
-  const accuracy = Math.max(0, Math.min(100, avgAccuracy));
+  const wpms=completed.map(a=>Number(a.wpm||0)).filter(Number.isFinite);
+  const accuracies=completed.map(a=>Number(a.accuracy||0)).filter(Number.isFinite);
+  const seconds=completed.map(a=>{
+    const raw=Number(a.elapsedSeconds ?? a.elapsed ?? a.timeSeconds ?? a.durationSeconds ?? 0);
+    return Number.isFinite(raw)&&raw>0?raw:null;
+  }).filter(v=>v!==null);
 
-  const rating = Math.round(
-    diligence * RANKING_CONFIG.weights.diligence +
-    accuracy * RANKING_CONFIG.weights.accuracy +
-    speed * RANKING_CONFIG.weights.speed +
-    consistency * RANKING_CONFIG.weights.consistency
+  const avg=a=>a.length?a.reduce((x,y)=>x+y,0)/a.length:0;
+  const avgWpm=avg(wpms);
+  const avgAccuracy=avg(accuracies);
+  const avgSeconds=avg(seconds);
+
+  // 40 คะแนนจากความเร็ว: 80 WPM = เต็ม 100 ใน component นี้
+  const speed=Math.max(0,Math.min(100,(avgWpm/RANKING_CONFIG.targets.targetWpm)*100));
+
+  // 40 คะแนนจาก Accuracy โดยตรง
+  const accuracy=Math.max(0,Math.min(100,avgAccuracy));
+
+  // 20 คะแนนจากเวลา: ใช้ inverse ratio ยิ่งเร็วคะแนนยิ่งสูง
+  // 90 sec = 100, 180 sec = 50, 360 sec = 25 โดยไม่ให้เกิน 100
+  const completionTime=avgSeconds>0
+    ?Math.max(0,Math.min(100,(90/avgSeconds)*100))
+    :0;
+
+  const rating=Math.round(
+    speed*RANKING_CONFIG.weights.speed +
+    accuracy*RANKING_CONFIG.weights.accuracy +
+    completionTime*RANKING_CONFIG.weights.completionTime
   );
 
-  const tiers = [...RANKING_CONFIG.tiers].sort((a,b)=>b.min-a.min);
-  const tier = tiers.find(t => rating >= t.min) || RANKING_CONFIG.tiers[0];
-
+  const tier=rankTierFromRating(rating);
   return {
     rating,
-    tierId: tier.id,
-    tierName: tier.name,
-    tierIcon: tier.icon,
-    diligence: Math.round(diligence),
-    accuracy: Math.round(accuracy),
-    speed: Math.round(speed),
-    consistency: Math.round(consistency),
-    avgWpm: Math.round(avgWpm * 10) / 10,
-    avgAccuracy: Math.round(avgAccuracy * 10) / 10,
-    completedAttempts: total,
-    activeDayCount
+    tierId:tier.id,
+    tierName:tier.name,
+    speed:Math.round(speed),
+    accuracy:Math.round(accuracy),
+    completionTime:Math.round(completionTime),
+    avgWpm:Math.round(avgWpm*10)/10,
+    avgAccuracy:Math.round(avgAccuracy*100)/100,
+    avgSeconds:Math.round(avgSeconds*10)/10,
+    bestWpm:wpms.length?Math.max(...wpms):0,
+    bestAccuracy:accuracies.length?Math.max(...accuracies):0,
+    bestSeconds:seconds.length?Math.min(...seconds):0,
+    completedAttempts:completed.length
   };
-}
-
-
-export function rankingClassKey(educationLevel,classroom){
-  return `${String(educationLevel||"").trim()}${String(classroom||"").trim()}`;
 }
 
 export function rankProfiles(profiles,limit=10){

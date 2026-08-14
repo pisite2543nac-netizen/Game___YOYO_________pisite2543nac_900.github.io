@@ -5,10 +5,10 @@ import {
   writeBatch, serverTimestamp, onSnapshot, Timestamp, query, orderBy, limit
 } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
 import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-functions.js";
-import { firebaseConfig, ADMIN_USERNAME, ADMIN_EMAIL, ADMIN_UID } from "./firebase-config.js?v=4.9.3";
-import { DEFAULT_MODES, DEFAULT_LEVELS } from "./default-data.js?v=4.9.3";
-import { seasonIdFromDate, seasonRange, calculateRankMetrics, rankingClassKey } from "./ranking-system.js?v=4.9.3";
-import { DEFAULT_TEACHER_QUESTS, clampQuestReward, questDifficultyName, questObjectiveLabel, defaultMinRankForDifficulty, rewardRange } from "./quest-system.js?v=4.9.3";
+import { firebaseConfig, ADMIN_USERNAME, ADMIN_EMAIL, ADMIN_UID } from "./firebase-config.js?v=4.9.4";
+import { DEFAULT_MODES, DEFAULT_LEVELS } from "./default-data.js?v=4.9.4";
+import { seasonIdFromDate, seasonRange, calculateRankMetrics, rankingClassKey } from "./ranking-system.js?v=4.9.4";
+import { DEFAULT_TEACHER_QUESTS, clampQuestReward, questDifficultyName, questObjectiveLabel, defaultMinRankForDifficulty, rewardRange } from "./quest-system.js?v=4.9.4";
 
 const app=initializeApp(firebaseConfig),auth=getAuth(app),db=getFirestore(app),cloudFunctions=getFunctions(app,"asia-southeast1"),$=id=>document.getElementById(id);
 const adminResetStudentPassword=httpsCallable(cloudFunctions,"adminResetStudentPassword");
@@ -287,7 +287,7 @@ function buildAdminRankingRows(){
   const rows=cache.users.map(u=>{
     const attempts=seasonAttemptsForUser(u.id);
     const days=new Set(attempts.map(a=>a.createdAt?.toDate?.()?.toISOString().slice(0,10)).filter(Boolean)).size;
-    const m=calculateRankMetrics(attempts,days);
+    const m=calculateRankMetrics(attempts);
     return {user:u,classKey:classKeyForUser(u),departmentKey:departmentKeyForUser(u),majorKey:majorKeyForUser(u),...m};
   }).sort((a,b)=>b.rating-a.rating||compareStudentId(a.user,b.user));
   rows.forEach((r,i)=>r.globalPosition=i+1);
@@ -502,8 +502,8 @@ function renderRanking(){
     <td>${esc(r.user.fullName)}<br><small>${esc(r.user.studentId)}</small></td>
     <td><small>${esc(r.departmentKey)}<br>${esc(r.majorKey)}<br>${esc(r.classKey)}</small></td>
     <td>${adminRankShieldHTML(r)} <strong>${esc(r.tierName)}</strong></td>
-    <td><strong>${r.rating}</strong></td><td>${r.diligence}</td><td>${r.accuracy}</td><td>${r.speed}</td><td>${r.consistency}</td><td>${r.avgWpm}</td>
-  </tr>`).join("")||`<tr><td colspan="13" class="empty">ยังไม่มีข้อมูล Ranking</td></tr>`;
+    <td><strong>${r.rating}</strong></td><td>${r.speed}</td><td>${r.accuracy}</td><td>${r.completionTime}</td><td>${r.avgWpm}</td><td>${r.avgAccuracy}</td><td>${r.avgSeconds?`${r.avgSeconds}s`:"-"}</td>
+  </tr>`).join("")||`<tr><td colspan="15" class="empty">ยังไม่มีข้อมูล Ranking</td></tr>`;
 }
 
 async function persistRanking(){

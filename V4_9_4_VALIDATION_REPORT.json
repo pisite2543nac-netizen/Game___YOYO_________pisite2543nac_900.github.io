@@ -1,0 +1,15 @@
+{
+  "syntax_ranking-system.js": true,
+  "syntax_app.js": true,
+  "syntax_admin.js": true,
+  "syntax_zone.js": true,
+  "weight_speed_40": true,
+  "weight_accuracy_40": true,
+  "weight_time_20": true,
+  "old_rank_metrics_removed": true,
+  "typing_stats_kept": true,
+  "gm_no_own_shield": true,
+  "gm_no_card_shield": true,
+  "admin_new_metrics": true,
+  "all_passed": true
+}

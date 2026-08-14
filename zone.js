@@ -5,13 +5,13 @@ import {
   serverTimestamp, query, orderBy, limit, Timestamp, runTransaction
 } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
 import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-functions.js";
-import { firebaseConfig, ADMIN_UID } from "./firebase-config.js?v=4.9.3";
-import { REWARD_ITEMS, RARITY_META, INVENTORY_CAPACITY, SHOP_BUYBACK_RATE } from "./reward-data.js?v=4.9.3";
-import { DEFAULT_CHARACTER } from "./character-system.js?v=4.9.3";
+import { firebaseConfig, ADMIN_UID } from "./firebase-config.js?v=4.9.4";
+import { REWARD_ITEMS, RARITY_META, INVENTORY_CAPACITY, SHOP_BUYBACK_RATE } from "./reward-data.js?v=4.9.4";
+import { DEFAULT_CHARACTER } from "./character-system.js?v=4.9.4";
 import {
   QUEST_CONFIG, DEFAULT_TEACHER_QUESTS, localDayKey, activeQuestLimit,
   canAccessQuest, clampQuestReward, questDifficultyName, questObjectiveLabel
-} from "./quest-system.js?v=4.9.3";
+} from "./quest-system.js?v=4.9.4";
 
 const firebaseApp=initializeApp(firebaseConfig);
 const auth=getAuth(firebaseApp);
@@ -121,7 +121,7 @@ function listenModeration(){
 }
 
 async function loadProfile(){
-  if(isGM()){profile={uid,studentId:"GM",fullName:"GM",rank:GM_RANK,tokenBalance:0,inventory:[],character:{gender:"male",equipped:{}},zone:{}};me.x=450;return true}
+  if(isGM()){profile={uid,studentId:"GM",fullName:"GM",rank:null,tokenBalance:0,inventory:[],character:{gender:"male",equipped:{}},zone:{}};me.x=450;return true}
   try{
     const snap=await getDoc(doc(db,"users",uid));if(!snap.exists()){showGate("ไม่พบ User","กรุณาลงทะเบียนใหม่");return false}
     profile={uid,...snap.data()};
@@ -136,7 +136,7 @@ async function syncPublicProfile(){
     const gm=isGM();
     await setDoc(doc(db,"public_profiles",uid),{
       uid,studentId:gm?"GM":profile.studentId,fullName:gm?"GM":profile.fullName,isAdmin:gm,role:gm?"GM":"USER",
-      rank:gm?GM_RANK:(profile.rank||null),
+      rank:gm?null:(profile.rank||null),
       character:gm?{gender:"male",equipped:{}}:{gender:profile.character?.gender||"male",equipped:equipped(profile.character)},
       updatedAt:serverTimestamp()
     },{merge:true});
@@ -145,7 +145,7 @@ async function syncPublicProfile(){
 async function publishPresence(){
   try{
     await setDoc(doc(db,"presence",uid),{
-      uid,studentId:isGM()?"GM":profile.studentId,isAdmin:isGM(),rank:isGM()?GM_RANK:(profile.rank||null),
+      uid,studentId:isGM()?"GM":profile.studentId,isAdmin:isGM(),rank:isGM()?null:(profile.rank||null),
       area:"zone",online:true,lastSeenAt:serverTimestamp()
     },{merge:true});
   }catch(error){console.warn("presence",error)}
@@ -156,7 +156,7 @@ async function publishPosition(force=false){
   try{
     await setDoc(doc(db,"zone_positions",uid),{
       uid,studentId:isGM()?"GM":profile.studentId,isAdmin:isGM(),role:isGM()?"GM":"USER",
-      rank:isGM()?GM_RANK:(profile.rank||null),
+      rank:isGM()?null:(profile.rank||null),
       character:isGM()?{gender:"male",equipped:{}}:{gender:profile.character?.gender||"male",equipped:equipped(profile.character)},
       zoneId:ZONE_ID,x:Math.round(me.x*10)/10,y:WALK_Y,direction:me.direction,moving:me.moving,online:true,updatedAt:serverTimestamp()
     },{merge:true});
@@ -289,7 +289,7 @@ async function acceptQuest(id){
 function startQuest(id){
   const q=teacherQuests.find(x=>x.id===id)||DEFAULT_TEACHER_QUESTS.find(x=>x.id===id);if(!q)return;
   if(isTouchOnly()){alert("รับภารกิจแล้ว กรุณาเปิดบัญชีนี้บนคอมพิวเตอร์เพื่อทำภารกิจ");return}
-  location.href=`./index.html?quest=${encodeURIComponent(id)}&v=4.9.3`;
+  location.href=`./index.html?quest=${encodeURIComponent(id)}&v=4.9.4`;
 }
 $("openWizardQuests").onclick=async()=>{await loadQuestProgress();renderQuestModal();$("zoneQuestModal").classList.remove("hidden")};
 $("closeWizardQuests").onclick=()=>$("zoneQuestModal").classList.add("hidden");
@@ -484,7 +484,7 @@ function drawRankShield(c,x,y,rank){const r=rankMeta(rank);c.save();c.translate(
 function drawName(c,p,gm){
   const label=gm?"GM":String(p.studentId||"USER");c.font="800 14px system-ui";const w=Math.max(gm?76:105,c.measureText(label).width+45);
   c.fillStyle=gm?"rgba(91,22,49,.95)":"rgba(9,28,39,.9)";rr(c,-w/2,-143,w,29,8);c.fill();c.strokeStyle=gm?"#ebc34e":"rgba(255,255,255,.1)";c.lineWidth=2;c.stroke();
-  c.fillStyle="#fff";c.textAlign="center";c.fillText(label,0,-124);drawRankShield(c,-w/2+16,-130,gm?GM_RANK:p.rank);drawBubble(c,p);
+  c.fillStyle="#fff";c.textAlign="center";c.fillText(label,0,-124);if(!gm)drawRankShield(c,-w/2+16,-130,p.rank);drawBubble(c,p);
 }
 function drawBubble(c,p){
   const m=messagesByUid.get(p.uid);if(!m?.text)return;const dt=m.createdAt?.toDate?.();if(dt&&Date.now()-dt.getTime()>BUBBLE_MS)return;
@@ -518,7 +518,7 @@ function drawFrame(now){
   ctx.setTransform(1,0,0,1,0,0);ctx.fillStyle="#102c3d";ctx.fillRect(0,0,canvas.width,canvas.height);
   ctx.setTransform(dpr*zoom,0,0,dpr*zoom,-cameraX*dpr*zoom,0);drawWorld(now);
   const list=[...players.values()].map(p=>({...p,x:p.currentX,y:WALK_Y}));
-  list.push({uid,studentId:isGM()?"GM":profile.studentId,isAdmin:isGM(),rank:isGM()?GM_RANK:profile.rank,character:isGM()?{gender:"male",equipped:{}}:{gender:profile.character?.gender,equipped:equipped(profile.character)},x:me.x,y:WALK_Y,direction:me.direction,moving:me.moving});
+  list.push({uid,studentId:isGM()?"GM":profile.studentId,isAdmin:isGM(),rank:isGM()?null:profile.rank,character:isGM()?{gender:"male",equipped:{}}:{gender:profile.character?.gender,equipped:equipped(profile.character)},x:me.x,y:WALK_Y,direction:me.direction,moving:me.moving});
   for(const p of list)drawCharacter(ctx,p,p.x,p.y,now);
 }
 function loop(now){const dt=Math.min(.04,(now-lastFrame)/1000);lastFrame=now;updateMovement(dt);smoothRemote(dt);updateCamera(dt);drawFrame(now);requestAnimationFrame(loop)}
@@ -530,8 +530,8 @@ canvas.onclick=e=>{
   let selected=null,best=999;for(const p of players.values()){const d=Math.abs(p.currentX-pt.x);if(d<65&&d<best){selected=p;best=d}}if(selected)openPlayerCard(selected);
 };
 function openPlayerCard(p){
-  const gm=isGMPlayer(p);$("zonePlayerCardId").textContent=gm?"GM":String(p.studentId||"USER");$("zonePlayerCardShield").innerHTML=rankShieldHTML(gm?GM_RANK:p.rank);
-  $("zonePlayerCardRank").textContent=gm?"GAME MASTER":`${p.rank?.tierName||"Bronze"} · ${Number(p.rank?.rating||0)} Rating`;
+  const gm=isGMPlayer(p);$("zonePlayerCardId").textContent=gm?"GM":String(p.studentId||"USER");$("zonePlayerCardShield").innerHTML=gm?"":rankShieldHTML(p.rank);
+  $("zonePlayerCardRank").textContent=gm?"ADMIN · GM":`${p.rank?.tierName||"Bronze"} · ${Number(p.rank?.rating||0)} Rating`;
   $("zonePlayerCardItemTitle").textContent=gm?"GM EXCLUSIVE":"ไอเท็มที่กำลังสวม";
   const list=gm?GM_ITEMS:equippedItems(p.character).map(x=>x.item);
   $("zonePlayerCardItems").innerHTML=list.length?list.map(i=>`<div><span>${i.icon||"✨"}</span><small>${esc(i.name||"Item")}</small></div>`).join(""):`<div class="empty">ยังไม่ได้สวมไอเท็ม</div>`;
@@ -560,7 +560,7 @@ onAuthStateChanged(auth,async user=>{
   if(!user){showGate("กรุณา Login ก่อน","2D Zone ใช้บัญชีที่ลงทะเบียนแล้ว");return}
   uid=user.uid;if(!(await loadProfile()))return;if(!(await checkModeration()))return;
   hideGate();$("zoneMyStudentId").textContent=isGM()?"GM":profile.studentId;$("zoneChatIdentity").textContent=isGM()?"GM":profile.studentId;
-  $("zoneMyShield").innerHTML=rankShieldHTML(isGM()?GM_RANK:profile.rank);$("zoneTokenBalance").textContent=isGM()?"∞":Number(profile.tokenBalance||0).toLocaleString();
+  $("zoneMyShield").innerHTML=isGM()?"":rankShieldHTML(profile.rank);$("zoneTokenBalance").textContent=isGM()?"∞":Number(profile.tokenBalance||0).toLocaleString();
   if(isGM()){$("openAdminPanel").classList.remove("hidden");$("leaveZoneButton").href="./admin.html";$("zoneChatInput").placeholder="GM พิมพ์ข้อความหรือประกาศ..."}
   resizeCanvas();updateClock();clockTimer=setInterval(updateClock,1000);startZoneDailyCheckin();await loadQuestProgress();
   listenModeration();listenPositions();listenMessages();listenTeacherQuests();listenRankingNotice();expiryTimer=setInterval(refreshMessages,60000);

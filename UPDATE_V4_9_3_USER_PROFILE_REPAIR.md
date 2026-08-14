@@ -1,4 +1,4 @@
-# V4.9.3 — User Profile Repair
+# V4.9.4 — User Profile Repair
 
 ## เป้าหมาย
 แก้ปัญหา User สมัคร/Login ไม่ได้จากข้อมูลแผนก/สาขาวิชาไม่ครบ และให้ User แก้ข้อมูลวิชาการของตัวเองได้หลัง Login
@@ -40,7 +40,7 @@
 จะใช้ข้อมูลชุดใหม่ทันที
 
 ## การ Deploy
-อัป V4.9.3 ทั้งชุดทับ GitHub Pages root
+อัป V4.9.4 ทั้งชุดทับ GitHub Pages root
 แล้ว Ctrl+F5
 
-Firestore Rules ไม่ได้เพิ่ม collection ใหม่ แต่ควรใช้ไฟล์จาก V4.9.3 ให้ตรงเวอร์ชัน
+Firestore Rules ไม่ได้เพิ่ม collection ใหม่ แต่ควรใช้ไฟล์จาก V4.9.4 ให้ตรงเวอร์ชัน
