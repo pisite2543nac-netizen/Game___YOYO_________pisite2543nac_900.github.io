@@ -76,6 +76,12 @@ service cloud.firestore {
       allow read, write: if isAdmin();
     }
 
+
+    match /users/{uid}/daily_checkins/{dayId} {
+      allow read: if signedIn() && (request.auth.uid == uid || isAdmin());
+      allow write: if false;
+    }
+
     match /public_profiles/{uid} {
       allow read: if signedIn();
       allow create, update, delete: if signedIn() && request.auth.uid == uid;

@@ -4,12 +4,14 @@ import {
   getFirestore, collection, doc, getDocs, setDoc, deleteDoc, updateDoc,
   writeBatch, serverTimestamp, onSnapshot, Timestamp, query, orderBy, limit
 } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
-import { firebaseConfig, ADMIN_USERNAME, ADMIN_EMAIL, ADMIN_UID } from "./firebase-config.js?v=4.7.0";
-import { DEFAULT_MODES, DEFAULT_LEVELS } from "./default-data.js?v=4.7.0";
-import { seasonIdFromDate, seasonRange, calculateRankMetrics, rankingClassKey } from "./ranking-system.js?v=4.7.0";
-import { DEFAULT_TEACHER_QUESTS, clampQuestReward, questDifficultyName, questObjectiveLabel, defaultMinRankForDifficulty, rewardRange } from "./quest-system.js?v=4.7.0";
+import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-functions.js";
+import { firebaseConfig, ADMIN_USERNAME, ADMIN_EMAIL, ADMIN_UID } from "./firebase-config.js?v=4.9.0";
+import { DEFAULT_MODES, DEFAULT_LEVELS } from "./default-data.js?v=4.9.0";
+import { seasonIdFromDate, seasonRange, calculateRankMetrics, rankingClassKey } from "./ranking-system.js?v=4.9.0";
+import { DEFAULT_TEACHER_QUESTS, clampQuestReward, questDifficultyName, questObjectiveLabel, defaultMinRankForDifficulty, rewardRange } from "./quest-system.js?v=4.9.0";
 
-const app=initializeApp(firebaseConfig),auth=getAuth(app),db=getFirestore(app),$=id=>document.getElementById(id);
+const app=initializeApp(firebaseConfig),auth=getAuth(app),db=getFirestore(app),cloudFunctions=getFunctions(app,"asia-southeast1"),$=id=>document.getElementById(id);
+const adminResetStudentPassword=httpsCallable(cloudFunctions,"adminResetStudentPassword");
 let cache={users:[],attempts:[],levels:[],modes:[],official:[],zonePositions:[],zoneModeration:[],zoneMessages:[],zoneArchive:[],rankingSettings:{},teacherQuests:[]},unsubs=[];
 let knownUserIds=null;
 let selectedAdminClass="";
@@ -19,6 +21,7 @@ let adminDepartmentSearchTerm="";
 let selectedAdminMajor="";
 let adminMajorSearchTerm="";
 let adminRankClock=null;
+let passwordResetTargetUid=null;
 
 const isAdmin=user=>!!user&&user.uid===ADMIN_UID;
 const dateValue=v=>{try{return v?.toDate?.()?.getTime?.()||0}catch{return 0}};
@@ -92,9 +95,29 @@ function compareStudentId(a,b){
 }
 function renderUsers(){
   const users=[...cache.users].sort(compareStudentId);
-  $("usersBody").innerHTML=users.map(x=>`<tr><td>${formatDate(x.createdAt)}</td><td>${esc(x.studentId)}</td><td><strong>${esc(x.fullName)}</strong></td><td>${esc(x.educationLevel||"")}${esc(x.classroom||"")}</td><td>${esc(x.department||"ไม่ระบุแผนก")}</td><td>${esc(x.major||"ไม่ระบุสาขาวิชา")}</td><td><strong>${Number(x.tokenBalance||0).toLocaleString()}</strong></td><td><span class="status status-active">${esc(x.status||"active")}</span></td><td><button class="mini-delete" data-delete-user="${x.id}">ลบข้อมูล</button></td></tr>`).join("")||`<tr><td colspan="9" class="empty">ยังไม่มีสมาชิก</td></tr>`;
+  $("usersBody").innerHTML=users.map(x=>`<tr><td>${formatDate(x.createdAt)}</td><td>${esc(x.studentId)}</td><td><strong>${esc(x.fullName)}</strong></td><td>${esc(x.educationLevel||"")}${esc(x.classroom||"")}</td><td>${esc(x.department||"ไม่ระบุแผนก")}</td><td>${esc(x.major||"ไม่ระบุสาขาวิชา")}</td><td><strong>${Number(x.tokenBalance||0).toLocaleString()}</strong></td><td><span class="status status-active">${esc(x.status||"active")}</span></td><td><button class="btn btn-small secondary" data-reset-password="${x.id}">ตั้งรหัสใหม่</button></td><td><button class="mini-delete" data-delete-user="${x.id}">ลบข้อมูล</button></td></tr>`).join("")||`<tr><td colspan="10" class="empty">ยังไม่มีสมาชิก</td></tr>`;
   document.querySelectorAll("[data-delete-user]").forEach(b=>b.onclick=async()=>{if(confirm("ลบข้อมูลสมาชิกจาก Firestore? หมายเหตุ: บัญชี Authentication ต้องลบใน Firebase Console แยกต่างหาก"))await deleteDoc(doc(db,"users",b.dataset.deleteUser))});
+  document.querySelectorAll("[data-reset-password]").forEach(btn=>btn.onclick=()=>{
+    const user=cache.users.find(x=>x.id===btn.dataset.resetPassword);if(!user)return;
+    passwordResetTargetUid=user.id;
+    $("passwordResetStudent").textContent=user.studentId||"-";$("passwordResetName").textContent=user.fullName||"-";
+    $("adminNewStudentPassword").value="";$("passwordResetModal").classList.remove("hidden");
+  });
 }
+function randomTemporaryPassword(){
+  const chars="ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789";let out="";
+  crypto.getRandomValues(new Uint32Array(10)).forEach(n=>out+=chars[n%chars.length]);return out;
+}
+if($("generateStudentPassword"))$("generateStudentPassword").onclick=()=>{$("adminNewStudentPassword").value=randomTemporaryPassword()};
+if($("closePasswordResetModal"))$("closePasswordResetModal").onclick=()=>$("passwordResetModal").classList.add("hidden");
+if($("confirmStudentPasswordReset"))$("confirmStudentPasswordReset").onclick=async()=>{
+  const password=$("adminNewStudentPassword").value;if(!passwordResetTargetUid||password.length<6){alert("รหัสผ่านต้องอย่างน้อย 6 ตัวอักษร");return}
+  if(!confirm("ยืนยันตั้งรหัสผ่านใหม่ให้นักศึกษารายนี้?"))return;
+  try{
+    await adminResetStudentPassword({targetUid:passwordResetTargetUid,newPassword:password});
+    $("passwordResetModal").classList.add("hidden");showAdminToast("ตั้งรหัสผ่านใหม่สำเร็จ","แจ้งรหัสใหม่ให้นักศึกษาได้เลย");
+  }catch(error){showAdminToast("ตั้งรหัสผ่านไม่สำเร็จ",error.message||String(error),true)}
+};
 function renderLevels(){
   $("levelCards").innerHTML=cache.levels.map(x=>`<article class="level-admin-card"><div><span>LEVEL ${esc(x.levelNo)}</span><h3>${esc(x.title)}</h3><p>${esc(x.language)} · ${esc(x.difficulty)} · ${esc(x.basePoints)} pts</p></div><div class="button-row"><button class="btn ghost btn-small" data-edit-level="${x.id}">แก้ไข</button><button class="btn danger btn-small" data-delete-level="${x.id}">ลบ</button></div></article>`).join("");
   document.querySelectorAll("[data-edit-level]").forEach(b=>b.onclick=()=>{const x=cache.levels.find(l=>l.id===b.dataset.editLevel);if(!x)return;$("editLevelNo").value=x.levelNo;$("editTitle").value=x.title;$("editLanguage").value=x.language;$("editDifficulty").value=x.difficulty;$("editBasePoints").value=x.basePoints;$("editTimeLimit").value=x.timeLimit;$("editMultiplier").value=x.difficultyMultiplier;$("editDescription").value=x.description||"";$("editCode").value=x.code;window.scrollTo({top:$("levelForm").offsetTop-30,behavior:"smooth"})});
@@ -423,7 +446,7 @@ if($("saveRankResetSchedule"))$("saveRankResetSchedule").onclick=async()=>{
 };
 if($("clearRankResetSchedule"))$("clearRankResetSchedule").onclick=async()=>{await setDoc(doc(db,"system_settings","ranking"),{nextResetAt:null,notice:"",updatedAt:serverTimestamp()},{merge:true});showAdminToast("ยกเลิกกำหนดการแล้ว")};
 if($("resetRankingNow"))$("resetRankingNow").onclick=executeRankingResetNow;
-if($("recalculateRanking"))$("recalculateRanking").onclick=async()=>{await persistRanking();showAdminToast("คำนวณ Ranking ใหม่แล้ว","อัปเดตทั้งแรงค์รวมและแรงค์รายห้อง")};
+if($("recalculateRanking"))$("recalculateRanking").onclick=async()=>{await persistRanking();showAdminToast("คำนวณ Ranking ใหม่แล้ว","อัปเดตแรงค์รวม / แผนก / สาขาวิชา / ห้อง")};
 
 if($("exportOfficialCsv"))$("exportOfficialCsv").onclick=()=>{
   const h=["submitted_at","student_id","name","class","department","completed","score","max_score","accuracy","wpm"];

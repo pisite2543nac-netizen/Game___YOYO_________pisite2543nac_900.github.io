@@ -7,18 +7,21 @@ import {
   getFirestore, collection, doc, getDoc, getDocs, setDoc, addDoc, updateDoc, deleteDoc,
   serverTimestamp, query, where, orderBy, limit, onSnapshot, runTransaction
 } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
-import { firebaseConfig } from "./firebase-config.js?v=4.7.0";
-import { LANGUAGES, LESSONS, DIFFICULTIES } from "./lessons.js?v=4.7.0";
-import { REWARD_ITEMS, RARITY_META } from "./reward-data.js?v=4.7.0";
-import { DEFAULT_CHARACTER, DEFAULT_ZONE_STATE } from "./character-system.js?v=4.7.0";
-import { OFFICIAL_STAGES, OFFICIAL_TOTAL_SCORE } from "./official-data.js?v=4.7.0";
-import { RANKING_CONFIG, seasonIdFromDate, seasonRange, calculateRankMetrics, rankingClassKey, rankProfiles } from "./ranking-system.js?v=4.7.0";
-import { TOKEN_REWARD_CONFIG, calculateStageTokenReward, maxTokenForLesson, classKey } from "./economy-system.js?v=4.7.0";
-import { DEFAULT_TEACHER_QUESTS, localDayKey, questObjectiveMet, questObjectiveLabel, clampQuestReward } from "./quest-system.js?v=4.7.0";
+import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-functions.js";
+import { firebaseConfig } from "./firebase-config.js?v=4.9.0";
+import { LANGUAGES, LESSONS, DIFFICULTIES } from "./lessons.js?v=4.9.0";
+import { REWARD_ITEMS, RARITY_META, INVENTORY_CAPACITY, SHOP_BUYBACK_RATE } from "./reward-data.js?v=4.9.0";
+import { DEFAULT_CHARACTER, DEFAULT_ZONE_STATE } from "./character-system.js?v=4.9.0";
+import { OFFICIAL_STAGES, OFFICIAL_TOTAL_SCORE } from "./official-data.js?v=4.9.0";
+import { RANKING_CONFIG, seasonIdFromDate, seasonRange, calculateRankMetrics, rankingClassKey, rankProfiles } from "./ranking-system.js?v=4.9.0";
+import { TOKEN_REWARD_CONFIG, calculateStageTokenReward, maxTokenForLesson, classKey } from "./economy-system.js?v=4.9.0";
+import { DEFAULT_TEACHER_QUESTS, localDayKey, questObjectiveMet, questObjectiveLabel, clampQuestReward } from "./quest-system.js?v=4.9.0";
 
 const firebaseApp = initializeApp(firebaseConfig);
 const auth = getAuth(firebaseApp);
 const db = getFirestore(firebaseApp);
+const cloudFunctions = getFunctions(firebaseApp,"asia-southeast1");
+const recordDailyCheckinHeartbeat = httpsCallable(cloudFunctions,"recordDailyCheckinHeartbeat");
 const $ = id => document.getElementById(id);
 
 const state = {
@@ -35,13 +38,58 @@ const state = {
   pvpRoomListUnsub:null,pvpStakeLocking:false,pvpCurrentShot:-1,pvpShotRecorded:-1,
   pvpAggregate:{typedChars:0,keys:0,mistakes:0,seconds:0},pvpPayoutClaimed:false,pvpWasActive:false,pvpTargetCode:"",pvpTurnSignature:null,pvpRecordedSignature:null,
   pvpCountdownTimer:null,pvpCountdownEndMs:0,rankSettingsUnsub:null,rankResetTimer:null,rankSettings:{},rankResetAppliedVersion:null,
-  activeQuest:null,questLaunchHandled:false
+  activeQuest:null,questLaunchHandled:false,dailyCheckinTimer:null,dailyCheckinState:null
 };
 
 const studentEmail = id => `${String(id).trim()}@student.thc-nr.local`;
 const esc = v => String(v ?? "").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;");
 const fmtDate = v => { try { return v?.toDate?.().toLocaleString("th-TH") || "-"; } catch { return "-"; } };
 const fmtTime = s => { s=Math.max(0,s); return `${Math.floor(s/60).toString().padStart(2,"0")}:${Math.floor(s%60).toString().padStart(2,"0")}`; };
+
+async function requestLoginFullscreen(){
+  document.body.classList.add("immersive-app");
+  try{
+    if(!document.fullscreenElement && document.documentElement.requestFullscreen){
+      await document.documentElement.requestFullscreen({navigationUI:"hide"});
+    }
+  }catch(error){
+    console.warn("Fullscreen ต้องอาศัย Browser/User gesture:",error);
+  }
+}
+function appLooksFullscreen(){
+  if(document.fullscreenElement)return true;
+  if(window.matchMedia?.("(display-mode: fullscreen)")?.matches)return true;
+  const h=window.visualViewport?.height||window.innerHeight;
+  const sh=window.screen?.height||h;
+  return h/sh>=0.90;
+}
+function renderDailyCheckinStatus(data={}){
+  state.dailyCheckinState=data;
+  const seconds=Math.max(0,Number(data.qualifiedSeconds||0));
+  const pct=Math.min(100,seconds/3600*100);
+  $("dailyCheckinProgress")&&($("dailyCheckinProgress").style.width=`${pct}%`);
+  if($("dailyCheckinStatus")){
+    if(data.rewarded)$("dailyCheckinStatus").textContent="เช็กอินวันนี้สำเร็จแล้ว · ได้รับ 10 Token";
+    else $("dailyCheckinStatus").textContent=`สะสม ${Math.floor(seconds/60)} / 60 นาที · ต้องเปิดหน้าเว็บและเต็มหน้าจอ`;
+  }
+}
+async function dailyCheckinPulse(){
+  if(!state.uid||document.visibilityState!=="visible"||!appLooksFullscreen())return;
+  try{
+    const result=await recordDailyCheckinHeartbeat({visible:true,fullscreen:true});
+    renderDailyCheckinStatus(result.data||{});
+    if(result.data?.justRewarded){
+      await ensureProfileDefaults();
+      $("userTokens")&&($("userTokens").textContent=Number(state.player?.tokenBalance||0).toLocaleString());
+      alert("เช็กอินประจำวันสำเร็จ! ได้รับ 10 Token");
+    }
+  }catch(error){console.warn("daily checkin:",error)}
+}
+function startDailyCheckin(){
+  clearInterval(state.dailyCheckinTimer);
+  dailyCheckinPulse();
+  state.dailyCheckinTimer=setInterval(dailyCheckinPulse,60000);
+}
 
 function showScreen(id){
   ["authScreen","userPortal","gameScreen","resultScreen","pvpGameScreen"].forEach(x => $(x)?.classList.toggle("hidden", x !== id));
@@ -71,6 +119,7 @@ async function ensureProfileDefaults(){
     patch.tokenLifetime = typeof d.pointsLifetime === "number" ? d.pointsLifetime : 0;
   }
   if(!Array.isArray(d.inventory)) patch.inventory = [];
+  if(typeof d.inventoryCapacity!=="number") patch.inventoryCapacity=INVENTORY_CAPACITY;
   if(!d.progress) patch.progress = {html:{maxUnlockedStage:1},python:{maxUnlockedStage:1}};
   else {
     patch.progress = {
@@ -116,12 +165,13 @@ $("registerForm").addEventListener("submit",async e=>{
     const sid=$("studentId").value.trim();
     const cred=await createUserWithEmailAndPassword(auth,studentEmail(sid),$("password").value);
     state.uid=cred.user.uid;
+    await requestLoginFullscreen();
     const p={
       uid:state.uid,studentId:sid,fullName:$("fullName").value.trim(),
       educationLevel:$("educationLevel").value,classroom:$("classroom").value,
       classKey:classKey($("educationLevel").value,$("classroom").value),
       department:$("department").value,major:$("major").value,role:"student",status:"active",
-      tokenBalance:0,tokenLifetime:0,inventory:[],
+      tokenBalance:0,tokenLifetime:0,inventory:[],inventoryCapacity:INVENTORY_CAPACITY,
       officialProgress:{},officialSubmitted:false,
       rank:{seasonId:null,rating:0,tierId:"bronze",tierName:"Bronze"},
       progress:{html:{maxUnlockedStage:1},python:{maxUnlockedStage:1}},
@@ -141,6 +191,7 @@ $("loginForm").addEventListener("submit",async e=>{
   try{
     const cred=await signInWithEmailAndPassword(auth,studentEmail($("loginStudentId").value.trim()),$("loginPassword").value);
     state.uid=cred.user.uid;
+    await requestLoginFullscreen();
     await routeAuthenticatedStudent();
   }catch{
     $("loginMessage").textContent="เลขนักศึกษาหรือรหัสผ่านไม่ถูกต้อง";
@@ -165,7 +216,7 @@ async function routeAuthenticatedStudent(){
     }catch(error){
       console.warn("mobile route sync skipped:", error);
     }
-    location.replace("./zone.html?v=4.7.0");
+    location.replace("./zone.html?v=4.9.0");
     return;
   }
 
@@ -175,6 +226,7 @@ async function routeAuthenticatedStudent(){
 async function enterPortal(){
   await ensureProfileDefaults();
   showScreen("userPortal");
+  startDailyCheckin();
   $("portalWelcome").textContent=`${state.player.fullName} · ${state.player.studentId} · ${state.player.educationLevel}${state.player.classroom} · ${state.player.department||"ไม่ระบุแผนก"} · ${state.player.major||"ไม่ระบุสาขาวิชา"}`;
   $("userTokens").textContent=Number(state.player.tokenBalance||0).toLocaleString();
   renderUserRank();
@@ -403,7 +455,7 @@ async function maybeLaunchQuestFromUrl(){
   if(!id||state.questLaunchHandled||!state.uid||!state.player)return false;
   state.questLaunchHandled=true;
   if(isMobileOrTabletDevice()){
-    location.replace("./zone.html?v=4.7.0");
+    location.replace("./zone.html?v=4.9.0");
     return true;
   }
   const quest=await resolveTeacherQuest(id);
@@ -718,7 +770,7 @@ $("nextLevelButton").onclick=async()=>{
   state.lesson=next;state.difficulty=DIFFICULTIES.find(x=>x.id===next.difficulty);
   prepareClassic();showScreen("gameScreen");await requestRealFullscreen();setTimeout(()=>$("typingInput").focus({preventScroll:true}),100);
 };
-$("questZoneButton").onclick=()=>{location.href="./zone.html?v=4.7.0"};
+$("questZoneButton").onclick=()=>{location.href="./zone.html?v=4.9.0"};
 $("portalButton").onclick=async()=>{state.activeQuest=null;history.replaceState(null,"",location.pathname);await ensureProfileDefaults();await enterPortal()};
 
 function renderRewardShop(){
@@ -758,7 +810,8 @@ async function redeemReward(id){
       const balance=Number(d.tokenBalance||0);
       const inv=Array.isArray(d.inventory)?d.inventory:[];
       if(inv.includes(id))throw new Error("มีไอเทมแล้ว");
-      if(balance<item.cost)throw new Error("แต้มไม่พอ");
+      if(inv.length>=INVENTORY_CAPACITY)throw new Error(`กระเป๋าเต็ม ${INVENTORY_CAPACITY}/${INVENTORY_CAPACITY}`);
+      if(balance<item.cost)throw new Error("Token ไม่พอ");
       tx.update(ref,{tokenBalance:balance-item.cost,inventory:[...inv,id],updatedAt:serverTimestamp()});
     });
     await ensureProfileDefaults();
@@ -827,7 +880,7 @@ function renderUserRank(){
   const rating=Number(rank.rating||0);
   $("userRank").innerHTML=`${rankShieldHTML(rank,"small")} <span>${tierName} ${rating}</span>`;
   const range=seasonRange(new Date());
-  $("rankSeasonLabel").textContent=`${seasonIdFromDate(new Date())} · ${range.end.toLocaleDateString("th-TH")}`;
+  $("rankSeasonLabel").textContent="รีแรงค์โดย Admin เท่านั้น";
 }
 
 function officialStageSource(item){
@@ -985,7 +1038,7 @@ async function saveCharacterGender(gender){
 
   // มือถือ/แท็บเล็ตใช้เฉพาะ 2D Zone หลังเลือกตัวละครเสร็จ
   if(isMobileOrTabletDevice()){
-    location.replace("./zone.html?v=4.7.0");
+    location.replace("./zone.html?v=4.9.0");
   }
 }
 
@@ -1572,7 +1625,7 @@ updateDeviceUX();
 
 onAuthStateChanged(auth,async user=>{
   if(!user){state.uid=null;state.player=null;showScreen("authScreen");return;}
-  if(user.email==="pisit_2000@thc-nr.local"){location.replace("./admin.html?v=4.7.0");return;}
+  if(user.email==="pisit_2000@thc-nr.local"){location.replace("./admin.html?v=4.9.0");return;}
   state.uid=user.uid;
   try{
     await routeAuthenticatedStudent();

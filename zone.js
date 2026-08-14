@@ -4,17 +4,20 @@ import {
   getFirestore, doc, getDoc, setDoc, updateDoc, collection, onSnapshot,
   serverTimestamp, query, orderBy, limit, Timestamp, runTransaction
 } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
-import { firebaseConfig, ADMIN_UID } from "./firebase-config.js?v=4.7.0";
-import { REWARD_ITEMS, RARITY_META } from "./reward-data.js?v=4.7.0";
-import { DEFAULT_CHARACTER } from "./character-system.js?v=4.7.0";
+import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-functions.js";
+import { firebaseConfig, ADMIN_UID } from "./firebase-config.js?v=4.9.0";
+import { REWARD_ITEMS, RARITY_META, INVENTORY_CAPACITY, SHOP_BUYBACK_RATE } from "./reward-data.js?v=4.9.0";
+import { DEFAULT_CHARACTER } from "./character-system.js?v=4.9.0";
 import {
   QUEST_CONFIG, DEFAULT_TEACHER_QUESTS, localDayKey, activeQuestLimit,
   canAccessQuest, clampQuestReward, questDifficultyName, questObjectiveLabel
-} from "./quest-system.js?v=4.7.0";
+} from "./quest-system.js?v=4.9.0";
 
 const firebaseApp=initializeApp(firebaseConfig);
 const auth=getAuth(firebaseApp);
 const db=getFirestore(firebaseApp);
+const cloudFunctions=getFunctions(firebaseApp,"asia-southeast1");
+const recordDailyCheckinHeartbeat=httpsCallable(cloudFunctions,"recordDailyCheckinHeartbeat");
 const $=id=>document.getElementById(id);
 
 const ZONE_ID="thai_social_zone_v4_1";
@@ -41,7 +44,7 @@ let uid=null,profile=null,blocked=true;
 let players=new Map(),messages=[],messagesByUid=new Map();
 let teacherQuests=[...DEFAULT_TEACHER_QUESTS],questProgress={};
 let positionsUnsub=null,messagesUnsub=null,moderationUnsub=null,rankingUnsub=null,questUnsub=null;
-let heartbeat=null,clockTimer=null,expiryTimer=null;
+let heartbeat=null,clockTimer=null,expiryTimer=null,dailyCheckinTimer=null;
 let lastFrame=performance.now(),lastPositionSend=0,lastChatAt=0;
 let cameraX=0,velocityX=0;
 const me={x:450,y:WALK_Y,direction:"right",moving:false};
@@ -53,6 +56,22 @@ const GM_RANK={tierId:"master",tierName:"GAME MASTER",rating:999999};
 const GM_ITEMS=[{icon:"👑",name:"GM Crown"},{icon:"🪄",name:"GM Staff"},{icon:"🛡️",name:"Guardian Aura"}];
 
 const esc=v=>String(v??"").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;");
+function zoneLooksFullscreen(){
+  if(document.fullscreenElement)return true;
+  if(window.matchMedia?.("(display-mode: fullscreen)")?.matches)return true;
+  const h=window.visualViewport?.height||window.innerHeight,sh=window.screen?.height||h;
+  return h/sh>=0.90;
+}
+async function zoneCheckinPulse(){
+  if(!uid||isGM()||document.visibilityState!=="visible"||!zoneLooksFullscreen())return;
+  try{
+    const result=await recordDailyCheckinHeartbeat({visible:true,fullscreen:true});
+    const d=result.data||{},seconds=Number(d.qualifiedSeconds||0);
+    $("zoneCheckinMini").textContent=d.rewarded?"Check-in ✓ +10":"Check-in "+Math.floor(seconds/60)+"/60m";
+    if(d.justRewarded){await refreshProfile();alert("เช็กอินประจำวันสำเร็จ! +10 Token")}
+  }catch(error){console.warn("zone daily checkin",error)}
+}
+function startZoneDailyCheckin(){clearInterval(dailyCheckinTimer);zoneCheckinPulse();dailyCheckinTimer=setInterval(zoneCheckinPulse,60000)}
 function isGM(){return uid===ADMIN_UID}
 function isGMPlayer(p){return p?.uid===ADMIN_UID||p?.isAdmin===true}
 function isTouchOnly(){return window.matchMedia("(pointer: coarse)").matches&&window.innerWidth<=1180}
@@ -270,7 +289,7 @@ async function acceptQuest(id){
 function startQuest(id){
   const q=teacherQuests.find(x=>x.id===id)||DEFAULT_TEACHER_QUESTS.find(x=>x.id===id);if(!q)return;
   if(isTouchOnly()){alert("รับภารกิจแล้ว กรุณาเปิดบัญชีนี้บนคอมพิวเตอร์เพื่อทำภารกิจ");return}
-  location.href=`./index.html?quest=${encodeURIComponent(id)}&v=4.7.0`;
+  location.href=`./index.html?quest=${encodeURIComponent(id)}&v=4.9.0`;
 }
 $("openWizardQuests").onclick=async()=>{await loadQuestProgress();renderQuestModal();$("zoneQuestModal").classList.remove("hidden")};
 $("closeWizardQuests").onclick=()=>$("zoneQuestModal").classList.add("hidden");
@@ -278,6 +297,7 @@ $("closeWizardQuests").onclick=()=>$("zoneQuestModal").classList.add("hidden");
 function renderShop(){
   if(!profile||isGM())return;
   const owned=new Set(profile.inventory||[]),eq=equipped(profile.character),wearing=new Set(Object.values(eq).filter(Boolean)),balance=Number(profile.tokenBalance||0);
+  $("zoneBagCount")&&($("zoneBagCount").textContent=`${owned.size}/${INVENTORY_CAPACITY}`);
   $("zoneTokenBalance").textContent=balance.toLocaleString();$("zoneShopBalance").textContent=balance.toLocaleString();
   const items=[...REWARD_ITEMS].sort((a,b)=>(RARITY_META[a.rarity]?.order||0)-(RARITY_META[b.rarity]?.order||0)||a.cost-b.cost);
   $("zoneShopGrid").innerHTML=items.map(item=>{
@@ -294,7 +314,7 @@ function renderShop(){
 async function refreshProfile(){
   if(isGM())return;
   const snap=await getDoc(doc(db,"users",uid));if(snap.exists())profile={uid,...snap.data()};
-  renderShop();await syncPublicProfile();await publishPosition(true);
+  renderShop();if(!$("zoneBagModal")?.classList.contains("hidden"))renderZoneBag();await syncPublicProfile();await publishPosition(true);
 }
 async function handleShopItem(id){
   if(isGM())return;
@@ -305,7 +325,7 @@ async function handleShopItem(id){
       await runTransaction(db,async tx=>{
         const snap=await tx.get(userRef);if(!snap.exists())throw new Error("ไม่พบ User");
         const d=snap.data(),balance=Number(d.tokenBalance||0),inv=Array.isArray(d.inventory)?d.inventory:[];
-        if(inv.includes(id))return;if(balance<item.cost)throw new Error("Token ไม่พอ");
+        if(inv.includes(id))return;if(inv.length>=INVENTORY_CAPACITY)throw new Error(`กระเป๋าเต็ม ${INVENTORY_CAPACITY}/${INVENTORY_CAPACITY}`);if(balance<item.cost)throw new Error("Token ไม่พอ");
         tx.update(userRef,{tokenBalance:balance-item.cost,inventory:[...inv,id],updatedAt:serverTimestamp()});
       });await refreshProfile();
     }catch(error){alert(error.message)}return;
@@ -314,6 +334,36 @@ async function handleShopItem(id){
   await updateDoc(userRef,{character:{...DEFAULT_CHARACTER,...profile.character,equipped:current},updatedAt:serverTimestamp()});
   await refreshProfile();
 }
+function renderZoneBag(){
+  if(!profile||isGM())return;
+  const inventory=Array.isArray(profile.inventory)?profile.inventory:[],eq=equipped(profile.character),wearing=new Set(Object.values(eq).filter(Boolean));
+  $("zoneBagCapacity").textContent=`${inventory.length} / ${INVENTORY_CAPACITY}`;
+  $("zoneBagCount").textContent=`${inventory.length}/${INVENTORY_CAPACITY}`;
+  $("zoneBagGrid").innerHTML=inventory.length?inventory.map(id=>{
+    const item=itemById(id);if(!item)return "";const on=wearing.has(id),buyback=Math.floor(Number(item.cost||0)*SHOP_BUYBACK_RATE);
+    return `<article class="zone47-shop-item ${on?"wearing":""}"><div class="zone47-shop-rarity">${esc(RARITY_META[item.rarity]?.name||item.rarity)}</div><div class="zone47-shop-icon">${item.icon}</div><strong>${esc(item.name)}</strong><small>${esc(item.description)}</small><em>ขายคืน ${buyback.toLocaleString()} Token</em><div class="zone-bag-actions"><button class="btn secondary" data-bag-equip="${esc(id)}">${on?"ถอด":"สวม"}</button><button class="btn danger" data-bag-sell="${esc(id)}">ขายคืน</button></div></article>`;
+  }).join(""):`<div class="empty-card">กระเป๋ายังว่าง</div>`;
+  document.querySelectorAll("[data-bag-equip]").forEach(btn=>btn.onclick=()=>handleShopItem(btn.dataset.bagEquip));
+  document.querySelectorAll("[data-bag-sell]").forEach(btn=>btn.onclick=()=>sellInventoryItem(btn.dataset.bagSell));
+}
+async function sellInventoryItem(id){
+  if(isGM())return;const item=itemById(id);if(!item)return;
+  const buyback=Math.floor(Number(item.cost||0)*SHOP_BUYBACK_RATE);
+  if(!confirm(`ขาย ${item.name} คืนร้าน รับ ${buyback} Token ?`))return;
+  try{
+    await runTransaction(db,async tx=>{
+      const ref=doc(db,"users",uid),snap=await tx.get(ref);if(!snap.exists())throw new Error("ไม่พบ User");
+      const d=snap.data(),inv=Array.isArray(d.inventory)?d.inventory:[];if(!inv.includes(id))throw new Error("ไม่มีไอเท็มนี้ในกระเป๋า");
+      const character={...DEFAULT_CHARACTER,...(d.character||{}),equipped:{...DEFAULT_CHARACTER.equipped,...(d.character?.equipped||{})}};
+      for(const slot of Object.keys(character.equipped))if(character.equipped[slot]===id)character.equipped[slot]=null;
+      tx.update(ref,{inventory:inv.filter(x=>x!==id),tokenBalance:Number(d.tokenBalance||0)+buyback,character,updatedAt:serverTimestamp()});
+    });
+    await refreshProfile();renderZoneBag();
+  }catch(error){alert(error.message||String(error))}
+}
+$("openZoneBag").onclick=()=>{if(isGM()){alert("GM ใช้ไอเท็มพิเศษ ไม่ใช้กระเป๋า User");return}renderZoneBag();$("zoneBagModal").classList.remove("hidden")};
+$("closeZoneBag").onclick=()=>$("zoneBagModal").classList.add("hidden");
+
 $("openZoneShop").onclick=()=>{if(isGM()){alert("GM ใช้ไอเท็มพิเศษเฉพาะ ไม่ซื้อจากร้าน");return}renderShop();$("zoneShopModal").classList.remove("hidden")};
 $("closeZoneShop").onclick=()=>$("zoneShopModal").classList.add("hidden");
 
@@ -498,7 +548,7 @@ function listenRankingNotice(){
 }
 
 async function leaveZone(){
-  clearInterval(heartbeat);clearInterval(clockTimer);clearInterval(expiryTimer);positionsUnsub?.();messagesUnsub?.();moderationUnsub?.();rankingUnsub?.();questUnsub?.();
+  clearInterval(heartbeat);clearInterval(clockTimer);clearInterval(expiryTimer);clearInterval(dailyCheckinTimer);positionsUnsub?.();messagesUnsub?.();moderationUnsub?.();rankingUnsub?.();questUnsub?.();
   try{await updateDoc(doc(db,"zone_positions",uid),{online:false,updatedAt:serverTimestamp()})}catch{}
   try{await setDoc(doc(db,"presence",uid),{online:false,lastSeenAt:serverTimestamp()},{merge:true})}catch{}
   if(!isGM())try{await updateDoc(doc(db,"users",uid),{zone:{zoneId:ZONE_ID,x:Math.round(me.x),y:WALK_Y,direction:me.direction,lastSeenAt:new Date().toISOString()}})}catch{}
@@ -512,7 +562,7 @@ onAuthStateChanged(auth,async user=>{
   hideGate();$("zoneMyStudentId").textContent=isGM()?"GM":profile.studentId;$("zoneChatIdentity").textContent=isGM()?"GM":profile.studentId;
   $("zoneMyShield").innerHTML=rankShieldHTML(isGM()?GM_RANK:profile.rank);$("zoneTokenBalance").textContent=isGM()?"∞":Number(profile.tokenBalance||0).toLocaleString();
   if(isGM()){$("openAdminPanel").classList.remove("hidden");$("leaveZoneButton").href="./admin.html";$("zoneChatInput").placeholder="GM พิมพ์ข้อความหรือประกาศ..."}
-  resizeCanvas();updateClock();clockTimer=setInterval(updateClock,1000);await loadQuestProgress();
+  resizeCanvas();updateClock();clockTimer=setInterval(updateClock,1000);startZoneDailyCheckin();await loadQuestProgress();
   listenModeration();listenPositions();listenMessages();listenTeacherQuests();listenRankingNotice();expiryTimer=setInterval(refreshMessages,60000);
   await syncPublicProfile();await publishPresence();await publishPosition(true);heartbeat=setInterval(async()=>{await publishPresence();await publishPosition(true)},PRESENCE_HEARTBEAT_MS);
   requestAnimationFrame(loop);

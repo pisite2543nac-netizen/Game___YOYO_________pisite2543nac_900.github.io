@@ -1,5 +1,6 @@
 export const RANKING_CONFIG = {
-  seasonDays: 60,
+  seasonDays: null,
+  automaticReset: false,
 
   weights: {
     diligence: 0.35,
@@ -22,19 +23,14 @@ export const RANKING_CONFIG = {
 };
 
 export function seasonIdFromDate(date = new Date()) {
-  const epoch = Date.UTC(2026, 0, 1);
-  const days = Math.floor((date.getTime() - epoch) / 86400000);
-  const season = Math.floor(Math.max(0, days) / RANKING_CONFIG.seasonDays) + 1;
-  return `S${String(season).padStart(3, "0")}`;
+  return "MANUAL";
 }
 
 export function seasonRange(date = new Date()) {
-  const epoch = Date.UTC(2026, 0, 1);
-  const days = Math.floor((date.getTime() - epoch) / 86400000);
-  const seasonIndex = Math.floor(Math.max(0, days) / RANKING_CONFIG.seasonDays);
-  const start = new Date(epoch + seasonIndex * RANKING_CONFIG.seasonDays * 86400000);
-  const end = new Date(start.getTime() + RANKING_CONFIG.seasonDays * 86400000 - 1);
-  return { start, end };
+  return {
+    start: new Date(Date.UTC(2026,0,1)),
+    end: new Date(Date.UTC(2099,11,31,23,59,59,999))
+  };
 }
 
 export function calculateRankMetrics(attempts, activeDayCount = 0) {

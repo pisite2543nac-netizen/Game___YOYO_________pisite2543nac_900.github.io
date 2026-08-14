@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1">
   <title>ระบบเกมพิมพ์ Code | วิทยาลัยเทคนิคนางรอง</title>
-  <link rel="stylesheet" href="./style.css?v=4.7.0">
+  <link rel="stylesheet" href="./style.css?v=4.9.0">
 </head>
 <body>
 <header class="site-header">
@@ -154,8 +154,21 @@
       <div class="card portal-stat"><span>คะแนนสูงสุด</span><strong id="userBestScore">0</strong></div>
       <div class="card portal-stat"><span>WPM สูงสุด</span><strong id="userBestWpm">0</strong></div>
       <div class="card portal-stat points-stat"><span>Token สะสม</span><strong id="userTokens">0</strong><small>TOKENS</small></div>
-      <div class="card portal-stat rank-stat"><span>Rank Season</span><strong id="userRank">-</strong><small id="rankSeasonLabel">60 DAYS</small></div>
+      <div class="card portal-stat rank-stat"><span>Rank รอบปัจจุบัน</span><strong id="userRank">-</strong><small id="rankSeasonLabel">ADMIN RESET</small></div>
     </div>
+
+    
+    <section id="dailyCheckinCard" class="card daily-checkin-card">
+      <div class="daily-checkin-icon">🎁</div>
+      <div class="daily-checkin-copy">
+        <span class="section-kicker">DAILY FULLSCREEN CHECK-IN</span>
+        <h3>ใช้งานครบ 1 ชั่วโมง รับ 10 Token</h3>
+        <p>นับเฉพาะเวลาที่หน้าเว็บเปิดใช้งานอยู่และอยู่ในโหมดเต็มหน้าจอ · รับได้วันละ 1 ครั้ง</p>
+        <div class="daily-checkin-track"><div id="dailyCheckinProgress"></div></div>
+        <small id="dailyCheckinStatus">กำลังเตรียมระบบเช็กอิน...</small>
+      </div>
+      <strong id="dailyCheckinReward">+10 🪙</strong>
+    </section>
 
     <section id="rankResetNotice" class="card rank-reset-user-notice hidden">
       <div class="rank-reset-user-icon">🏆</div>
@@ -526,7 +539,7 @@
 </main>
 
 <footer><div class="wrap">ระบบเกมพิมพ์ Code · วิทยาลัยเทคนิคนางรอง</div></footer>
-<script type="module" src="./app.js?v=4.7.0"></script>
+<script type="module" src="./app.js?v=4.9.0"></script>
 
   <div id="characterSetupModal" class="character-modal hidden">
     <div class="character-modal-card character-setup-card">

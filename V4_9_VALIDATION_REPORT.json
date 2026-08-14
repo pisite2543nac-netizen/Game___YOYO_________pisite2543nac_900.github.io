@@ -1,0 +1,23 @@
+{
+  "syntax_app.js": true,
+  "syntax_admin.js": true,
+  "syntax_zone.js": true,
+  "syntax_quest-system.js": true,
+  "syntax_ranking-system.js": true,
+  "syntax_economy-system.js": true,
+  "syntax_reward-data.js": true,
+  "syntax_functions": true,
+  "manual_rank_only": true,
+  "inventory_capacity": true,
+  "buyback_30": true,
+  "bag_zone": true,
+  "new_items": true,
+  "daily_checkin_client": true,
+  "daily_checkin_server": true,
+  "password_reset_server": true,
+  "password_reset_admin": true,
+  "fullscreen_after_login": true,
+  "wizard_quests_12": true,
+  "rules_daily_checkin": true,
+  "all_passed": true
+}

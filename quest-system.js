@@ -100,6 +100,13 @@ export const DEFAULT_TEACHER_QUESTS = [
     minRank:"platinum",
     active:true
   }
+  ,{id:"q_easy_html_08",title:"HTML Warm Up",description:"ผ่าน HTML Stage 8 ให้สำเร็จ",languageId:"html",stage:8,difficulty:"easy",objectiveType:"pass",targetValue:0,rewardToken:5,minRank:"bronze",active:true}
+  ,{id:"q_easy_python_10",title:"Python Warm Up",description:"ผ่าน Python Stage 10 ให้สำเร็จ",languageId:"python",stage:10,difficulty:"easy",objectiveType:"pass",targetValue:0,rewardToken:5,minRank:"bronze",active:true}
+  ,{id:"q_medium_html_28",title:"HTML Accuracy Run",description:"ผ่าน HTML Stage 28 ด้วย Accuracy 97%",languageId:"html",stage:28,difficulty:"medium",objectiveType:"accuracy",targetValue:97,rewardToken:15,minRank:"silver",active:true}
+  ,{id:"q_medium_python_30",title:"Python Speed Run",description:"ผ่าน Python Stage 30 ภายใน 130 วินาที",languageId:"python",stage:30,difficulty:"medium",objectiveType:"time",targetValue:130,rewardToken:15,minRank:"silver",active:true}
+  ,{id:"q_hard_html_48",title:"HTML Final Master",description:"ผ่าน HTML Stage 48 ด้วย Accuracy 99%",languageId:"html",stage:48,difficulty:"hard",objectiveType:"accuracy",targetValue:99,rewardToken:20,minRank:"platinum",active:true}
+  ,{id:"q_hard_python_50",title:"Python Final Master",description:"ผ่าน Python Stage 50 ภายใน 180 วินาที",languageId:"python",stage:50,difficulty:"hard",objectiveType:"time",targetValue:180,rewardToken:20,minRank:"platinum",active:true}
+
 ];
 
 export function localDayKey(date=new Date()){

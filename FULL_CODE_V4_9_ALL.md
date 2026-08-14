@@ -1,7 +1,6 @@
 # FULL CODE V4.9
 
 
-
 ## index.html
 
 ```html
@@ -161,8 +160,21 @@
       <div class="card portal-stat"><span>คะแนนสูงสุด</span><strong id="userBestScore">0</strong></div>
       <div class="card portal-stat"><span>WPM สูงสุด</span><strong id="userBestWpm">0</strong></div>
       <div class="card portal-stat points-stat"><span>Token สะสม</span><strong id="userTokens">0</strong><small>TOKENS</small></div>
-      <div class="card portal-stat rank-stat"><span>Rank Season</span><strong id="userRank">-</strong><small id="rankSeasonLabel">60 DAYS</small></div>
+      <div class="card portal-stat rank-stat"><span>Rank รอบปัจจุบัน</span><strong id="userRank">-</strong><small id="rankSeasonLabel">ADMIN RESET</small></div>
     </div>
+
+    
+    <section id="dailyCheckinCard" class="card daily-checkin-card">
+      <div class="daily-checkin-icon">🎁</div>
+      <div class="daily-checkin-copy">
+        <span class="section-kicker">DAILY FULLSCREEN CHECK-IN</span>
+        <h3>ใช้งานครบ 1 ชั่วโมง รับ 10 Token</h3>
+        <p>นับเฉพาะเวลาที่หน้าเว็บเปิดใช้งานอยู่และอยู่ในโหมดเต็มหน้าจอ · รับได้วันละ 1 ครั้ง</p>
+        <div class="daily-checkin-track"><div id="dailyCheckinProgress"></div></div>
+        <small id="dailyCheckinStatus">กำลังเตรียมระบบเช็กอิน...</small>
+      </div>
+      <strong id="dailyCheckinReward">+10 🪙</strong>
+    </section>
 
     <section id="rankResetNotice" class="card rank-reset-user-notice hidden">
       <div class="rank-reset-user-icon">🏆</div>
@@ -625,7 +637,6 @@
 </html>
 ```
 
-
 ## admin.html
 
 ```html
@@ -727,14 +738,14 @@
         <div class="panel-title">
           <div>
             <h2>ข้อมูลสมาชิก User</h2>
-            <p>สมาชิกที่ลงทะเบียนบัญชีเข้าสู่ระบบเกม</p>
+            <p>สมาชิกที่ลงทะเบียนบัญชีเข้าสู่ระบบเกม · Firebase ไม่สามารถแสดงรหัสผ่านเดิมได้ จึงใช้การตั้งรหัสผ่านใหม่แบบปลอดภัยแทน</p>
           </div>
           <button id="deleteUsers" class="btn danger">ลบข้อมูลทั้งหมด</button>
         </div>
         <div class="table-wrap">
           <table>
             <thead>
-              <tr><th>วันเวลา</th><th>เลขนักศึกษา</th><th>ชื่อ-นามสกุล</th><th>ชั้น/ห้อง</th><th>แผนก</th><th>สาขาวิชา</th><th>แต้ม</th><th>สถานะ</th><th>จัดการ</th></tr>
+              <tr><th>วันเวลา</th><th>เลขนักศึกษา</th><th>ชื่อ-นามสกุล</th><th>ชั้น/ห้อง</th><th>แผนก</th><th>สาขาวิชา</th><th>แต้ม</th><th>สถานะ</th><th>รหัสผ่าน</th><th>จัดการ</th></tr>
             </thead>
             <tbody id="usersBody"></tbody>
           </table>
@@ -1039,13 +1050,26 @@
     </section>
   </main>
 
+  
+  <div id="passwordResetModal" class="admin-password-modal hidden">
+    <div class="admin-password-card">
+      <button id="closePasswordResetModal" class="admin-password-close" type="button">✕</button>
+      <span class="section-kicker">SECURE PASSWORD RESET</span>
+      <h2>ตั้งรหัสผ่านใหม่ให้นักศึกษา</h2>
+      <p><strong>ไม่สามารถดูรหัสผ่านเดิมได้</strong> ระบบจะตั้งรหัสใหม่ผ่าน Firebase Admin SDK ฝั่งเซิร์ฟเวอร์</p>
+      <div class="admin-password-user"><span>นักศึกษา</span><strong id="passwordResetStudent">-</strong><small id="passwordResetName">-</small></div>
+      <label><span>รหัสผ่านใหม่</span><div class="password-row"><input id="adminNewStudentPassword" type="text" minlength="6" placeholder="อย่างน้อย 6 ตัวอักษร"><button id="generateStudentPassword" class="btn ghost" type="button">สุ่มรหัส</button></div></label>
+      <div class="admin-password-actions"><button id="confirmStudentPasswordReset" class="btn danger" type="button">ตั้งรหัสผ่านใหม่</button></div>
+      <small>หลังตั้งเสร็จ ให้แจ้งรหัสให้นักศึกษาโดยตรง และไม่ควรบันทึกรหัสผ่านไว้ใน Firestore/GitHub</small>
+    </div>
+  </div>
+
   <div id="adminToast" class="admin-toast hidden" aria-live="polite"></div>
   <script type="module" src="./admin.js?v=4.9.0"></script>
 </body>
 </html>
 
 ```
-
 
 ## zone.html
 
@@ -1082,10 +1106,11 @@
         <div id="zoneMyShield"></div>
         <div><strong id="zoneMyStudentId">-</strong><small><i></i><span id="zoneOnlineCount">1</span> online</small></div>
       </div>
-      <div class="zone47-token"><span>🪙 Token</span><strong id="zoneTokenBalance">0</strong></div>
+      <div class="zone47-token"><span>🪙 Token</span><strong id="zoneTokenBalance">0</strong><small id="zoneCheckinMini">Check-in 0/60m</small></div>
       <div class="zone47-actions">
         <button id="openWizardQuests" class="btn ghost" type="button">🧙 ภารกิจ</button>
         <button id="openZoneShop" class="btn ghost" type="button">🛒 ร้านค้า</button>
+        <button id="openZoneBag" class="btn ghost" type="button">🎒 กระเป๋า <span id="zoneBagCount">0/25</span></button>
         <button id="openZoneChatHistory" class="btn ghost" type="button">💬 แชต</button>
         <a id="openAdminPanel" class="btn ghost hidden" href="./admin.html">Admin</a>
         <a id="leaveZoneButton" class="btn danger" href="./index.html">ออก</a>
@@ -1162,6 +1187,19 @@
     </div>
   </div>
 
+
+  <div id="zoneBagModal" class="zone47-modal hidden">
+    <div class="zone47-modal-card">
+      <button id="closeZoneBag" class="zone47-modal-close" type="button">✕</button>
+      <div class="zone47-shop-head">
+        <div><span class="section-kicker">INVENTORY BAG</span><h2>🎒 กระเป๋าไอเท็ม</h2><p>ความจุสูงสุด 25 ไอเท็ม · สวม/ถอด/ขายคืนร้านได้จากที่นี่</p></div>
+        <div class="zone47-shop-wallet"><span>ความจุ</span><strong id="zoneBagCapacity">0 / 25</strong></div>
+      </div>
+      <div class="zone-bag-rule">ขายคืนร้านได้รับ <strong>30%</strong> ของราคาขายปัจจุบัน · หากกำลังสวมอยู่ ระบบจะถอดให้อัตโนมัติ</div>
+      <div id="zoneBagGrid" class="zone47-shop-grid"></div>
+    </div>
+  </div>
+
   <div id="zoneChatHistoryModal" class="zone47-modal hidden">
     <div class="zone47-modal-card">
       <button id="closeZoneChatHistory" class="zone47-modal-close" type="button">✕</button>
@@ -1175,7 +1213,6 @@
 </html>
 
 ```
-
 
 ## style.css
 
@@ -4296,9 +4333,8 @@ html,body.social-zone-page{
 .admin-selected-major{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:14px 0 8px;padding:12px 14px;border-left:4px solid #566fa5;border-radius:10px;background:#f3f6fb}.admin-selected-major>div span,.admin-selected-major>div strong{display:block}.admin-selected-major>div span{font-size:8px;color:#7c8695}.admin-selected-major>div strong{font-size:18px;color:#273f72;margin-top:2px}.admin-selected-major>span{font-size:9px;color:#66748a}
 @media(max-width:1000px){.ranking-mode-switch-four{grid-template-columns:repeat(2,minmax(0,1fr))}.admin-major-directory{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:650px){.ranking-mode-switch-four{grid-template-columns:1fr}.admin-major-search-card{grid-template-columns:1fr}.admin-major-search-meta{text-align:left}.admin-major-directory{grid-template-columns:1fr}.admin-selected-major{align-items:flex-start;flex-direction:column}}
-
+\n/* ===== V4.9 DAILY CHECK-IN / BAG / PASSWORD RESET ===== */\n.daily-checkin-card{display:grid;grid-template-columns:58px minmax(0,1fr) auto;gap:14px;align-items:center;border-left:5px solid #d7a72f;background:linear-gradient(180deg,#fffdf4,#fff8df)}\n.daily-checkin-icon{width:58px;height:58px;border-radius:16px;display:grid;place-items:center;background:#ffe9a5;font-size:30px}.daily-checkin-copy h3{margin:4px 0}.daily-checkin-copy p{margin:0;color:#6c7680;font-size:12px}.daily-checkin-track{height:9px;margin:10px 0 5px;border-radius:999px;background:#e5e9ec;overflow:hidden}.daily-checkin-track>div{width:0;height:100%;background:#d3a12d;transition:width .3s}.daily-checkin-copy small{color:#6d7780}.daily-checkin-card>strong{font-size:22px;color:#a77910}\n.zone47-token small{display:block;font-size:6px;color:#b8d0db;margin-top:2px}.zone-bag-rule{margin:12px 0;padding:9px 11px;border-radius:10px;background:#f4efe3;color:#6c5a3e;font-size:9px}.zone-bag-actions{display:grid;grid-template-columns:1fr 1fr;gap:5px;width:100%;margin-top:7px}.zone-bag-actions .btn{margin:0!important}\n.admin-password-modal{position:fixed;inset:0;z-index:60000;display:grid;place-items:center;padding:18px;background:rgba(5,18,27,.72);backdrop-filter:blur(7px)}.admin-password-modal.hidden{display:none!important}.admin-password-card{position:relative;width:min(560px,100%);padding:26px;background:#fff;border-radius:18px;border:1px solid #dce3e8;box-shadow:0 26px 80px rgba(0,0,0,.28)}.admin-password-card h2{margin:6px 0}.admin-password-card>p{color:#66737e;line-height:1.6}.admin-password-close{position:absolute;right:10px;top:10px;width:34px;height:34px;border:0;border-radius:9px;background:#edf1f4;cursor:pointer}.admin-password-user{margin:15px 0;padding:12px;border-radius:11px;background:#f5f8fa}.admin-password-user span,.admin-password-user strong,.admin-password-user small{display:block}.admin-password-user span{font-size:9px;color:#75828c}.admin-password-user strong{font-size:20px}.admin-password-user small{color:#65727d}.admin-password-card label>span{display:block;font-size:11px;font-weight:800;margin-bottom:6px}.admin-password-actions{display:flex;justify-content:flex-end;margin:14px 0}.immersive-app{min-height:100vh;min-height:100dvh}\n@media(max-width:650px){.daily-checkin-card{grid-template-columns:46px 1fr}.daily-checkin-icon{width:46px;height:46px}.daily-checkin-card>strong{grid-column:1/-1;text-align:right}}\n
 ```
-
 
 ## app.js
 
@@ -4312,9 +4348,10 @@ import {
   getFirestore, collection, doc, getDoc, getDocs, setDoc, addDoc, updateDoc, deleteDoc,
   serverTimestamp, query, where, orderBy, limit, onSnapshot, runTransaction
 } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
+import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-functions.js";
 import { firebaseConfig } from "./firebase-config.js?v=4.9.0";
 import { LANGUAGES, LESSONS, DIFFICULTIES } from "./lessons.js?v=4.9.0";
-import { REWARD_ITEMS, RARITY_META } from "./reward-data.js?v=4.9.0";
+import { REWARD_ITEMS, RARITY_META, INVENTORY_CAPACITY, SHOP_BUYBACK_RATE } from "./reward-data.js?v=4.9.0";
 import { DEFAULT_CHARACTER, DEFAULT_ZONE_STATE } from "./character-system.js?v=4.9.0";
 import { OFFICIAL_STAGES, OFFICIAL_TOTAL_SCORE } from "./official-data.js?v=4.9.0";
 import { RANKING_CONFIG, seasonIdFromDate, seasonRange, calculateRankMetrics, rankingClassKey, rankProfiles } from "./ranking-system.js?v=4.9.0";
@@ -4324,6 +4361,8 @@ import { DEFAULT_TEACHER_QUESTS, localDayKey, questObjectiveMet, questObjectiveL
 const firebaseApp = initializeApp(firebaseConfig);
 const auth = getAuth(firebaseApp);
 const db = getFirestore(firebaseApp);
+const cloudFunctions = getFunctions(firebaseApp,"asia-southeast1");
+const recordDailyCheckinHeartbeat = httpsCallable(cloudFunctions,"recordDailyCheckinHeartbeat");
 const $ = id => document.getElementById(id);
 
 const state = {
@@ -4340,13 +4379,58 @@ const state = {
   pvpRoomListUnsub:null,pvpStakeLocking:false,pvpCurrentShot:-1,pvpShotRecorded:-1,
   pvpAggregate:{typedChars:0,keys:0,mistakes:0,seconds:0},pvpPayoutClaimed:false,pvpWasActive:false,pvpTargetCode:"",pvpTurnSignature:null,pvpRecordedSignature:null,
   pvpCountdownTimer:null,pvpCountdownEndMs:0,rankSettingsUnsub:null,rankResetTimer:null,rankSettings:{},rankResetAppliedVersion:null,
-  activeQuest:null,questLaunchHandled:false
+  activeQuest:null,questLaunchHandled:false,dailyCheckinTimer:null,dailyCheckinState:null
 };
 
 const studentEmail = id => `${String(id).trim()}@student.thc-nr.local`;
 const esc = v => String(v ?? "").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;");
 const fmtDate = v => { try { return v?.toDate?.().toLocaleString("th-TH") || "-"; } catch { return "-"; } };
 const fmtTime = s => { s=Math.max(0,s); return `${Math.floor(s/60).toString().padStart(2,"0")}:${Math.floor(s%60).toString().padStart(2,"0")}`; };
+
+async function requestLoginFullscreen(){
+  document.body.classList.add("immersive-app");
+  try{
+    if(!document.fullscreenElement && document.documentElement.requestFullscreen){
+      await document.documentElement.requestFullscreen({navigationUI:"hide"});
+    }
+  }catch(error){
+    console.warn("Fullscreen ต้องอาศัย Browser/User gesture:",error);
+  }
+}
+function appLooksFullscreen(){
+  if(document.fullscreenElement)return true;
+  if(window.matchMedia?.("(display-mode: fullscreen)")?.matches)return true;
+  const h=window.visualViewport?.height||window.innerHeight;
+  const sh=window.screen?.height||h;
+  return h/sh>=0.90;
+}
+function renderDailyCheckinStatus(data={}){
+  state.dailyCheckinState=data;
+  const seconds=Math.max(0,Number(data.qualifiedSeconds||0));
+  const pct=Math.min(100,seconds/3600*100);
+  $("dailyCheckinProgress")&&($("dailyCheckinProgress").style.width=`${pct}%`);
+  if($("dailyCheckinStatus")){
+    if(data.rewarded)$("dailyCheckinStatus").textContent="เช็กอินวันนี้สำเร็จแล้ว · ได้รับ 10 Token";
+    else $("dailyCheckinStatus").textContent=`สะสม ${Math.floor(seconds/60)} / 60 นาที · ต้องเปิดหน้าเว็บและเต็มหน้าจอ`;
+  }
+}
+async function dailyCheckinPulse(){
+  if(!state.uid||document.visibilityState!=="visible"||!appLooksFullscreen())return;
+  try{
+    const result=await recordDailyCheckinHeartbeat({visible:true,fullscreen:true});
+    renderDailyCheckinStatus(result.data||{});
+    if(result.data?.justRewarded){
+      await ensureProfileDefaults();
+      $("userTokens")&&($("userTokens").textContent=Number(state.player?.tokenBalance||0).toLocaleString());
+      alert("เช็กอินประจำวันสำเร็จ! ได้รับ 10 Token");
+    }
+  }catch(error){console.warn("daily checkin:",error)}
+}
+function startDailyCheckin(){
+  clearInterval(state.dailyCheckinTimer);
+  dailyCheckinPulse();
+  state.dailyCheckinTimer=setInterval(dailyCheckinPulse,60000);
+}
 
 function showScreen(id){
   ["authScreen","userPortal","gameScreen","resultScreen","pvpGameScreen"].forEach(x => $(x)?.classList.toggle("hidden", x !== id));
@@ -4376,6 +4460,7 @@ async function ensureProfileDefaults(){
     patch.tokenLifetime = typeof d.pointsLifetime === "number" ? d.pointsLifetime : 0;
   }
   if(!Array.isArray(d.inventory)) patch.inventory = [];
+  if(typeof d.inventoryCapacity!=="number") patch.inventoryCapacity=INVENTORY_CAPACITY;
   if(!d.progress) patch.progress = {html:{maxUnlockedStage:1},python:{maxUnlockedStage:1}};
   else {
     patch.progress = {
@@ -4421,12 +4506,13 @@ $("registerForm").addEventListener("submit",async e=>{
     const sid=$("studentId").value.trim();
     const cred=await createUserWithEmailAndPassword(auth,studentEmail(sid),$("password").value);
     state.uid=cred.user.uid;
+    await requestLoginFullscreen();
     const p={
       uid:state.uid,studentId:sid,fullName:$("fullName").value.trim(),
       educationLevel:$("educationLevel").value,classroom:$("classroom").value,
       classKey:classKey($("educationLevel").value,$("classroom").value),
       department:$("department").value,major:$("major").value,role:"student",status:"active",
-      tokenBalance:0,tokenLifetime:0,inventory:[],
+      tokenBalance:0,tokenLifetime:0,inventory:[],inventoryCapacity:INVENTORY_CAPACITY,
       officialProgress:{},officialSubmitted:false,
       rank:{seasonId:null,rating:0,tierId:"bronze",tierName:"Bronze"},
       progress:{html:{maxUnlockedStage:1},python:{maxUnlockedStage:1}},
@@ -4446,6 +4532,7 @@ $("loginForm").addEventListener("submit",async e=>{
   try{
     const cred=await signInWithEmailAndPassword(auth,studentEmail($("loginStudentId").value.trim()),$("loginPassword").value);
     state.uid=cred.user.uid;
+    await requestLoginFullscreen();
     await routeAuthenticatedStudent();
   }catch{
     $("loginMessage").textContent="เลขนักศึกษาหรือรหัสผ่านไม่ถูกต้อง";
@@ -4480,6 +4567,7 @@ async function routeAuthenticatedStudent(){
 async function enterPortal(){
   await ensureProfileDefaults();
   showScreen("userPortal");
+  startDailyCheckin();
   $("portalWelcome").textContent=`${state.player.fullName} · ${state.player.studentId} · ${state.player.educationLevel}${state.player.classroom} · ${state.player.department||"ไม่ระบุแผนก"} · ${state.player.major||"ไม่ระบุสาขาวิชา"}`;
   $("userTokens").textContent=Number(state.player.tokenBalance||0).toLocaleString();
   renderUserRank();
@@ -5063,7 +5151,8 @@ async function redeemReward(id){
       const balance=Number(d.tokenBalance||0);
       const inv=Array.isArray(d.inventory)?d.inventory:[];
       if(inv.includes(id))throw new Error("มีไอเทมแล้ว");
-      if(balance<item.cost)throw new Error("แต้มไม่พอ");
+      if(inv.length>=INVENTORY_CAPACITY)throw new Error(`กระเป๋าเต็ม ${INVENTORY_CAPACITY}/${INVENTORY_CAPACITY}`);
+      if(balance<item.cost)throw new Error("Token ไม่พอ");
       tx.update(ref,{tokenBalance:balance-item.cost,inventory:[...inv,id],updatedAt:serverTimestamp()});
     });
     await ensureProfileDefaults();
@@ -5132,7 +5221,7 @@ function renderUserRank(){
   const rating=Number(rank.rating||0);
   $("userRank").innerHTML=`${rankShieldHTML(rank,"small")} <span>${tierName} ${rating}</span>`;
   const range=seasonRange(new Date());
-  $("rankSeasonLabel").textContent=`${seasonIdFromDate(new Date())} · ${range.end.toLocaleDateString("th-TH")}`;
+  $("rankSeasonLabel").textContent="รีแรงค์โดย Admin เท่านั้น";
 }
 
 function officialStageSource(item){
@@ -5893,7 +5982,6 @@ updateRegister();
 
 ```
 
-
 ## admin.js
 
 ```js
@@ -5903,12 +5991,14 @@ import {
   getFirestore, collection, doc, getDocs, setDoc, deleteDoc, updateDoc,
   writeBatch, serverTimestamp, onSnapshot, Timestamp, query, orderBy, limit
 } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
+import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-functions.js";
 import { firebaseConfig, ADMIN_USERNAME, ADMIN_EMAIL, ADMIN_UID } from "./firebase-config.js?v=4.9.0";
 import { DEFAULT_MODES, DEFAULT_LEVELS } from "./default-data.js?v=4.9.0";
 import { seasonIdFromDate, seasonRange, calculateRankMetrics, rankingClassKey } from "./ranking-system.js?v=4.9.0";
 import { DEFAULT_TEACHER_QUESTS, clampQuestReward, questDifficultyName, questObjectiveLabel, defaultMinRankForDifficulty, rewardRange } from "./quest-system.js?v=4.9.0";
 
-const app=initializeApp(firebaseConfig),auth=getAuth(app),db=getFirestore(app),$=id=>document.getElementById(id);
+const app=initializeApp(firebaseConfig),auth=getAuth(app),db=getFirestore(app),cloudFunctions=getFunctions(app,"asia-southeast1"),$=id=>document.getElementById(id);
+const adminResetStudentPassword=httpsCallable(cloudFunctions,"adminResetStudentPassword");
 let cache={users:[],attempts:[],levels:[],modes:[],official:[],zonePositions:[],zoneModeration:[],zoneMessages:[],zoneArchive:[],rankingSettings:{},teacherQuests:[]},unsubs=[];
 let knownUserIds=null;
 let selectedAdminClass="";
@@ -5918,6 +6008,7 @@ let adminDepartmentSearchTerm="";
 let selectedAdminMajor="";
 let adminMajorSearchTerm="";
 let adminRankClock=null;
+let passwordResetTargetUid=null;
 
 const isAdmin=user=>!!user&&user.uid===ADMIN_UID;
 const dateValue=v=>{try{return v?.toDate?.()?.getTime?.()||0}catch{return 0}};
@@ -5991,9 +6082,29 @@ function compareStudentId(a,b){
 }
 function renderUsers(){
   const users=[...cache.users].sort(compareStudentId);
-  $("usersBody").innerHTML=users.map(x=>`<tr><td>${formatDate(x.createdAt)}</td><td>${esc(x.studentId)}</td><td><strong>${esc(x.fullName)}</strong></td><td>${esc(x.educationLevel||"")}${esc(x.classroom||"")}</td><td>${esc(x.department||"ไม่ระบุแผนก")}</td><td>${esc(x.major||"ไม่ระบุสาขาวิชา")}</td><td><strong>${Number(x.tokenBalance||0).toLocaleString()}</strong></td><td><span class="status status-active">${esc(x.status||"active")}</span></td><td><button class="mini-delete" data-delete-user="${x.id}">ลบข้อมูล</button></td></tr>`).join("")||`<tr><td colspan="9" class="empty">ยังไม่มีสมาชิก</td></tr>`;
+  $("usersBody").innerHTML=users.map(x=>`<tr><td>${formatDate(x.createdAt)}</td><td>${esc(x.studentId)}</td><td><strong>${esc(x.fullName)}</strong></td><td>${esc(x.educationLevel||"")}${esc(x.classroom||"")}</td><td>${esc(x.department||"ไม่ระบุแผนก")}</td><td>${esc(x.major||"ไม่ระบุสาขาวิชา")}</td><td><strong>${Number(x.tokenBalance||0).toLocaleString()}</strong></td><td><span class="status status-active">${esc(x.status||"active")}</span></td><td><button class="btn btn-small secondary" data-reset-password="${x.id}">ตั้งรหัสใหม่</button></td><td><button class="mini-delete" data-delete-user="${x.id}">ลบข้อมูล</button></td></tr>`).join("")||`<tr><td colspan="10" class="empty">ยังไม่มีสมาชิก</td></tr>`;
   document.querySelectorAll("[data-delete-user]").forEach(b=>b.onclick=async()=>{if(confirm("ลบข้อมูลสมาชิกจาก Firestore? หมายเหตุ: บัญชี Authentication ต้องลบใน Firebase Console แยกต่างหาก"))await deleteDoc(doc(db,"users",b.dataset.deleteUser))});
+  document.querySelectorAll("[data-reset-password]").forEach(btn=>btn.onclick=()=>{
+    const user=cache.users.find(x=>x.id===btn.dataset.resetPassword);if(!user)return;
+    passwordResetTargetUid=user.id;
+    $("passwordResetStudent").textContent=user.studentId||"-";$("passwordResetName").textContent=user.fullName||"-";
+    $("adminNewStudentPassword").value="";$("passwordResetModal").classList.remove("hidden");
+  });
 }
+function randomTemporaryPassword(){
+  const chars="ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789";let out="";
+  crypto.getRandomValues(new Uint32Array(10)).forEach(n=>out+=chars[n%chars.length]);return out;
+}
+if($("generateStudentPassword"))$("generateStudentPassword").onclick=()=>{$("adminNewStudentPassword").value=randomTemporaryPassword()};
+if($("closePasswordResetModal"))$("closePasswordResetModal").onclick=()=>$("passwordResetModal").classList.add("hidden");
+if($("confirmStudentPasswordReset"))$("confirmStudentPasswordReset").onclick=async()=>{
+  const password=$("adminNewStudentPassword").value;if(!passwordResetTargetUid||password.length<6){alert("รหัสผ่านต้องอย่างน้อย 6 ตัวอักษร");return}
+  if(!confirm("ยืนยันตั้งรหัสผ่านใหม่ให้นักศึกษารายนี้?"))return;
+  try{
+    await adminResetStudentPassword({targetUid:passwordResetTargetUid,newPassword:password});
+    $("passwordResetModal").classList.add("hidden");showAdminToast("ตั้งรหัสผ่านใหม่สำเร็จ","แจ้งรหัสใหม่ให้นักศึกษาได้เลย");
+  }catch(error){showAdminToast("ตั้งรหัสผ่านไม่สำเร็จ",error.message||String(error),true)}
+};
 function renderLevels(){
   $("levelCards").innerHTML=cache.levels.map(x=>`<article class="level-admin-card"><div><span>LEVEL ${esc(x.levelNo)}</span><h3>${esc(x.title)}</h3><p>${esc(x.language)} · ${esc(x.difficulty)} · ${esc(x.basePoints)} pts</p></div><div class="button-row"><button class="btn ghost btn-small" data-edit-level="${x.id}">แก้ไข</button><button class="btn danger btn-small" data-delete-level="${x.id}">ลบ</button></div></article>`).join("");
   document.querySelectorAll("[data-edit-level]").forEach(b=>b.onclick=()=>{const x=cache.levels.find(l=>l.id===b.dataset.editLevel);if(!x)return;$("editLevelNo").value=x.levelNo;$("editTitle").value=x.title;$("editLanguage").value=x.language;$("editDifficulty").value=x.difficulty;$("editBasePoints").value=x.basePoints;$("editTimeLimit").value=x.timeLimit;$("editMultiplier").value=x.difficultyMultiplier;$("editDescription").value=x.description||"";$("editCode").value=x.code;window.scrollTo({top:$("levelForm").offsetTop-30,behavior:"smooth"})});
@@ -6322,7 +6433,7 @@ if($("saveRankResetSchedule"))$("saveRankResetSchedule").onclick=async()=>{
 };
 if($("clearRankResetSchedule"))$("clearRankResetSchedule").onclick=async()=>{await setDoc(doc(db,"system_settings","ranking"),{nextResetAt:null,notice:"",updatedAt:serverTimestamp()},{merge:true});showAdminToast("ยกเลิกกำหนดการแล้ว")};
 if($("resetRankingNow"))$("resetRankingNow").onclick=executeRankingResetNow;
-if($("recalculateRanking"))$("recalculateRanking").onclick=async()=>{await persistRanking();showAdminToast("คำนวณ Ranking ใหม่แล้ว","อัปเดตทั้งแรงค์รวมและแรงค์รายห้อง")};
+if($("recalculateRanking"))$("recalculateRanking").onclick=async()=>{await persistRanking();showAdminToast("คำนวณ Ranking ใหม่แล้ว","อัปเดตแรงค์รวม / แผนก / สาขาวิชา / ห้อง")};
 
 if($("exportOfficialCsv"))$("exportOfficialCsv").onclick=()=>{
   const h=["submitted_at","student_id","name","class","department","completed","score","max_score","accuracy","wpm"];
@@ -6673,7 +6784,6 @@ document.querySelectorAll(".tab").forEach(btn=>btn.onclick=()=>{document.querySe
 
 ```
 
-
 ## zone.js
 
 ```js
@@ -6683,8 +6793,9 @@ import {
   getFirestore, doc, getDoc, setDoc, updateDoc, collection, onSnapshot,
   serverTimestamp, query, orderBy, limit, Timestamp, runTransaction
 } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
+import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-functions.js";
 import { firebaseConfig, ADMIN_UID } from "./firebase-config.js?v=4.9.0";
-import { REWARD_ITEMS, RARITY_META } from "./reward-data.js?v=4.9.0";
+import { REWARD_ITEMS, RARITY_META, INVENTORY_CAPACITY, SHOP_BUYBACK_RATE } from "./reward-data.js?v=4.9.0";
 import { DEFAULT_CHARACTER } from "./character-system.js?v=4.9.0";
 import {
   QUEST_CONFIG, DEFAULT_TEACHER_QUESTS, localDayKey, activeQuestLimit,
@@ -6694,6 +6805,8 @@ import {
 const firebaseApp=initializeApp(firebaseConfig);
 const auth=getAuth(firebaseApp);
 const db=getFirestore(firebaseApp);
+const cloudFunctions=getFunctions(firebaseApp,"asia-southeast1");
+const recordDailyCheckinHeartbeat=httpsCallable(cloudFunctions,"recordDailyCheckinHeartbeat");
 const $=id=>document.getElementById(id);
 
 const ZONE_ID="thai_social_zone_v4_1";
@@ -6720,7 +6833,7 @@ let uid=null,profile=null,blocked=true;
 let players=new Map(),messages=[],messagesByUid=new Map();
 let teacherQuests=[...DEFAULT_TEACHER_QUESTS],questProgress={};
 let positionsUnsub=null,messagesUnsub=null,moderationUnsub=null,rankingUnsub=null,questUnsub=null;
-let heartbeat=null,clockTimer=null,expiryTimer=null;
+let heartbeat=null,clockTimer=null,expiryTimer=null,dailyCheckinTimer=null;
 let lastFrame=performance.now(),lastPositionSend=0,lastChatAt=0;
 let cameraX=0,velocityX=0;
 const me={x:450,y:WALK_Y,direction:"right",moving:false};
@@ -6732,6 +6845,22 @@ const GM_RANK={tierId:"master",tierName:"GAME MASTER",rating:999999};
 const GM_ITEMS=[{icon:"👑",name:"GM Crown"},{icon:"🪄",name:"GM Staff"},{icon:"🛡️",name:"Guardian Aura"}];
 
 const esc=v=>String(v??"").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;");
+function zoneLooksFullscreen(){
+  if(document.fullscreenElement)return true;
+  if(window.matchMedia?.("(display-mode: fullscreen)")?.matches)return true;
+  const h=window.visualViewport?.height||window.innerHeight,sh=window.screen?.height||h;
+  return h/sh>=0.90;
+}
+async function zoneCheckinPulse(){
+  if(!uid||isGM()||document.visibilityState!=="visible"||!zoneLooksFullscreen())return;
+  try{
+    const result=await recordDailyCheckinHeartbeat({visible:true,fullscreen:true});
+    const d=result.data||{},seconds=Number(d.qualifiedSeconds||0);
+    $("zoneCheckinMini").textContent=d.rewarded?"Check-in ✓ +10":"Check-in "+Math.floor(seconds/60)+"/60m";
+    if(d.justRewarded){await refreshProfile();alert("เช็กอินประจำวันสำเร็จ! +10 Token")}
+  }catch(error){console.warn("zone daily checkin",error)}
+}
+function startZoneDailyCheckin(){clearInterval(dailyCheckinTimer);zoneCheckinPulse();dailyCheckinTimer=setInterval(zoneCheckinPulse,60000)}
 function isGM(){return uid===ADMIN_UID}
 function isGMPlayer(p){return p?.uid===ADMIN_UID||p?.isAdmin===true}
 function isTouchOnly(){return window.matchMedia("(pointer: coarse)").matches&&window.innerWidth<=1180}
@@ -6957,6 +7086,7 @@ $("closeWizardQuests").onclick=()=>$("zoneQuestModal").classList.add("hidden");
 function renderShop(){
   if(!profile||isGM())return;
   const owned=new Set(profile.inventory||[]),eq=equipped(profile.character),wearing=new Set(Object.values(eq).filter(Boolean)),balance=Number(profile.tokenBalance||0);
+  $("zoneBagCount")&&($("zoneBagCount").textContent=`${owned.size}/${INVENTORY_CAPACITY}`);
   $("zoneTokenBalance").textContent=balance.toLocaleString();$("zoneShopBalance").textContent=balance.toLocaleString();
   const items=[...REWARD_ITEMS].sort((a,b)=>(RARITY_META[a.rarity]?.order||0)-(RARITY_META[b.rarity]?.order||0)||a.cost-b.cost);
   $("zoneShopGrid").innerHTML=items.map(item=>{
@@ -6973,7 +7103,7 @@ function renderShop(){
 async function refreshProfile(){
   if(isGM())return;
   const snap=await getDoc(doc(db,"users",uid));if(snap.exists())profile={uid,...snap.data()};
-  renderShop();await syncPublicProfile();await publishPosition(true);
+  renderShop();if(!$("zoneBagModal")?.classList.contains("hidden"))renderZoneBag();await syncPublicProfile();await publishPosition(true);
 }
 async function handleShopItem(id){
   if(isGM())return;
@@ -6984,7 +7114,7 @@ async function handleShopItem(id){
       await runTransaction(db,async tx=>{
         const snap=await tx.get(userRef);if(!snap.exists())throw new Error("ไม่พบ User");
         const d=snap.data(),balance=Number(d.tokenBalance||0),inv=Array.isArray(d.inventory)?d.inventory:[];
-        if(inv.includes(id))return;if(balance<item.cost)throw new Error("Token ไม่พอ");
+        if(inv.includes(id))return;if(inv.length>=INVENTORY_CAPACITY)throw new Error(`กระเป๋าเต็ม ${INVENTORY_CAPACITY}/${INVENTORY_CAPACITY}`);if(balance<item.cost)throw new Error("Token ไม่พอ");
         tx.update(userRef,{tokenBalance:balance-item.cost,inventory:[...inv,id],updatedAt:serverTimestamp()});
       });await refreshProfile();
     }catch(error){alert(error.message)}return;
@@ -6993,6 +7123,36 @@ async function handleShopItem(id){
   await updateDoc(userRef,{character:{...DEFAULT_CHARACTER,...profile.character,equipped:current},updatedAt:serverTimestamp()});
   await refreshProfile();
 }
+function renderZoneBag(){
+  if(!profile||isGM())return;
+  const inventory=Array.isArray(profile.inventory)?profile.inventory:[],eq=equipped(profile.character),wearing=new Set(Object.values(eq).filter(Boolean));
+  $("zoneBagCapacity").textContent=`${inventory.length} / ${INVENTORY_CAPACITY}`;
+  $("zoneBagCount").textContent=`${inventory.length}/${INVENTORY_CAPACITY}`;
+  $("zoneBagGrid").innerHTML=inventory.length?inventory.map(id=>{
+    const item=itemById(id);if(!item)return "";const on=wearing.has(id),buyback=Math.floor(Number(item.cost||0)*SHOP_BUYBACK_RATE);
+    return `<article class="zone47-shop-item ${on?"wearing":""}"><div class="zone47-shop-rarity">${esc(RARITY_META[item.rarity]?.name||item.rarity)}</div><div class="zone47-shop-icon">${item.icon}</div><strong>${esc(item.name)}</strong><small>${esc(item.description)}</small><em>ขายคืน ${buyback.toLocaleString()} Token</em><div class="zone-bag-actions"><button class="btn secondary" data-bag-equip="${esc(id)}">${on?"ถอด":"สวม"}</button><button class="btn danger" data-bag-sell="${esc(id)}">ขายคืน</button></div></article>`;
+  }).join(""):`<div class="empty-card">กระเป๋ายังว่าง</div>`;
+  document.querySelectorAll("[data-bag-equip]").forEach(btn=>btn.onclick=()=>handleShopItem(btn.dataset.bagEquip));
+  document.querySelectorAll("[data-bag-sell]").forEach(btn=>btn.onclick=()=>sellInventoryItem(btn.dataset.bagSell));
+}
+async function sellInventoryItem(id){
+  if(isGM())return;const item=itemById(id);if(!item)return;
+  const buyback=Math.floor(Number(item.cost||0)*SHOP_BUYBACK_RATE);
+  if(!confirm(`ขาย ${item.name} คืนร้าน รับ ${buyback} Token ?`))return;
+  try{
+    await runTransaction(db,async tx=>{
+      const ref=doc(db,"users",uid),snap=await tx.get(ref);if(!snap.exists())throw new Error("ไม่พบ User");
+      const d=snap.data(),inv=Array.isArray(d.inventory)?d.inventory:[];if(!inv.includes(id))throw new Error("ไม่มีไอเท็มนี้ในกระเป๋า");
+      const character={...DEFAULT_CHARACTER,...(d.character||{}),equipped:{...DEFAULT_CHARACTER.equipped,...(d.character?.equipped||{})}};
+      for(const slot of Object.keys(character.equipped))if(character.equipped[slot]===id)character.equipped[slot]=null;
+      tx.update(ref,{inventory:inv.filter(x=>x!==id),tokenBalance:Number(d.tokenBalance||0)+buyback,character,updatedAt:serverTimestamp()});
+    });
+    await refreshProfile();renderZoneBag();
+  }catch(error){alert(error.message||String(error))}
+}
+$("openZoneBag").onclick=()=>{if(isGM()){alert("GM ใช้ไอเท็มพิเศษ ไม่ใช้กระเป๋า User");return}renderZoneBag();$("zoneBagModal").classList.remove("hidden")};
+$("closeZoneBag").onclick=()=>$("zoneBagModal").classList.add("hidden");
+
 $("openZoneShop").onclick=()=>{if(isGM()){alert("GM ใช้ไอเท็มพิเศษเฉพาะ ไม่ซื้อจากร้าน");return}renderShop();$("zoneShopModal").classList.remove("hidden")};
 $("closeZoneShop").onclick=()=>$("zoneShopModal").classList.add("hidden");
 
@@ -7177,7 +7337,7 @@ function listenRankingNotice(){
 }
 
 async function leaveZone(){
-  clearInterval(heartbeat);clearInterval(clockTimer);clearInterval(expiryTimer);positionsUnsub?.();messagesUnsub?.();moderationUnsub?.();rankingUnsub?.();questUnsub?.();
+  clearInterval(heartbeat);clearInterval(clockTimer);clearInterval(expiryTimer);clearInterval(dailyCheckinTimer);positionsUnsub?.();messagesUnsub?.();moderationUnsub?.();rankingUnsub?.();questUnsub?.();
   try{await updateDoc(doc(db,"zone_positions",uid),{online:false,updatedAt:serverTimestamp()})}catch{}
   try{await setDoc(doc(db,"presence",uid),{online:false,lastSeenAt:serverTimestamp()},{merge:true})}catch{}
   if(!isGM())try{await updateDoc(doc(db,"users",uid),{zone:{zoneId:ZONE_ID,x:Math.round(me.x),y:WALK_Y,direction:me.direction,lastSeenAt:new Date().toISOString()}})}catch{}
@@ -7191,14 +7351,13 @@ onAuthStateChanged(auth,async user=>{
   hideGate();$("zoneMyStudentId").textContent=isGM()?"GM":profile.studentId;$("zoneChatIdentity").textContent=isGM()?"GM":profile.studentId;
   $("zoneMyShield").innerHTML=rankShieldHTML(isGM()?GM_RANK:profile.rank);$("zoneTokenBalance").textContent=isGM()?"∞":Number(profile.tokenBalance||0).toLocaleString();
   if(isGM()){$("openAdminPanel").classList.remove("hidden");$("leaveZoneButton").href="./admin.html";$("zoneChatInput").placeholder="GM พิมพ์ข้อความหรือประกาศ..."}
-  resizeCanvas();updateClock();clockTimer=setInterval(updateClock,1000);await loadQuestProgress();
+  resizeCanvas();updateClock();clockTimer=setInterval(updateClock,1000);startZoneDailyCheckin();await loadQuestProgress();
   listenModeration();listenPositions();listenMessages();listenTeacherQuests();listenRankingNotice();expiryTimer=setInterval(refreshMessages,60000);
   await syncPublicProfile();await publishPresence();await publishPosition(true);heartbeat=setInterval(async()=>{await publishPresence();await publishPosition(true)},PRESENCE_HEARTBEAT_MS);
   requestAnimationFrame(loop);
 });
 
 ```
-
 
 ## quest-system.js
 
@@ -7305,6 +7464,13 @@ export const DEFAULT_TEACHER_QUESTS = [
     minRank:"platinum",
     active:true
   }
+  ,{id:"q_easy_html_08",title:"HTML Warm Up",description:"ผ่าน HTML Stage 8 ให้สำเร็จ",languageId:"html",stage:8,difficulty:"easy",objectiveType:"pass",targetValue:0,rewardToken:5,minRank:"bronze",active:true}
+  ,{id:"q_easy_python_10",title:"Python Warm Up",description:"ผ่าน Python Stage 10 ให้สำเร็จ",languageId:"python",stage:10,difficulty:"easy",objectiveType:"pass",targetValue:0,rewardToken:5,minRank:"bronze",active:true}
+  ,{id:"q_medium_html_28",title:"HTML Accuracy Run",description:"ผ่าน HTML Stage 28 ด้วย Accuracy 97%",languageId:"html",stage:28,difficulty:"medium",objectiveType:"accuracy",targetValue:97,rewardToken:15,minRank:"silver",active:true}
+  ,{id:"q_medium_python_30",title:"Python Speed Run",description:"ผ่าน Python Stage 30 ภายใน 130 วินาที",languageId:"python",stage:30,difficulty:"medium",objectiveType:"time",targetValue:130,rewardToken:15,minRank:"silver",active:true}
+  ,{id:"q_hard_html_48",title:"HTML Final Master",description:"ผ่าน HTML Stage 48 ด้วย Accuracy 99%",languageId:"html",stage:48,difficulty:"hard",objectiveType:"accuracy",targetValue:99,rewardToken:20,minRank:"platinum",active:true}
+  ,{id:"q_hard_python_50",title:"Python Final Master",description:"ผ่าน Python Stage 50 ภายใน 180 วินาที",languageId:"python",stage:50,difficulty:"hard",objectiveType:"time",targetValue:180,rewardToken:20,minRank:"platinum",active:true}
+
 ];
 
 export function localDayKey(date=new Date()){
@@ -7368,7 +7534,6 @@ export function defaultMinRankForDifficulty(difficulty){
 
 ```
 
-
 ## firebase-config.js
 
 ```js
@@ -7388,7 +7553,6 @@ export const ADMIN_EMAIL = "pisit_2000@thc-nr.local";
 export const ADMIN_UID = "TWUrLjOh3BTa1cBNwDXKk4X2IAg1";
 
 ```
-
 
 ## firestore.rules
 
@@ -7469,6 +7633,12 @@ service cloud.firestore {
       allow create: if signedIn() && request.resource.data.uid == request.auth.uid;
       allow read, update: if signedIn() && resource.data.uid == request.auth.uid;
       allow read, write: if isAdmin();
+    }
+
+
+    match /users/{uid}/daily_checkins/{dayId} {
+      allow read: if signedIn() && (request.auth.uid == uid || isAdmin());
+      allow write: if false;
     }
 
     match /public_profiles/{uid} {
@@ -7591,12 +7761,12 @@ service cloud.firestore {
 
 ```
 
-
 ## ranking-system.js
 
 ```js
 export const RANKING_CONFIG = {
-  seasonDays: 60,
+  seasonDays: null,
+  automaticReset: false,
 
   weights: {
     diligence: 0.35,
@@ -7619,19 +7789,14 @@ export const RANKING_CONFIG = {
 };
 
 export function seasonIdFromDate(date = new Date()) {
-  const epoch = Date.UTC(2026, 0, 1);
-  const days = Math.floor((date.getTime() - epoch) / 86400000);
-  const season = Math.floor(Math.max(0, days) / RANKING_CONFIG.seasonDays) + 1;
-  return `S${String(season).padStart(3, "0")}`;
+  return "MANUAL";
 }
 
 export function seasonRange(date = new Date()) {
-  const epoch = Date.UTC(2026, 0, 1);
-  const days = Math.floor((date.getTime() - epoch) / 86400000);
-  const seasonIndex = Math.floor(Math.max(0, days) / RANKING_CONFIG.seasonDays);
-  const start = new Date(epoch + seasonIndex * RANKING_CONFIG.seasonDays * 86400000);
-  const end = new Date(start.getTime() + RANKING_CONFIG.seasonDays * 86400000 - 1);
-  return { start, end };
+  return {
+    start: new Date(Date.UTC(2026,0,1)),
+    end: new Date(Date.UTC(2099,11,31,23,59,59,999))
+  };
 }
 
 export function calculateRankMetrics(attempts, activeDayCount = 0) {
@@ -7718,7 +7883,6 @@ export function rankingMajorKey(user){
 
 ```
 
-
 ## economy-system.js
 
 ```js
@@ -7756,49 +7920,65 @@ export function set2Price(baseCost){ return Math.round(Number(baseCost||0)*1.30)
 
 ```
 
-
 ## reward-data.js
 
 ```js
 export const REWARD_ITEMS = [
-  {id:"cap_blue",name:"หมวก Coder ฟ้า",icon:"🧢",cost:250,type:"wearable",slot:"head",rarity:"common",visual:"cap",description:"หมวกเรียบง่ายสำหรับผู้เริ่มต้น"},
-  {id:"shirt_blue",name:"เสื้อ Code ฟ้า",icon:"👕",cost:350,type:"wearable",slot:"top",rarity:"common",visual:"shirt_blue",description:"เสื้อสีฟ้าสไตล์ Coder"},
-  {id:"sneaker_white",name:"รองเท้าขาว",icon:"👟",cost:450,type:"wearable",slot:"shoes",rarity:"common",visual:"shoe_white",description:"รองเท้าพื้นฐานดูสะอาด"},
+  {id:"cap_blue",name:"หมวก Coder ฟ้า",icon:"🧢",cost:200,type:"wearable",slot:"head",rarity:"common",visual:"cap",description:"หมวกเรียบง่ายสำหรับผู้เริ่มต้น"},
+  {id:"shirt_blue",name:"เสื้อ Code ฟ้า",icon:"👕",cost:280,type:"wearable",slot:"top",rarity:"common",visual:"shirt_blue",description:"เสื้อสีฟ้าสไตล์ Coder"},
+  {id:"sneaker_white",name:"รองเท้าขาว",icon:"👟",cost:360,type:"wearable",slot:"shoes",rarity:"common",visual:"shoe_white",description:"รองเท้าพื้นฐานดูสะอาด"},
 
-  {id:"thai_sash",name:"ผ้าคาดไทย",icon:"🎗️",cost:700,type:"wearable",slot:"top",rarity:"rare",visual:"thai_sash",description:"ผ้าคาดลายไทยเพิ่มความโดดเด่น"},
-  {id:"student_bag",name:"กระเป๋านักเรียน",icon:"🎒",cost:850,type:"wearable",slot:"back",rarity:"rare",visual:"backpack",description:"กระเป๋าสะพายสำหรับตัวละคร"},
-  {id:"round_glasses",name:"แว่นทรงกลม",icon:"👓",cost:1000,type:"wearable",slot:"face",rarity:"rare",visual:"glasses",description:"แว่นสำหรับสายวิชาการ"},
+  {id:"thai_sash",name:"ผ้าคาดไทย",icon:"🎗️",cost:560,type:"wearable",slot:"top",rarity:"rare",visual:"thai_sash",description:"ผ้าคาดลายไทยเพิ่มความโดดเด่น"},
+  {id:"student_bag",name:"กระเป๋านักเรียน",icon:"🎒",cost:680,type:"wearable",slot:"back",rarity:"rare",visual:"backpack",description:"กระเป๋าสะพายสำหรับตัวละคร"},
+  {id:"round_glasses",name:"แว่นทรงกลม",icon:"👓",cost:800,type:"wearable",slot:"face",rarity:"rare",visual:"glasses",description:"แว่นสำหรับสายวิชาการ"},
 
-  {id:"coder_jacket",name:"แจ็กเก็ต Cyber Coder",icon:"🧥",cost:1600,type:"wearable",slot:"top",rarity:"epic",visual:"cyber_jacket",description:"แจ็กเก็ตไซเบอร์มีขอบเรืองแสง"},
-  {id:"neon_headset",name:"หูฟัง Neon",icon:"🎧",cost:1900,type:"wearable",slot:"head",rarity:"epic",visual:"neon_headset",description:"หูฟัง Neon สำหรับสายเกม"},
-  {id:"code_tablet",name:"แท็บเล็ต Code",icon:"📱",cost:2200,type:"wearable",slot:"hand",rarity:"epic",visual:"tablet",description:"แท็บเล็ตเรืองแสงถือในมือ"},
+  {id:"coder_jacket",name:"แจ็กเก็ต Cyber Coder",icon:"🧥",cost:1280,type:"wearable",slot:"top",rarity:"epic",visual:"cyber_jacket",description:"แจ็กเก็ตไซเบอร์มีขอบเรืองแสง"},
+  {id:"neon_headset",name:"หูฟัง Neon",icon:"🎧",cost:1520,type:"wearable",slot:"head",rarity:"epic",visual:"neon_headset",description:"หูฟัง Neon สำหรับสายเกม"},
+  {id:"code_tablet",name:"แท็บเล็ต Code",icon:"📱",cost:1760,type:"wearable",slot:"hand",rarity:"epic",visual:"tablet",description:"แท็บเล็ตเรืองแสงถือในมือ"},
 
-  {id:"gold_crown",name:"มงกุฎทอง Coder",icon:"👑",cost:3500,type:"wearable",slot:"head",rarity:"legendary",visual:"gold_crown",description:"มงกุฎทองสำหรับผู้เล่นระดับสูง"},
-  {id:"royal_cape",name:"ผ้าคลุม Royal Code",icon:"🦸",cost:4200,type:"wearable",slot:"back",rarity:"legendary",visual:"royal_cape",description:"ผ้าคลุมใหญ่พร้อมขอบทอง"},
-  {id:"gold_aura",name:"ออร่าสีทอง",icon:"✨",cost:5000,type:"wearable",slot:"aura",rarity:"legendary",visual:"gold_aura",description:"ออร่าทองล้อมรอบตัวละคร"},
+  {id:"gold_crown",name:"มงกุฎทอง Coder",icon:"👑",cost:2800,type:"wearable",slot:"head",rarity:"legendary",visual:"gold_crown",description:"มงกุฎทองสำหรับผู้เล่นระดับสูง"},
+  {id:"royal_cape",name:"ผ้าคลุม Royal Code",icon:"🦸",cost:3360,type:"wearable",slot:"back",rarity:"legendary",visual:"royal_cape",description:"ผ้าคลุมใหญ่พร้อมขอบทอง"},
+  {id:"gold_aura",name:"ออร่าสีทอง",icon:"✨",cost:4000,type:"wearable",slot:"aura",rarity:"legendary",visual:"gold_aura",description:"ออร่าทองล้อมรอบตัวละคร"},
 
-  {id:"dragon_wings",name:"ปีกมังกร Cyber",icon:"🐉",cost:7500,type:"wearable",slot:"back",rarity:"mythic",visual:"dragon_wings",description:"ปีกมังกรเรืองแสงขนาดใหญ่"},
-  {id:"master_halo",name:"วงแหวน Master",icon:"🌟",cost:9000,type:"wearable",slot:"aura",rarity:"mythic",visual:"master_halo",description:"วงแหวนพลังระดับ Master"},
-  {id:"phoenix_pet",name:"สัตว์เลี้ยง Phoenix",icon:"🔥",cost:12000,type:"wearable",slot:"pet",rarity:"mythic",visual:"phoenix_pet",description:"Phoenix ไฟลอยข้างตัวละคร"},
-  {id:"throne_effect",name:"บัลลังก์ Code Emperor",icon:"🏆",cost:18000,type:"wearable",slot:"aura",rarity:"mythic",visual:"throne",description:"เอฟเฟกต์สูงสุดของร้าน Token"},
+  {id:"dragon_wings",name:"ปีกมังกร Cyber",icon:"🐉",cost:6000,type:"wearable",slot:"back",rarity:"mythic",visual:"dragon_wings",description:"ปีกมังกรเรืองแสงขนาดใหญ่"},
+  {id:"master_halo",name:"วงแหวน Master",icon:"🌟",cost:7200,type:"wearable",slot:"aura",rarity:"mythic",visual:"master_halo",description:"วงแหวนพลังระดับ Master"},
+  {id:"phoenix_pet",name:"สัตว์เลี้ยง Phoenix",icon:"🔥",cost:9600,type:"wearable",slot:"pet",rarity:"mythic",visual:"phoenix_pet",description:"Phoenix ไฟลอยข้างตัวละคร"},
+  {id:"throne_effect",name:"บัลลังก์ Code Emperor",icon:"🏆",cost:14400,type:"wearable",slot:"aura",rarity:"mythic",visual:"throne",description:"เอฟเฟกต์สูงสุดของร้าน Token"},
 
   // ===== ITEM SET 2 · PREMIUM +30% =====
   // cost = baseCost × 1.30 ตามกติกาชุดที่ 2
-  {id:"set2_mystic_staff",name:"คฑา Mystic Code",icon:"🪄",baseCost:2400,cost:3120,type:"wearable",slot:"hand",rarity:"epic",set:"set2",visual:"mystic_staff",description:"คฑาพลังโค้ด มีประกายเวท ชุด 2 ราคา +30%"},
-  {id:"set2_katana",name:"ดาบ Katana Coder",icon:"🗡️",baseCost:3000,cost:3900,type:"wearable",slot:"hand",rarity:"epic",set:"set2",visual:"katana",description:"ดาบคาตานะแสงสำหรับนักพิมพ์สายเร็ว ชุด 2 ราคา +30%"},
-  {id:"set2_cyber_spear",name:"หอก Cyber Spear",icon:"🔱",baseCost:3800,cost:4940,type:"wearable",slot:"hand",rarity:"legendary",set:"set2",visual:"cyber_spear",description:"หอกพลังงานยาวพร้อมแสง Neon ชุด 2 ราคา +30%"},
+  {id:"set2_mystic_staff",name:"คฑา Mystic Code",icon:"🪄",baseCost:2400,cost:2496,type:"wearable",slot:"hand",rarity:"epic",set:"set2",visual:"mystic_staff",description:"คฑาพลังโค้ด มีประกายเวท ชุด 2 ราคา +30%"},
+  {id:"set2_katana",name:"ดาบ Katana Coder",icon:"🗡️",baseCost:3000,cost:3120,type:"wearable",slot:"hand",rarity:"epic",set:"set2",visual:"katana",description:"ดาบคาตานะแสงสำหรับนักพิมพ์สายเร็ว ชุด 2 ราคา +30%"},
+  {id:"set2_cyber_spear",name:"หอก Cyber Spear",icon:"🔱",baseCost:3800,cost:3952,type:"wearable",slot:"hand",rarity:"legendary",set:"set2",visual:"cyber_spear",description:"หอกพลังงานยาวพร้อมแสง Neon ชุด 2 ราคา +30%"},
 
-  {id:"set2_samurai_armor",name:"ชุด Samurai Coder",icon:"🥋",baseCost:5000,cost:6500,type:"wearable",slot:"top",rarity:"legendary",set:"set2",visual:"samurai_armor",description:"เกราะซามูไรแดงดำขอบทอง ชุด 2 ราคา +30%"},
-  {id:"set2_mage_robe",name:"ชุด Arcane Programmer",icon:"🧙",baseCost:6000,cost:7800,type:"wearable",slot:"top",rarity:"legendary",set:"set2",visual:"mage_robe",description:"เสื้อคลุมจอมเวทสายโปรแกรม ชุด 2 ราคา +30%"},
-  {id:"set2_dragon_armor",name:"ชุด Dragon Core",icon:"🛡️",baseCost:8000,cost:10400,type:"wearable",slot:"top",rarity:"mythic",set:"set2",visual:"dragon_armor",description:"เกราะมังกรพร้อมแกนพลังงาน ชุด 2 ราคา +30%"},
+  {id:"set2_samurai_armor",name:"ชุด Samurai Coder",icon:"🥋",baseCost:5000,cost:5200,type:"wearable",slot:"top",rarity:"legendary",set:"set2",visual:"samurai_armor",description:"เกราะซามูไรแดงดำขอบทอง ชุด 2 ราคา +30%"},
+  {id:"set2_mage_robe",name:"ชุด Arcane Programmer",icon:"🧙",baseCost:6000,cost:6240,type:"wearable",slot:"top",rarity:"legendary",set:"set2",visual:"mage_robe",description:"เสื้อคลุมจอมเวทสายโปรแกรม ชุด 2 ราคา +30%"},
+  {id:"set2_dragon_armor",name:"ชุด Dragon Core",icon:"🛡️",baseCost:8000,cost:8320,type:"wearable",slot:"top",rarity:"mythic",set:"set2",visual:"dragon_armor",description:"เกราะมังกรพร้อมแกนพลังงาน ชุด 2 ราคา +30%"},
 
-  {id:"set2_cat_pet",name:"สัตว์เลี้ยง Code Cat",icon:"🐈",baseCost:2500,cost:3250,type:"wearable",slot:"pet",rarity:"epic",set:"set2",visual:"cat_pet",description:"แมวคู่หูนักเขียนโค้ด ชุด 2 ราคา +30%"},
-  {id:"set2_wolf_pet",name:"สัตว์เลี้ยง Neon Wolf",icon:"🐺",baseCost:4500,cost:5850,type:"wearable",slot:"pet",rarity:"legendary",set:"set2",visual:"wolf_pet",description:"หมาป่า Neon วิ่งตามตัวละคร ชุด 2 ราคา +30%"},
-  {id:"set2_tiger_pet",name:"สัตว์เลี้ยง Siam Tiger",icon:"🐯",baseCost:7000,cost:9100,type:"wearable",slot:"pet",rarity:"legendary",set:"set2",visual:"tiger_pet",description:"เสือคู่ใจที่ดูโดดเด่นใน Zone ชุด 2 ราคา +30%"},
-  {id:"set2_mini_dragon",name:"สัตว์เลี้ยง Mini Dragon",icon:"🐲",baseCost:11000,cost:14300,type:"wearable",slot:"pet",rarity:"mythic",set:"set2",visual:"mini_dragon",description:"มังกรจิ๋วบินข้างตัวละคร ชุด 2 ราคา +30%"},
+  {id:"set2_cat_pet",name:"สัตว์เลี้ยง Code Cat",icon:"🐈",baseCost:2500,cost:2600,type:"wearable",slot:"pet",rarity:"epic",set:"set2",visual:"cat_pet",description:"แมวคู่หูนักเขียนโค้ด ชุด 2 ราคา +30%"},
+  {id:"set2_wolf_pet",name:"สัตว์เลี้ยง Neon Wolf",icon:"🐺",baseCost:4500,cost:4680,type:"wearable",slot:"pet",rarity:"legendary",set:"set2",visual:"wolf_pet",description:"หมาป่า Neon วิ่งตามตัวละคร ชุด 2 ราคา +30%"},
+  {id:"set2_tiger_pet",name:"สัตว์เลี้ยง Siam Tiger",icon:"🐯",baseCost:7000,cost:7280,type:"wearable",slot:"pet",rarity:"legendary",set:"set2",visual:"tiger_pet",description:"เสือคู่ใจที่ดูโดดเด่นใน Zone ชุด 2 ราคา +30%"},
+  {id:"set2_mini_dragon",name:"สัตว์เลี้ยง Mini Dragon",icon:"🐲",baseCost:11000,cost:11440,type:"wearable",slot:"pet",rarity:"mythic",set:"set2",visual:"mini_dragon",description:"มังกรจิ๋วบินข้างตัวละคร ชุด 2 ราคา +30%"},
 
-  {id:"set2_spirit_wings",name:"ปีก Spirit Guardian",icon:"🪽",baseCost:9500,cost:12350,type:"wearable",slot:"back",rarity:"mythic",set:"set2",visual:"spirit_wings",description:"ปีกวิญญาณสีฟ้าขนาดใหญ่ ชุด 2 ราคา +30%"},
-  {id:"set2_storm_aura",name:"Storm Code Aura",icon:"⚡",baseCost:12500,cost:16250,type:"wearable",slot:"aura",rarity:"mythic",set:"set2",visual:"storm_aura",description:"สายฟ้าหมุนรอบตัวละคร ชุด 2 ราคา +30%"}
+  {id:"set2_spirit_wings",name:"ปีก Spirit Guardian",icon:"🪽",baseCost:9500,cost:9880,type:"wearable",slot:"back",rarity:"mythic",set:"set2",visual:"spirit_wings",description:"ปีกวิญญาณสีฟ้าขนาดใหญ่ ชุด 2 ราคา +30%"},
+  {id:"set2_storm_aura",name:"Storm Code Aura",icon:"⚡",baseCost:12500,cost:13000,type:"wearable",slot:"aura",rarity:"mythic",set:"set2",visual:"storm_aura",description:"สายฟ้าหมุนรอบตัวละคร ชุด 2 ราคา +30%"}
+  // ===== V4.9 NEW COLLECTION =====
+  {id:"armor_silver_guard",name:"เกราะ Silver Guard",icon:"🛡️",cost:2800,type:"wearable",slot:"top",rarity:"epic",visual:"silver_armor",description:"เกราะเงินสำหรับนักรบสายโค้ด"},
+  {id:"armor_gold_guard",name:"เกราะ Golden Guardian",icon:"🛡️",cost:5200,type:"wearable",slot:"top",rarity:"legendary",visual:"gold_armor",description:"เกราะทองพร้อมขอบเรืองแสง"},
+  {id:"crown_violet",name:"มงกุฎม่วง Arcane",icon:"👑",cost:4200,type:"wearable",slot:"head",rarity:"legendary",visual:"violet_crown",description:"มงกุฎพลังเวทสีม่วง"},
+  {id:"crown_dragon_king",name:"มงกุฎราชามังกร",icon:"👑",cost:7600,type:"wearable",slot:"head",rarity:"mythic",visual:"dragon_crown",description:"มงกุฎระดับสูงลายมังกรทอง"},
+  {id:"spell_fire_orb",name:"คาถา Fire Orb",icon:"🔮",cost:2600,type:"wearable",slot:"hand",rarity:"epic",visual:"fire_orb",description:"ลูกแก้วเวทไฟลอยในมือ"},
+  {id:"spell_arcane_book",name:"คัมภีร์ Arcane Code",icon:"📖",cost:3600,type:"wearable",slot:"hand",rarity:"legendary",visual:"arcane_book",description:"คัมภีร์เวทสำหรับจอมเวทโค้ด"},
+  {id:"sword_gold",name:"ดาบทอง Golden Blade",icon:"⚔️",cost:4800,type:"wearable",slot:"hand",rarity:"legendary",visual:"gold_sword",description:"ดาบทองประกายสำหรับตัวละคร"},
+  {id:"sword_purple",name:"ดาบม่วง Void Blade",icon:"🗡️",cost:5600,type:"wearable",slot:"hand",rarity:"legendary",visual:"purple_sword",description:"ดาบพลัง Void สีม่วง"},
+  {id:"pet_golden_dragon",name:"มังกรทอง",icon:"🐉",cost:11800,type:"wearable",slot:"pet",rarity:"mythic",visual:"golden_dragon",description:"มังกรทองบินตามตัวละคร"},
+  {id:"pet_white_cat",name:"แมวขาว Coder",icon:"🐈",cost:2200,type:"wearable",slot:"pet",rarity:"epic",visual:"white_cat",description:"แมวขาวคู่หูสายโค้ด"},
+  {id:"pet_royal_tiger",name:"เสือ Royal Tiger",icon:"🐯",cost:6800,type:"wearable",slot:"pet",rarity:"legendary",visual:"royal_tiger",description:"เสือคู่หูสีทองดำ"},
+  {id:"pet_cyber_monkey",name:"ลิง Cyber Monkey",icon:"🐒",cost:3400,type:"wearable",slot:"pet",rarity:"epic",visual:"cyber_monkey",description:"ลิงจอมซนถือชิปโค้ด"},
+  {id:"pet_owl_teacher",name:"นกฮูกนักปราชญ์",icon:"🦉",cost:4100,type:"wearable",slot:"pet",rarity:"legendary",visual:"wise_owl",description:"นกฮูกนักปราชญ์บินข้างตัว"},
+  {id:"cape_night_coder",name:"ผ้าคลุม Night Coder",icon:"🦸",cost:3300,type:"wearable",slot:"back",rarity:"epic",visual:"night_cape",description:"ผ้าคลุมสีเข้มสำหรับโหมดกลางคืน"},
+  {id:"aura_dragon_flame",name:"Dragon Flame Aura",icon:"🔥",cost:8200,type:"wearable",slot:"aura",rarity:"mythic",visual:"dragon_flame_aura",description:"เปลวไฟมังกรวนรอบตัวละคร"},
+
 
 ];
 
@@ -7810,8 +7990,10 @@ export const RARITY_META = {
   mythic:{name:"MYTHIC",order:5}
 };
 
-```
+export const INVENTORY_CAPACITY = 25;
+export const SHOP_BUYBACK_RATE = 0.30;
 
+```
 
 ## character-system.js
 
@@ -7842,7 +8024,6 @@ export const DEFAULT_ZONE_STATE = {
 };
 
 ```
-
 
 ## levels-html.js
 
@@ -8601,7 +8782,6 @@ export const HTML_LEVELS = [
 ];
 
 ```
-
 
 ## levels-python.js
 
@@ -9411,7 +9591,6 @@ export const PYTHON_LEVELS = [
 
 ```
 
-
 ## official-data.js
 
 ```js
@@ -9691,7 +9870,6 @@ export const OFFICIAL_TOTAL_SCORE = 40;
 
 ```
 
-
 ## lessons.js
 
 ```js
@@ -9732,7 +9910,6 @@ export const DIFFICULTIES = [
 export const LESSONS = [...HTML_LEVELS, ...PYTHON_LEVELS];
 
 ```
-
 
 ## default-data.js
 
@@ -9956,16 +10133,111 @@ def save_score():
 
 ```
 
-
 ## 404.html
 
 ```html
 <!DOCTYPE html><html lang="th"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>กำลังกู้คืนหน้า</title><style>body{font-family:system-ui;margin:0;min-height:100vh;display:grid;place-items:center;background:#f4f7fa;color:#173449}.box{max-width:520px;padding:30px;text-align:center;background:#fff;border:1px solid #dce3ea;border-radius:16px}.box a{display:inline-block;margin:6px;padding:10px 16px;border-radius:9px;background:#244b75;color:#fff;text-decoration:none}</style></head><body><div class="box"><h1>กำลังกู้คืนหน้า...</h1><p>กำลังกู้คืน URL ของ GitHub Pages</p><a href="./index.html?v=4.9.0">หน้า Login</a><a href="./zone.html?v=4.9.0">2D Zone</a></div><script>(function(){const ua=navigator.userAgent||"";const mobile=/Android|iPhone|iPad|iPod|Mobile|Tablet|Silk|Kindle/i.test(ua)||(navigator.platform==="MacIntel"&&navigator.maxTouchPoints>1);const parts=location.pathname.split("/").filter(Boolean);const base=parts.length?`/${parts[0]}/`:"/";const wanted=base+((location.pathname.toLowerCase().includes("zone")||mobile)?"zone.html?v=4.9.0":"index.html?v=4.9.0");if(!sessionStorage.getItem("v44_404_recovered")){sessionStorage.setItem("v44_404_recovered","1");setTimeout(()=>location.replace(wanted),700)}})();</script></body></html>
 ```
 
-
 ## chat.html
 
 ```html
 <!DOCTYPE html><html lang="th"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="refresh" content="0;url=./zone.html?v=4.9.0"><title>ย้ายไป 2D Zone</title><script>location.replace("./zone.html?v=4.9.0");</script></head><body><p>ระบบแชตรวมย้ายเข้า 2D Zone แล้ว</p><a href="./zone.html?v=4.9.0">เข้า 2D Zone</a></body></html>
+```
+
+## firebase.json
+
+```json
+{
+  "functions": {
+    "source": "functions",
+    "runtime": "nodejs20"
+  }
+}
+```
+
+## functions/package.json
+
+```json
+{
+  "name": "code-typing-backend",
+  "private": true,
+  "main": "index.js",
+  "engines": {
+    "node": "20"
+  },
+  "dependencies": {
+    "firebase-admin": "^13.0.0",
+    "firebase-functions": "^6.0.0"
+  }
+}
+```
+
+## functions/index.js
+
+```js
+const {onCall,HttpsError}=require("firebase-functions/v2/https");
+const {setGlobalOptions}=require("firebase-functions/v2");
+const {initializeApp}=require("firebase-admin/app");
+const {getAuth}=require("firebase-admin/auth");
+const {getFirestore,FieldValue,Timestamp}=require("firebase-admin/firestore");
+
+initializeApp();
+setGlobalOptions({region:"asia-southeast1",maxInstances:10});
+const db=getFirestore();
+const ADMIN_UID="TWUrLjOh3BTa1cBNwDXKk4X2IAg1";
+
+function requireAuth(request){
+  if(!request.auth)throw new HttpsError("unauthenticated","กรุณา Login ก่อน");
+  return request.auth.uid;
+}
+function bangkokDayKey(date=new Date()){
+  return new Intl.DateTimeFormat("en-CA",{timeZone:"Asia/Bangkok",year:"numeric",month:"2-digit",day:"2-digit"}).format(date);
+}
+
+exports.adminResetStudentPassword=onCall(async request=>{
+  const caller=requireAuth(request);
+  if(caller!==ADMIN_UID)throw new HttpsError("permission-denied","Admin only");
+  const targetUid=String(request.data?.targetUid||"").trim();
+  const newPassword=String(request.data?.newPassword||"");
+  if(!targetUid)throw new HttpsError("invalid-argument","ไม่พบ UID");
+  if(newPassword.length<6||newPassword.length>64)throw new HttpsError("invalid-argument","รหัสผ่านต้อง 6–64 ตัวอักษร");
+  await getAuth().updateUser(targetUid,{password:newPassword});
+  return {ok:true,targetUid};
+});
+
+exports.recordDailyCheckinHeartbeat=onCall(async request=>{
+  const uid=requireAuth(request);
+  if(uid===ADMIN_UID)return {qualifiedSeconds:3600,rewarded:true,justRewarded:false,admin:true};
+  if(request.data?.visible!==true||request.data?.fullscreen!==true)
+    throw new HttpsError("failed-precondition","ต้องเปิดหน้าเว็บและโหมดเต็มหน้าจอ");
+  const now=new Date(),dayKey=bangkokDayKey(now);
+  const userRef=db.doc(`users/${uid}`),checkRef=db.doc(`users/${uid}/daily_checkins/${dayKey}`);
+  let response={qualifiedSeconds:0,rewarded:false,justRewarded:false};
+  await db.runTransaction(async tx=>{
+    const [userSnap,checkSnap]=await Promise.all([tx.get(userRef),tx.get(checkRef)]);
+    if(!userSnap.exists)throw new HttpsError("not-found","ไม่พบ User profile");
+    const old=checkSnap.exists?checkSnap.data():{};
+    const last=old.lastHeartbeatAt?.toDate?.();
+    let add=0;
+    if(last){
+      const gap=(now.getTime()-last.getTime())/1000;
+      // เพิ่มเวลาเฉพาะ heartbeat ต่อเนื่อง ไม่เปิดช่องให้กระโดดเวลาจากการปิดหน้าเว็บนาน ๆ
+      if(gap>=35&&gap<=90)add=Math.min(65,Math.floor(gap));
+    }
+    const qualified=Math.min(3600,Number(old.qualifiedSeconds||0)+add);
+    let rewarded=old.rewarded===true,justRewarded=false;
+    const update={uid,dayKey,qualifiedSeconds:qualified,lastHeartbeatAt:Timestamp.fromDate(now),updatedAt:Timestamp.fromDate(now)};
+    if(!checkSnap.exists)update.createdAt=Timestamp.fromDate(now);
+    if(qualified>=3600&&!rewarded){
+      rewarded=true;justRewarded=true;update.rewarded=true;update.rewardedAt=Timestamp.fromDate(now);
+      const user=userSnap.data();
+      tx.update(userRef,{tokenBalance:Number(user.tokenBalance||0)+10,tokenLifetime:Number(user.tokenLifetime||0)+10,updatedAt:FieldValue.serverTimestamp()});
+    }else update.rewarded=rewarded;
+    tx.set(checkRef,update,{merge:true});
+    response={qualifiedSeconds:qualified,rewarded,justRewarded,dayKey};
+  });
+  return response;
+});
+
 ```
