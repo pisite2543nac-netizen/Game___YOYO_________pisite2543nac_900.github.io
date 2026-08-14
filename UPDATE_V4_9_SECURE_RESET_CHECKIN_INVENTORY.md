@@ -1,9 +1,9 @@
-# V4.9.4 — Secure Password Reset + Daily Fullscreen Check-in + Inventory 25
+# V4.9.5 — Secure Password Reset + Daily Fullscreen Check-in + Inventory 25
 
 ## Password
 Firebase Authentication ไม่สามารถแสดงรหัสผ่านเดิมเป็นข้อความให้ Admin ดูได้ และโปรเจกต์นี้ไม่เก็บรหัสผ่าน Plaintext ใน Firestore/GitHub
 
-V4.9.4 จึงเพิ่ม **ตั้งรหัสผ่านใหม่** ผ่าน Cloud Function `adminResetStudentPassword` ซึ่งตรวจ ADMIN_UID ก่อนเรียก Firebase Admin SDK
+V4.9.5 จึงเพิ่ม **ตั้งรหัสผ่านใหม่** ผ่าน Cloud Function `adminResetStudentPassword` ซึ่งตรวจ ADMIN_UID ก่อนเรียก Firebase Admin SDK
 
 ## Daily Check-in
 - 1 ครั้งต่อวัน

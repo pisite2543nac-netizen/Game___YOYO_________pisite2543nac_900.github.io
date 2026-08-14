@@ -5,10 +5,10 @@ import {
   writeBatch, serverTimestamp, onSnapshot, Timestamp, query, orderBy, limit
 } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
 import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-functions.js";
-import { firebaseConfig, ADMIN_USERNAME, ADMIN_EMAIL, ADMIN_UID } from "./firebase-config.js?v=4.9.4";
-import { DEFAULT_MODES, DEFAULT_LEVELS } from "./default-data.js?v=4.9.4";
-import { seasonIdFromDate, seasonRange, calculateRankMetrics, rankingClassKey } from "./ranking-system.js?v=4.9.4";
-import { DEFAULT_TEACHER_QUESTS, clampQuestReward, questDifficultyName, questObjectiveLabel, defaultMinRankForDifficulty, rewardRange } from "./quest-system.js?v=4.9.4";
+import { firebaseConfig, ADMIN_USERNAME, ADMIN_EMAIL, ADMIN_UID } from "./firebase-config.js?v=4.9.5";
+import { DEFAULT_MODES, DEFAULT_LEVELS } from "./default-data.js?v=4.9.5";
+import { seasonIdFromDate, seasonRange, calculateRankMetrics, rankingClassKey } from "./ranking-system.js?v=4.9.5";
+import { DEFAULT_TEACHER_QUESTS, clampQuestReward, questDifficultyName, questObjectiveLabel, defaultMinRankForDifficulty, rewardRange } from "./quest-system.js?v=4.9.5";
 
 const app=initializeApp(firebaseConfig),auth=getAuth(app),db=getFirestore(app),cloudFunctions=getFunctions(app,"asia-southeast1"),$=id=>document.getElementById(id);
 const adminResetStudentPassword=httpsCallable(cloudFunctions,"adminResetStudentPassword");

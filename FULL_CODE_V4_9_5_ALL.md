@@ -1,4 +1,4 @@
-# FULL CODE V4.9.5
+# FULL CODE V4.9.5 AUTH STABLE HOTFIX
 
 
 ## index.html
@@ -353,7 +353,7 @@
           <div>
             <span class="section-kicker">4-SCOPE RANKING · 60 DAY SEASON</span>
             <h2>Ranking รวม / แผนก / สาขาวิชา / ห้อง</h2>
-            <p class="muted-line">คะแนน Rank เดียวกัน แต่จัดอันดับแยกตามกลุ่มของผู้เล่นเพื่อให้เปรียบเทียบได้ยุติธรรมขึ้น</p>
+            <p class="muted-line">คะแนน Rank คำนวณจาก WPM 40% + Accuracy 40% + เวลาจบเร็ว 20% แล้วจัดอันดับแยกตามแต่ละกลุ่ม</p>
           </div>
           <div id="leaderboardSeason" class="season-chip">SEASON</div>
         </div>
@@ -4425,6 +4425,15 @@ html,body.social-zone-page{
 .user-profile-edit-note{margin:4px 0 14px;padding:10px 12px;border-radius:10px;background:#eef6fa;color:#436174;font-size:9px;line-height:1.55}
 @media(max-width:650px){.user-profile-edit-grid{grid-template-columns:1fr}}
 
+
+/* ===== V4.9.5 TYPING PERFORMANCE RANK ===== */
+.rank-formula-note{display:flex;gap:7px;flex-wrap:wrap}
+.rank-formula-note span{padding:5px 8px;border-radius:999px;background:#eef4f7;color:#3d6072;font-size:8px;font-weight:800}
+
+
+/* ===== V4.9.5 AUTH STABLE HOTFIX ===== */
+.auth-recovery-hint{margin-top:10px;padding:9px 11px;border:1px solid #d5e2e8;border-radius:9px;background:#f5fafc;color:#5c707b;font-size:8px;line-height:1.5}
+
 ```
 
 
@@ -4475,6 +4484,8 @@ const state = {
 };
 
 const studentEmail = id => `${String(id).trim()}@student.thc-nr.local`;
+let authRoutePromise=null;
+let authActionInProgress=false;
 const esc = v => String(v ?? "").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;");
 const fmtDate = v => { try { return v?.toDate?.().toLocaleString("th-TH") || "-"; } catch { return "-"; } };
 const fmtTime = s => { s=Math.max(0,s); return `${Math.floor(s/60).toString().padStart(2,"0")}:${Math.floor(s%60).toString().padStart(2,"0")}`; };
@@ -4575,6 +4586,7 @@ async function ensureProfileDefaults(){
   if(!snap.exists()) return;
   const d = snap.data();
   const patch = {};
+  let academicProfileComplete = true;
   if(typeof d.tokenBalance !== "number") {
     patch.tokenBalance = typeof d.pointsBalance === "number" ? d.pointsBalance : 0;
   }
@@ -4646,68 +4658,140 @@ $("major")?.addEventListener("change",syncDepartmentFromMajor);
 
 
 $("registerForm").addEventListener("submit",async e=>{
-  e.preventDefault(); if(!registerValid()) return;
+  e.preventDefault();
+  if(!registerValid())return;
+  const button=$("registerButton"),oldText=button.textContent;
+  button.disabled=true;button.textContent="กำลังสมัคร...";
+  $("registerMessage").textContent="";
+  authActionInProgress=true;
   try{
     const sid=$("studentId").value.trim();
     const cred=await createUserWithEmailAndPassword(auth,studentEmail(sid),$("password").value);
     state.uid=cred.user.uid;
-    await requestLoginFullscreen();
-    const p={
-      uid:state.uid,studentId:sid,fullName:$("fullName").value.trim(),
-      educationLevel:$("educationLevel").value,classroom:$("classroom").value,
+
+    const academic=normalizeAcademicSelection($("department").value,$("major").value);
+    const profile={
+      uid:state.uid,
+      studentId:sid,
+      fullName:$("fullName").value.trim(),
+      educationLevel:$("educationLevel").value,
+      classroom:$("classroom").value,
       classKey:classKey($("educationLevel").value,$("classroom").value),
-      department:normalizeAcademicSelection($("department").value,$("major").value).department,
-      major:normalizeAcademicSelection($("department").value,$("major").value).major,role:"student",status:"active",
-      tokenBalance:0,tokenLifetime:0,inventory:[],inventoryCapacity:INVENTORY_CAPACITY,
-      officialProgress:{},officialSubmitted:false,
+      department:academic.department,
+      major:academic.major,
+      role:"student",
+      status:"active",
+      tokenBalance:0,
+      tokenLifetime:0,
+      inventory:[],
+      inventoryCapacity:INVENTORY_CAPACITY,
+      officialProgress:{},
+      officialSubmitted:false,
       rank:{seasonId:null,rating:0,tierId:"bronze",tierName:"Bronze"},
       progress:{html:{maxUnlockedStage:1},python:{maxUnlockedStage:1}},
       character:{...DEFAULT_CHARACTER,displayName:$("fullName").value.trim()},
       zone:{...DEFAULT_ZONE_STATE},
-      createdAt:serverTimestamp(),updatedAt:serverTimestamp()
+      createdAt:serverTimestamp(),
+      updatedAt:serverTimestamp()
     };
-    await setDoc(doc(db,"users",state.uid),p);
+
+    // Write the Firestore user immediately after Authentication account creation.
+    await setDoc(doc(db,"users",state.uid),profile,{merge:true});
+    await requestLoginFullscreen();
     await routeAuthenticatedStudent();
   }catch(err){
-    $("registerMessage").textContent = err.code==="auth/email-already-in-use" ? "เลขนักศึกษานี้ลงทะเบียนแล้ว" : "ลงทะเบียนไม่สำเร็จ: "+err.message;
+    console.error("register:",err);
+    if(err?.code==="auth/email-already-in-use"){
+      $("registerMessage").textContent="รหัสนักศึกษานี้มีบัญชีอยู่แล้ว กรุณา Login หรือให้ Admin ลบบัญชีเดิม";
+    }else if(err?.code==="permission-denied"){
+      $("registerMessage").textContent="สมัคร Auth สำเร็จ แต่ Firestore Rules ไม่อนุญาตให้สร้าง Profile กรุณา Publish firestore.rules V4.9.5";
+    }else{
+      $("registerMessage").textContent="ลงทะเบียนไม่สำเร็จ: "+(err?.message||String(err));
+    }
+  }finally{
+    authActionInProgress=false;
+    button.textContent=oldText;
+    updateRegister();
   }
 });
 
 $("loginForm").addEventListener("submit",async e=>{
   e.preventDefault();
+  const sid=$("loginStudentId").value.trim();
+  const password=$("loginPassword").value;
+  const button=$("loginForm").querySelector('button[type="submit"]');
+  const oldText=button?.textContent||"เข้าสู่ระบบ";
+  if(button){button.disabled=true;button.textContent="กำลังเข้าสู่ระบบ...";}
+  $("loginMessage").textContent="";
+  authActionInProgress=true;
   try{
-    const cred=await signInWithEmailAndPassword(auth,studentEmail($("loginStudentId").value.trim()),$("loginPassword").value);
+    const cred=await signInWithEmailAndPassword(auth,studentEmail(sid),password);
     state.uid=cred.user.uid;
     await requestLoginFullscreen();
     await routeAuthenticatedStudent();
-  }catch{
-    $("loginMessage").textContent="เลขนักศึกษาหรือรหัสผ่านไม่ถูกต้อง";
+  }catch(error){
+    console.error("login:",error);
+    if(["auth/invalid-credential","auth/user-not-found","auth/wrong-password"].includes(error?.code)){
+      $("loginMessage").textContent="รหัสนักศึกษาหรือรหัสผ่านไม่ถูกต้อง";
+    }else if(error?.code==="permission-denied"){
+      $("loginMessage").textContent="Login Auth สำเร็จ แต่ Firestore Rules ปฏิเสธการอ่านข้อมูล User กรุณา Publish firestore.rules V4.9.5";
+    }else if(error?.message==="USER_PROFILE_NOT_READY"){
+      $("loginMessage").textContent="พบบัญชี Login แต่ไม่พบข้อมูล User ใน Firestore ให้ Admin ตรวจหรือลบบัญชีนี้แล้วสมัครใหม่";
+    }else{
+      $("loginMessage").textContent="เปิดบัญชีไม่สำเร็จ: "+(error?.message||String(error));
+    }
+  }finally{
+    authActionInProgress=false;
+    if(button){button.disabled=false;button.textContent=oldText;}
   }
 });
 
-async function routeAuthenticatedStudent(){
-  // createUserWithEmailAndPassword จะยิง onAuthStateChanged ก่อน setDoc(users/{uid}) ได้
-  // จึง retry สั้น ๆ เพื่อป้องกันหน้า Login กระพริบ/แจ้งไม่พบ User ตอนสมัครใหม่
-  for(let i=0;i<6&&!state.player;i++){
-    await ensureProfileDefaults();
-    if(!state.player) await new Promise(resolve=>setTimeout(resolve,250));
-  }
-  if(!state.player) throw new Error("ไม่พบข้อมูลผู้ใช้");
-
-  const requestedQuest=new URLSearchParams(location.search).get("quest");
-  // มือถือ/แท็บเล็ตยังเข้าได้เฉพาะ 2D Zone ตามกติกาเดิม
-  if(isMobileOrTabletDevice() && ["male","female"].includes(state.player?.character?.gender)){
+async function waitForStudentProfile(maxWaitMs=6000){
+  const started=Date.now();
+  while(Date.now()-started<maxWaitMs){
     try{
-      await syncPublicProfile();
-      await writePresence("zone");
+      const snap=await getDoc(doc(db,"users",state.uid));
+      if(snap.exists())return snap;
     }catch(error){
-      console.warn("mobile route sync skipped:", error);
+      if(error?.code==="permission-denied")throw error;
+      console.warn("wait profile:",error);
     }
-    location.replace("./zone.html?v=4.9.5");
-    return;
+    await new Promise(resolve=>setTimeout(resolve,250));
   }
+  return null;
+}
+async function routeAuthenticatedStudent(){
+  if(authRoutePromise)return authRoutePromise;
+  authRoutePromise=(async()=>{
+    if(!auth.currentUser)throw new Error("AUTH_SESSION_MISSING");
+    state.uid=auth.currentUser.uid;
 
-  await enterPortal();
+    // Registration can trigger onAuthStateChanged before users/{uid} is written.
+    // Wait for the profile document instead of treating it as a failed login.
+    const profileSnap=await waitForStudentProfile(6000);
+    if(!profileSnap)throw new Error("USER_PROFILE_NOT_READY");
+
+    await ensureProfileDefaults();
+    if(!state.player)throw new Error("USER_PROFILE_LOAD_FAILED");
+
+    // Old accounts are allowed in even if academic data is missing.
+    // enterPortal will offer the profile repair modal instead of blocking access.
+    const requestedQuest=new URLSearchParams(location.search).get("quest");
+
+    if(isMobileOrTabletDevice() && ["male","female"].includes(state.player?.character?.gender)){
+      try{
+        await syncPublicProfile();
+        await writePresence("zone");
+      }catch(error){
+        console.warn("mobile route sync skipped:",error);
+      }
+      location.replace("./zone.html?v=4.9.5");
+      return;
+    }
+
+    await enterPortal();
+  })().finally(()=>{authRoutePromise=null;});
+  return authRoutePromise;
 }
 
 function profileMajorOptions(current){
@@ -6174,15 +6258,35 @@ if ($("mobileExitButton")) {
 updateDeviceUX();
 
 onAuthStateChanged(auth,async user=>{
-  if(!user){state.uid=null;state.player=null;showScreen("authScreen");return;}
-  if(user.email==="pisit_2000@thc-nr.local"){location.replace("./admin.html?v=4.9.5");return;}
+  if(!user){
+    state.uid=null;
+    state.player=null;
+    if(!authActionInProgress)showScreen("authScreen");
+    return;
+  }
+
+  if(user.email==="pisit_2000@thc-nr.local"){
+    location.replace("./admin.html?v=4.9.5");
+    return;
+  }
+
   state.uid=user.uid;
+
+  // During an explicit Login/Register submit, that handler owns routing.
+  if(authActionInProgress)return;
+
   try{
     await routeAuthenticatedStudent();
   }catch(error){
-    console.error("auth route:",error);
+    console.error("auth observer route:",error);
     showScreen("authScreen");
-    $("loginMessage").textContent="เปิดบัญชีไม่สำเร็จ กรุณา Reload แล้วลองใหม่";
+    if(error?.code==="permission-denied"){
+      $("loginMessage").textContent="Firebase Rules ปฏิเสธการอ่าน User · กรุณา Publish firestore.rules V4.9.5";
+    }else if(error?.message==="USER_PROFILE_NOT_READY"){
+      $("loginMessage").textContent="บัญชี Authentication มีอยู่ แต่ไม่พบ Profile ใน Firestore · ให้ Admin ลบบัญชีเดิมแล้วสมัครใหม่";
+    }else{
+      $("loginMessage").textContent="เปิดบัญชีไม่สำเร็จ: "+(error?.message||String(error));
+    }
   }
 });
 
@@ -6484,7 +6588,7 @@ function buildAdminRankingRows(){
   const rows=cache.users.map(u=>{
     const attempts=seasonAttemptsForUser(u.id);
     const days=new Set(attempts.map(a=>a.createdAt?.toDate?.()?.toISOString().slice(0,10)).filter(Boolean)).size;
-    const m=calculateRankMetrics(attempts,days);
+    const m=calculateRankMetrics(attempts);
     return {user:u,classKey:classKeyForUser(u),departmentKey:departmentKeyForUser(u),majorKey:majorKeyForUser(u),...m};
   }).sort((a,b)=>b.rating-a.rating||compareStudentId(a.user,b.user));
   rows.forEach((r,i)=>r.globalPosition=i+1);
@@ -6699,8 +6803,8 @@ function renderRanking(){
     <td>${esc(r.user.fullName)}<br><small>${esc(r.user.studentId)}</small></td>
     <td><small>${esc(r.departmentKey)}<br>${esc(r.majorKey)}<br>${esc(r.classKey)}</small></td>
     <td>${adminRankShieldHTML(r)} <strong>${esc(r.tierName)}</strong></td>
-    <td><strong>${r.rating}</strong></td><td>${r.diligence}</td><td>${r.accuracy}</td><td>${r.speed}</td><td>${r.consistency}</td><td>${r.avgWpm}</td>
-  </tr>`).join("")||`<tr><td colspan="13" class="empty">ยังไม่มีข้อมูล Ranking</td></tr>`;
+    <td><strong>${r.rating}</strong></td><td>${r.speed}</td><td>${r.accuracy}</td><td>${r.completionTime}</td><td>${r.avgWpm}</td><td>${r.avgAccuracy}</td><td>${r.avgSeconds?`${r.avgSeconds}s`:"-"}</td>
+  </tr>`).join("")||`<tr><td colspan="15" class="empty">ยังไม่มีข้อมูล Ranking</td></tr>`;
 }
 
 async function persistRanking(){
@@ -7233,7 +7337,7 @@ function listenModeration(){
 }
 
 async function loadProfile(){
-  if(isGM()){profile={uid,studentId:"GM",fullName:"GM",rank:GM_RANK,tokenBalance:0,inventory:[],character:{gender:"male",equipped:{}},zone:{}};me.x=450;return true}
+  if(isGM()){profile={uid,studentId:"GM",fullName:"GM",rank:null,tokenBalance:0,inventory:[],character:{gender:"male",equipped:{}},zone:{}};me.x=450;return true}
   try{
     const snap=await getDoc(doc(db,"users",uid));if(!snap.exists()){showGate("ไม่พบ User","กรุณาลงทะเบียนใหม่");return false}
     profile={uid,...snap.data()};
@@ -7248,7 +7352,7 @@ async function syncPublicProfile(){
     const gm=isGM();
     await setDoc(doc(db,"public_profiles",uid),{
       uid,studentId:gm?"GM":profile.studentId,fullName:gm?"GM":profile.fullName,isAdmin:gm,role:gm?"GM":"USER",
-      rank:gm?GM_RANK:(profile.rank||null),
+      rank:gm?null:(profile.rank||null),
       character:gm?{gender:"male",equipped:{}}:{gender:profile.character?.gender||"male",equipped:equipped(profile.character)},
       updatedAt:serverTimestamp()
     },{merge:true});
@@ -7257,7 +7361,7 @@ async function syncPublicProfile(){
 async function publishPresence(){
   try{
     await setDoc(doc(db,"presence",uid),{
-      uid,studentId:isGM()?"GM":profile.studentId,isAdmin:isGM(),rank:isGM()?GM_RANK:(profile.rank||null),
+      uid,studentId:isGM()?"GM":profile.studentId,isAdmin:isGM(),rank:isGM()?null:(profile.rank||null),
       area:"zone",online:true,lastSeenAt:serverTimestamp()
     },{merge:true});
   }catch(error){console.warn("presence",error)}
@@ -7268,7 +7372,7 @@ async function publishPosition(force=false){
   try{
     await setDoc(doc(db,"zone_positions",uid),{
       uid,studentId:isGM()?"GM":profile.studentId,isAdmin:isGM(),role:isGM()?"GM":"USER",
-      rank:isGM()?GM_RANK:(profile.rank||null),
+      rank:isGM()?null:(profile.rank||null),
       character:isGM()?{gender:"male",equipped:{}}:{gender:profile.character?.gender||"male",equipped:equipped(profile.character)},
       zoneId:ZONE_ID,x:Math.round(me.x*10)/10,y:WALK_Y,direction:me.direction,moving:me.moving,online:true,updatedAt:serverTimestamp()
     },{merge:true});
@@ -7596,7 +7700,7 @@ function drawRankShield(c,x,y,rank){const r=rankMeta(rank);c.save();c.translate(
 function drawName(c,p,gm){
   const label=gm?"GM":String(p.studentId||"USER");c.font="800 14px system-ui";const w=Math.max(gm?76:105,c.measureText(label).width+45);
   c.fillStyle=gm?"rgba(91,22,49,.95)":"rgba(9,28,39,.9)";rr(c,-w/2,-143,w,29,8);c.fill();c.strokeStyle=gm?"#ebc34e":"rgba(255,255,255,.1)";c.lineWidth=2;c.stroke();
-  c.fillStyle="#fff";c.textAlign="center";c.fillText(label,0,-124);drawRankShield(c,-w/2+16,-130,gm?GM_RANK:p.rank);drawBubble(c,p);
+  c.fillStyle="#fff";c.textAlign="center";c.fillText(label,0,-124);if(!gm)drawRankShield(c,-w/2+16,-130,p.rank);drawBubble(c,p);
 }
 function drawBubble(c,p){
   const m=messagesByUid.get(p.uid);if(!m?.text)return;const dt=m.createdAt?.toDate?.();if(dt&&Date.now()-dt.getTime()>BUBBLE_MS)return;
@@ -7630,7 +7734,7 @@ function drawFrame(now){
   ctx.setTransform(1,0,0,1,0,0);ctx.fillStyle="#102c3d";ctx.fillRect(0,0,canvas.width,canvas.height);
   ctx.setTransform(dpr*zoom,0,0,dpr*zoom,-cameraX*dpr*zoom,0);drawWorld(now);
   const list=[...players.values()].map(p=>({...p,x:p.currentX,y:WALK_Y}));
-  list.push({uid,studentId:isGM()?"GM":profile.studentId,isAdmin:isGM(),rank:isGM()?GM_RANK:profile.rank,character:isGM()?{gender:"male",equipped:{}}:{gender:profile.character?.gender,equipped:equipped(profile.character)},x:me.x,y:WALK_Y,direction:me.direction,moving:me.moving});
+  list.push({uid,studentId:isGM()?"GM":profile.studentId,isAdmin:isGM(),rank:isGM()?null:profile.rank,character:isGM()?{gender:"male",equipped:{}}:{gender:profile.character?.gender,equipped:equipped(profile.character)},x:me.x,y:WALK_Y,direction:me.direction,moving:me.moving});
   for(const p of list)drawCharacter(ctx,p,p.x,p.y,now);
 }
 function loop(now){const dt=Math.min(.04,(now-lastFrame)/1000);lastFrame=now;updateMovement(dt);smoothRemote(dt);updateCamera(dt);drawFrame(now);requestAnimationFrame(loop)}
@@ -7642,8 +7746,8 @@ canvas.onclick=e=>{
   let selected=null,best=999;for(const p of players.values()){const d=Math.abs(p.currentX-pt.x);if(d<65&&d<best){selected=p;best=d}}if(selected)openPlayerCard(selected);
 };
 function openPlayerCard(p){
-  const gm=isGMPlayer(p);$("zonePlayerCardId").textContent=gm?"GM":String(p.studentId||"USER");$("zonePlayerCardShield").innerHTML=rankShieldHTML(gm?GM_RANK:p.rank);
-  $("zonePlayerCardRank").textContent=gm?"GAME MASTER":`${p.rank?.tierName||"Bronze"} · ${Number(p.rank?.rating||0)} Rating`;
+  const gm=isGMPlayer(p);$("zonePlayerCardId").textContent=gm?"GM":String(p.studentId||"USER");$("zonePlayerCardShield").innerHTML=gm?"":rankShieldHTML(p.rank);
+  $("zonePlayerCardRank").textContent=gm?"ADMIN · GM":`${p.rank?.tierName||"Bronze"} · ${Number(p.rank?.rating||0)} Rating`;
   $("zonePlayerCardItemTitle").textContent=gm?"GM EXCLUSIVE":"ไอเท็มที่กำลังสวม";
   const list=gm?GM_ITEMS:equippedItems(p.character).map(x=>x.item);
   $("zonePlayerCardItems").innerHTML=list.length?list.map(i=>`<div><span>${i.icon||"✨"}</span><small>${esc(i.name||"Item")}</small></div>`).join(""):`<div class="empty">ยังไม่ได้สวมไอเท็ม</div>`;
@@ -7672,7 +7776,7 @@ onAuthStateChanged(auth,async user=>{
   if(!user){showGate("กรุณา Login ก่อน","2D Zone ใช้บัญชีที่ลงทะเบียนแล้ว");return}
   uid=user.uid;if(!(await loadProfile()))return;if(!(await checkModeration()))return;
   hideGate();$("zoneMyStudentId").textContent=isGM()?"GM":profile.studentId;$("zoneChatIdentity").textContent=isGM()?"GM":profile.studentId;
-  $("zoneMyShield").innerHTML=rankShieldHTML(isGM()?GM_RANK:profile.rank);$("zoneTokenBalance").textContent=isGM()?"∞":Number(profile.tokenBalance||0).toLocaleString();
+  $("zoneMyShield").innerHTML=isGM()?"":rankShieldHTML(profile.rank);$("zoneTokenBalance").textContent=isGM()?"∞":Number(profile.tokenBalance||0).toLocaleString();
   if(isGM()){$("openAdminPanel").classList.remove("hidden");$("leaveZoneButton").href="./admin.html";$("zoneChatInput").placeholder="GM พิมพ์ข้อความหรือประกาศ..."}
   resizeCanvas();updateClock();clockTimer=setInterval(updateClock,1000);startZoneDailyCheckin();await loadQuestProgress();
   listenModeration();listenPositions();listenMessages();listenTeacherQuests();listenRankingNotice();expiryTimer=setInterval(refreshMessages,60000);
@@ -7688,26 +7792,17 @@ onAuthStateChanged(auth,async user=>{
 ```js
 export const RANKING_CONFIG = {
   seasonDays: null,
-  automaticReset: false,
-
   weights: {
-    diligence: 0.35,
-    accuracy: 0.30,
-    speed: 0.20,
-    consistency: 0.15
+    speed: 0.40,
+    accuracy: 0.40,
+    completionTime: 0.20
   },
-
-  // WPM เทียบกับช่วงคะแนนความเร็ว 0-100
-  speedReferenceWpm: 80,
-
-  tiers: [
-    {id:"bronze", name:"Bronze", icon:"🥉", min:0},
-    {id:"silver", name:"Silver", icon:"🥈", min:35},
-    {id:"gold", name:"Gold", icon:"🥇", min:55},
-    {id:"platinum", name:"Platinum", icon:"💠", min:70},
-    {id:"diamond", name:"Diamond", icon:"💎", min:82},
-    {id:"master", name:"Master", icon:"👑", min:92}
-  ]
+  targets: {
+    // WPM ตั้ง 80 เป็นคะแนนความเร็วเต็ม 100
+    targetWpm: 80,
+    // เวลามาตรฐานสำหรับ normalization; ยิ่งต่ำยิ่งได้คะแนนมาก
+    referenceSeconds: 180
+  }
 };
 
 export function seasonIdFromDate(date = new Date()) {
@@ -7721,71 +7816,76 @@ export function seasonRange(date = new Date()) {
   };
 }
 
-export function calculateRankMetrics(attempts, activeDayCount = 0) {
-  const completed = attempts.filter(a => a.status === "completed");
-  const total = completed.length;
+export function calculateRankMetrics(attempts=[]){
+  const completed=(attempts||[]).filter(a=>{
+    const status=String(a.status||"").toLowerCase();
+    return status==="completed"||status==="complete"||status==="passed"||status==="success";
+  });
 
-  const avgAccuracy = total
-    ? completed.reduce((s,a)=>s + Number(a.accuracy || 0), 0) / total
-    : 0;
-
-  const avgWpm = total
-    ? completed.reduce((s,a)=>s + Number(a.wpm || 0), 0) / total
-    : 0;
-
-  // ความขยัน: จำนวนด่าน + จำนวนวันที่กลับมาใช้งาน
-  const attemptFactor = Math.min(100, total * 2.5);
-  const dayFactor = Math.min(100, activeDayCount * 4);
-  const diligence = attemptFactor * 0.65 + dayFactor * 0.35;
-
-  // ความเร็ว: ไม่ให้ความเร็วสูงอย่างเดียวชนะ Accuracy
-  const speed = Math.min(100, (avgWpm / RANKING_CONFIG.speedReferenceWpm) * 100);
-
-  // ความสม่ำเสมอ: Accuracy กระจายน้อย + มีหลายรอบ
-  let consistency = 0;
-  if (total) {
-    const mean = avgAccuracy;
-    const variance = completed.reduce((s,a)=>{
-      const d = Number(a.accuracy || 0) - mean;
-      return s + d*d;
-    },0) / total;
-    const std = Math.sqrt(variance);
-    const stability = Math.max(0, 100 - std * 2);
-    const volume = Math.min(100, total * 4);
-    consistency = stability * 0.7 + volume * 0.3;
+  if(!completed.length){
+    return {
+      rating:0,
+      tierId:"bronze",
+      tierName:"Bronze",
+      speed:0,
+      accuracy:0,
+      completionTime:0,
+      avgWpm:0,
+      avgAccuracy:0,
+      avgSeconds:0,
+      bestWpm:0,
+      bestAccuracy:0,
+      bestSeconds:0,
+      completedAttempts:0
+    };
   }
 
-  const accuracy = Math.max(0, Math.min(100, avgAccuracy));
+  const wpms=completed.map(a=>Number(a.wpm||0)).filter(Number.isFinite);
+  const accuracies=completed.map(a=>Number(a.accuracy||0)).filter(Number.isFinite);
+  const seconds=completed.map(a=>{
+    const raw=Number(a.elapsedSeconds ?? a.elapsed ?? a.timeSeconds ?? a.durationSeconds ?? 0);
+    return Number.isFinite(raw)&&raw>0?raw:null;
+  }).filter(v=>v!==null);
 
-  const rating = Math.round(
-    diligence * RANKING_CONFIG.weights.diligence +
-    accuracy * RANKING_CONFIG.weights.accuracy +
-    speed * RANKING_CONFIG.weights.speed +
-    consistency * RANKING_CONFIG.weights.consistency
+  const avg=a=>a.length?a.reduce((x,y)=>x+y,0)/a.length:0;
+  const avgWpm=avg(wpms);
+  const avgAccuracy=avg(accuracies);
+  const avgSeconds=avg(seconds);
+
+  // 40 คะแนนจากความเร็ว: 80 WPM = เต็ม 100 ใน component นี้
+  const speed=Math.max(0,Math.min(100,(avgWpm/RANKING_CONFIG.targets.targetWpm)*100));
+
+  // 40 คะแนนจาก Accuracy โดยตรง
+  const accuracy=Math.max(0,Math.min(100,avgAccuracy));
+
+  // 20 คะแนนจากเวลา: ใช้ inverse ratio ยิ่งเร็วคะแนนยิ่งสูง
+  // 90 sec = 100, 180 sec = 50, 360 sec = 25 โดยไม่ให้เกิน 100
+  const completionTime=avgSeconds>0
+    ?Math.max(0,Math.min(100,(90/avgSeconds)*100))
+    :0;
+
+  const rating=Math.round(
+    speed*RANKING_CONFIG.weights.speed +
+    accuracy*RANKING_CONFIG.weights.accuracy +
+    completionTime*RANKING_CONFIG.weights.completionTime
   );
 
-  const tiers = [...RANKING_CONFIG.tiers].sort((a,b)=>b.min-a.min);
-  const tier = tiers.find(t => rating >= t.min) || RANKING_CONFIG.tiers[0];
-
+  const tier=rankTierFromRating(rating);
   return {
     rating,
-    tierId: tier.id,
-    tierName: tier.name,
-    tierIcon: tier.icon,
-    diligence: Math.round(diligence),
-    accuracy: Math.round(accuracy),
-    speed: Math.round(speed),
-    consistency: Math.round(consistency),
-    avgWpm: Math.round(avgWpm * 10) / 10,
-    avgAccuracy: Math.round(avgAccuracy * 10) / 10,
-    completedAttempts: total,
-    activeDayCount
+    tierId:tier.id,
+    tierName:tier.name,
+    speed:Math.round(speed),
+    accuracy:Math.round(accuracy),
+    completionTime:Math.round(completionTime),
+    avgWpm:Math.round(avgWpm*10)/10,
+    avgAccuracy:Math.round(avgAccuracy*100)/100,
+    avgSeconds:Math.round(avgSeconds*10)/10,
+    bestWpm:wpms.length?Math.max(...wpms):0,
+    bestAccuracy:accuracies.length?Math.max(...accuracies):0,
+    bestSeconds:seconds.length?Math.min(...seconds):0,
+    completedAttempts:completed.length
   };
-}
-
-
-export function rankingClassKey(educationLevel,classroom){
-  return `${String(educationLevel||"").trim()}${String(classroom||"").trim()}`;
 }
 
 export function rankProfiles(profiles,limit=10){
@@ -8344,6 +8444,27 @@ service cloud.firestore {
 
   }
 }
+
+```
+
+
+## firebase-config.js
+
+```js
+export const firebaseConfig = {
+  apiKey: "AIzaSyAScKt0szL6-KpA0KqQlROq2v59vBbBrxc",
+  authDomain: "thc-nr.firebaseapp.com",
+  projectId: "thc-nr",
+  storageBucket: "thc-nr.firebasestorage.app",
+  messagingSenderId: "839632570247",
+  appId: "1:839632570247:web:4c2d2413270df99dd7f522",
+  measurementId: "G-LWCNWGSZTS"
+};
+
+export const ADMIN_USERNAME = "Pisit_2000";
+export const ADMIN_EMAIL = "pisit_2000@thc-nr.local";
+
+export const ADMIN_UID = "TWUrLjOh3BTa1cBNwDXKk4X2IAg1";
 
 ```
 

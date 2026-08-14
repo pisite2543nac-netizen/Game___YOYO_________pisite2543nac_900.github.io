@@ -1,4 +1,4 @@
-# FULL CODE V4.9.4
+# FULL CODE V4.9.5
 
 
 
@@ -11,7 +11,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1">
   <title>ระบบเกมพิมพ์ Code | วิทยาลัยเทคนิคนางรอง</title>
-  <link rel="stylesheet" href="./style.css?v=4.9.4">
+  <link rel="stylesheet" href="./style.css?v=4.9.5">
 </head>
 <body>
 <header class="site-header">
@@ -533,7 +533,7 @@
 </main>
 
 <footer><div class="wrap">ระบบเกมพิมพ์ Code · วิทยาลัยเทคนิคนางรอง</div></footer>
-<script type="module" src="./app.js?v=4.9.4"></script>
+<script type="module" src="./app.js?v=4.9.5"></script>
 
   <div id="characterSetupModal" class="character-modal hidden">
     <div class="character-modal-card character-setup-card">
@@ -635,7 +635,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Admin | ระบบเกมพิมพ์ Code</title>
-  <link rel="stylesheet" href="./style.css?v=4.9.4">
+  <link rel="stylesheet" href="./style.css?v=4.9.5">
 </head>
 <body class="admin-page">
   <main class="wrap admin-wrap">
@@ -669,7 +669,7 @@
           <p>ผู้จัดทำ: นายพิสิษฐ์ หุนตระนี ครูพิเศษสอน</p>
         </div>
         <div>
-          <a class="btn gm-zone-entry" href="./zone.html?v=4.9.4">🌙 เข้า 2D Zone · GM</a>
+          <a class="btn gm-zone-entry" href="./zone.html?v=4.9.5">🌙 เข้า 2D Zone · GM</a>
           <a class="btn ghost" href="index.html">หน้าผู้เล่น</a>
           <button id="logoutAdmin" class="btn secondary">ออกจากระบบ</button>
         </div>
@@ -1009,7 +1009,7 @@
           <div class="admin-world-chat-input-row">
             <textarea id="gmWorldChatInput" maxlength="120" rows="2" placeholder="GM พิมพ์ข้อความถึงผู้เล่นทุกคน..."></textarea>
             <button id="sendGmWorldChat" class="btn primary" type="button">ส่งในแชตโลก</button>
-            <a class="btn gm-zone-entry" href="./zone.html?v=4.9.4#world-chat">เข้า World Chat</a>
+            <a class="btn gm-zone-entry" href="./zone.html?v=4.9.5#world-chat">เข้า World Chat</a>
           </div>
         </div>
 
@@ -1040,7 +1040,7 @@
   </main>
 
   <div id="adminToast" class="admin-toast hidden" aria-live="polite"></div>
-  <script type="module" src="./admin.js?v=4.9.4"></script>
+  <script type="module" src="./admin.js?v=4.9.5"></script>
 </body>
 </html>
 
@@ -1057,7 +1057,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#102c3d">
   <title>2D Zone | Code Typing Academy</title>
-  <link rel="stylesheet" href="./style.css?v=4.9.4">
+  <link rel="stylesheet" href="./style.css?v=4.9.5">
 </head>
 <body class="zone47-page">
   <div id="zoneGate" class="zone47-gate">
@@ -1170,7 +1170,7 @@
     </div>
   </div>
 
-  <script type="module" src="./zone.js?v=4.9.4"></script>
+  <script type="module" src="./zone.js?v=4.9.5"></script>
 </body>
 </html>
 
@@ -4285,7 +4285,7 @@ html,body.social-zone-page{
 @media(max-width:760px){.zone47-app{grid-template-rows:54px minmax(0,1fr) 72px}.zone47-topbar{grid-template-columns:minmax(0,1fr) auto;padding:5px 6px}.zone47-brand small,.zone47-token{display:none}.zone47-actions .btn:not(#openWizardQuests):not(#openZoneShop){display:none}.zone47-actions .btn{padding:0 5px}.zone47-help{display:none}.zone47-footer{grid-template-columns:54px minmax(0,1fr) 54px;gap:5px;padding:6px}.zone47-chat-id{display:none}.zone47-move-button{height:56px}.zone47-chat-form{height:56px;grid-template-columns:minmax(0,1fr) 55px;padding:5px;border-width:1px}.zone47-chat-form input{font-size:16px;padding:0 8px}.zone47-shop-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.zone47-quest-item{grid-template-columns:45px minmax(0,1fr);}.zone47-quest-reward{grid-column:1/-1;display:grid;grid-template-columns:50px 50px minmax(0,1fr);align-items:center;gap:5px}.zone47-quest-reward .btn{margin:0}.zone47-modal{padding:7px}.zone47-modal-card{width:100%;max-height:calc(100dvh - 14px);padding:14px;border-width:2px}.zone47-wizard-portrait{width:58px;height:58px;font-size:34px}.admin-quest-form{grid-template-columns:1fr}.admin-quest-description{grid-column:span 1}}
 
 
-/* ===== V4.9.4 DEPARTMENT + MAJOR RANKING ===== */
+/* ===== V4.9.5 DEPARTMENT + MAJOR RANKING ===== */
 .ranking-mode-switch-four{grid-template-columns:repeat(4,minmax(0,1fr));}
 .admin-major-search-card{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;align-items:center;margin-bottom:14px;padding:13px;border:1px solid #dde5eb;border-radius:14px;background:#f8fbfd}
 .admin-major-search-box{display:grid;grid-template-columns:28px minmax(0,1fr) auto;gap:7px;align-items:center}.admin-major-search-box input{min-height:44px;border:1px solid #ccd8e1;border-radius:10px;padding:0 12px;background:#fff}
@@ -4312,14 +4312,14 @@ import {
   getFirestore, collection, doc, getDoc, getDocs, setDoc, addDoc, updateDoc, deleteDoc,
   serverTimestamp, query, where, orderBy, limit, onSnapshot, runTransaction
 } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
-import { firebaseConfig } from "./firebase-config.js?v=4.9.4";
-import { LANGUAGES, LESSONS, DIFFICULTIES } from "./lessons.js?v=4.9.4";
-import { REWARD_ITEMS, RARITY_META } from "./reward-data.js?v=4.9.4";
-import { DEFAULT_CHARACTER, DEFAULT_ZONE_STATE } from "./character-system.js?v=4.9.4";
-import { OFFICIAL_STAGES, OFFICIAL_TOTAL_SCORE } from "./official-data.js?v=4.9.4";
-import { RANKING_CONFIG, seasonIdFromDate, seasonRange, calculateRankMetrics, rankingClassKey, rankProfiles } from "./ranking-system.js?v=4.9.4";
-import { TOKEN_REWARD_CONFIG, calculateStageTokenReward, maxTokenForLesson, classKey } from "./economy-system.js?v=4.9.4";
-import { DEFAULT_TEACHER_QUESTS, localDayKey, questObjectiveMet, questObjectiveLabel, clampQuestReward } from "./quest-system.js?v=4.9.4";
+import { firebaseConfig } from "./firebase-config.js?v=4.9.5";
+import { LANGUAGES, LESSONS, DIFFICULTIES } from "./lessons.js?v=4.9.5";
+import { REWARD_ITEMS, RARITY_META } from "./reward-data.js?v=4.9.5";
+import { DEFAULT_CHARACTER, DEFAULT_ZONE_STATE } from "./character-system.js?v=4.9.5";
+import { OFFICIAL_STAGES, OFFICIAL_TOTAL_SCORE } from "./official-data.js?v=4.9.5";
+import { RANKING_CONFIG, seasonIdFromDate, seasonRange, calculateRankMetrics, rankingClassKey, rankProfiles } from "./ranking-system.js?v=4.9.5";
+import { TOKEN_REWARD_CONFIG, calculateStageTokenReward, maxTokenForLesson, classKey } from "./economy-system.js?v=4.9.5";
+import { DEFAULT_TEACHER_QUESTS, localDayKey, questObjectiveMet, questObjectiveLabel, clampQuestReward } from "./quest-system.js?v=4.9.5";
 
 const firebaseApp = initializeApp(firebaseConfig);
 const auth = getAuth(firebaseApp);
@@ -4470,7 +4470,7 @@ async function routeAuthenticatedStudent(){
     }catch(error){
       console.warn("mobile route sync skipped:", error);
     }
-    location.replace("./zone.html?v=4.9.4");
+    location.replace("./zone.html?v=4.9.5");
     return;
   }
 
@@ -4708,7 +4708,7 @@ async function maybeLaunchQuestFromUrl(){
   if(!id||state.questLaunchHandled||!state.uid||!state.player)return false;
   state.questLaunchHandled=true;
   if(isMobileOrTabletDevice()){
-    location.replace("./zone.html?v=4.9.4");
+    location.replace("./zone.html?v=4.9.5");
     return true;
   }
   const quest=await resolveTeacherQuest(id);
@@ -5023,7 +5023,7 @@ $("nextLevelButton").onclick=async()=>{
   state.lesson=next;state.difficulty=DIFFICULTIES.find(x=>x.id===next.difficulty);
   prepareClassic();showScreen("gameScreen");await requestRealFullscreen();setTimeout(()=>$("typingInput").focus({preventScroll:true}),100);
 };
-$("questZoneButton").onclick=()=>{location.href="./zone.html?v=4.9.4"};
+$("questZoneButton").onclick=()=>{location.href="./zone.html?v=4.9.5"};
 $("portalButton").onclick=async()=>{state.activeQuest=null;history.replaceState(null,"",location.pathname);await ensureProfileDefaults();await enterPortal()};
 
 function renderRewardShop(){
@@ -5290,7 +5290,7 @@ async function saveCharacterGender(gender){
 
   // มือถือ/แท็บเล็ตใช้เฉพาะ 2D Zone หลังเลือกตัวละครเสร็จ
   if(isMobileOrTabletDevice()){
-    location.replace("./zone.html?v=4.9.4");
+    location.replace("./zone.html?v=4.9.5");
   }
 }
 
@@ -5877,7 +5877,7 @@ updateDeviceUX();
 
 onAuthStateChanged(auth,async user=>{
   if(!user){state.uid=null;state.player=null;showScreen("authScreen");return;}
-  if(user.email==="pisit_2000@thc-nr.local"){location.replace("./admin.html?v=4.9.4");return;}
+  if(user.email==="pisit_2000@thc-nr.local"){location.replace("./admin.html?v=4.9.5");return;}
   state.uid=user.uid;
   try{
     await routeAuthenticatedStudent();
@@ -5903,10 +5903,10 @@ import {
   getFirestore, collection, doc, getDocs, setDoc, deleteDoc, updateDoc,
   writeBatch, serverTimestamp, onSnapshot, Timestamp, query, orderBy, limit
 } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
-import { firebaseConfig, ADMIN_USERNAME, ADMIN_EMAIL, ADMIN_UID } from "./firebase-config.js?v=4.9.4";
-import { DEFAULT_MODES, DEFAULT_LEVELS } from "./default-data.js?v=4.9.4";
-import { seasonIdFromDate, seasonRange, calculateRankMetrics, rankingClassKey } from "./ranking-system.js?v=4.9.4";
-import { DEFAULT_TEACHER_QUESTS, clampQuestReward, questDifficultyName, questObjectiveLabel, defaultMinRankForDifficulty, rewardRange } from "./quest-system.js?v=4.9.4";
+import { firebaseConfig, ADMIN_USERNAME, ADMIN_EMAIL, ADMIN_UID } from "./firebase-config.js?v=4.9.5";
+import { DEFAULT_MODES, DEFAULT_LEVELS } from "./default-data.js?v=4.9.5";
+import { seasonIdFromDate, seasonRange, calculateRankMetrics, rankingClassKey } from "./ranking-system.js?v=4.9.5";
+import { DEFAULT_TEACHER_QUESTS, clampQuestReward, questDifficultyName, questObjectiveLabel, defaultMinRankForDifficulty, rewardRange } from "./quest-system.js?v=4.9.5";
 
 const app=initializeApp(firebaseConfig),auth=getAuth(app),db=getFirestore(app),$=id=>document.getElementById(id);
 let cache={users:[],attempts:[],levels:[],modes:[],official:[],zonePositions:[],zoneModeration:[],zoneMessages:[],zoneArchive:[],rankingSettings:{},teacherQuests:[]},unsubs=[];
@@ -6683,13 +6683,13 @@ import {
   getFirestore, doc, getDoc, setDoc, updateDoc, collection, onSnapshot,
   serverTimestamp, query, orderBy, limit, Timestamp, runTransaction
 } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
-import { firebaseConfig, ADMIN_UID } from "./firebase-config.js?v=4.9.4";
-import { REWARD_ITEMS, RARITY_META } from "./reward-data.js?v=4.9.4";
-import { DEFAULT_CHARACTER } from "./character-system.js?v=4.9.4";
+import { firebaseConfig, ADMIN_UID } from "./firebase-config.js?v=4.9.5";
+import { REWARD_ITEMS, RARITY_META } from "./reward-data.js?v=4.9.5";
+import { DEFAULT_CHARACTER } from "./character-system.js?v=4.9.5";
 import {
   QUEST_CONFIG, DEFAULT_TEACHER_QUESTS, localDayKey, activeQuestLimit,
   canAccessQuest, clampQuestReward, questDifficultyName, questObjectiveLabel
-} from "./quest-system.js?v=4.9.4";
+} from "./quest-system.js?v=4.9.5";
 
 const firebaseApp=initializeApp(firebaseConfig);
 const auth=getAuth(firebaseApp);
@@ -6949,7 +6949,7 @@ async function acceptQuest(id){
 function startQuest(id){
   const q=teacherQuests.find(x=>x.id===id)||DEFAULT_TEACHER_QUESTS.find(x=>x.id===id);if(!q)return;
   if(isTouchOnly()){alert("รับภารกิจแล้ว กรุณาเปิดบัญชีนี้บนคอมพิวเตอร์เพื่อทำภารกิจ");return}
-  location.href=`./index.html?quest=${encodeURIComponent(id)}&v=4.9.4`;
+  location.href=`./index.html?quest=${encodeURIComponent(id)}&v=4.9.5`;
 }
 $("openWizardQuests").onclick=async()=>{await loadQuestProgress();renderQuestModal();$("zoneQuestModal").classList.remove("hidden")};
 $("closeWizardQuests").onclick=()=>$("zoneQuestModal").classList.add("hidden");
@@ -9695,8 +9695,8 @@ export const OFFICIAL_TOTAL_SCORE = 40;
 ## lessons.js
 
 ```js
-import { HTML_LEVELS } from "./levels-html.js?v=4.9.4";
-import { PYTHON_LEVELS } from "./levels-python.js?v=4.9.4";
+import { HTML_LEVELS } from "./levels-html.js?v=4.9.5";
+import { PYTHON_LEVELS } from "./levels-python.js?v=4.9.5";
 
 export const LANGUAGES = [
   {
@@ -9960,12 +9960,12 @@ def save_score():
 ## 404.html
 
 ```html
-<!DOCTYPE html><html lang="th"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>กำลังกู้คืนหน้า</title><style>body{font-family:system-ui;margin:0;min-height:100vh;display:grid;place-items:center;background:#f4f7fa;color:#173449}.box{max-width:520px;padding:30px;text-align:center;background:#fff;border:1px solid #dce3ea;border-radius:16px}.box a{display:inline-block;margin:6px;padding:10px 16px;border-radius:9px;background:#244b75;color:#fff;text-decoration:none}</style></head><body><div class="box"><h1>กำลังกู้คืนหน้า...</h1><p>กำลังกู้คืน URL ของ GitHub Pages</p><a href="./index.html?v=4.9.4">หน้า Login</a><a href="./zone.html?v=4.9.4">2D Zone</a></div><script>(function(){const ua=navigator.userAgent||"";const mobile=/Android|iPhone|iPad|iPod|Mobile|Tablet|Silk|Kindle/i.test(ua)||(navigator.platform==="MacIntel"&&navigator.maxTouchPoints>1);const parts=location.pathname.split("/").filter(Boolean);const base=parts.length?`/${parts[0]}/`:"/";const wanted=base+((location.pathname.toLowerCase().includes("zone")||mobile)?"zone.html?v=4.9.4":"index.html?v=4.9.4");if(!sessionStorage.getItem("v44_404_recovered")){sessionStorage.setItem("v44_404_recovered","1");setTimeout(()=>location.replace(wanted),700)}})();</script></body></html>
+<!DOCTYPE html><html lang="th"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>กำลังกู้คืนหน้า</title><style>body{font-family:system-ui;margin:0;min-height:100vh;display:grid;place-items:center;background:#f4f7fa;color:#173449}.box{max-width:520px;padding:30px;text-align:center;background:#fff;border:1px solid #dce3ea;border-radius:16px}.box a{display:inline-block;margin:6px;padding:10px 16px;border-radius:9px;background:#244b75;color:#fff;text-decoration:none}</style></head><body><div class="box"><h1>กำลังกู้คืนหน้า...</h1><p>กำลังกู้คืน URL ของ GitHub Pages</p><a href="./index.html?v=4.9.5">หน้า Login</a><a href="./zone.html?v=4.9.5">2D Zone</a></div><script>(function(){const ua=navigator.userAgent||"";const mobile=/Android|iPhone|iPad|iPod|Mobile|Tablet|Silk|Kindle/i.test(ua)||(navigator.platform==="MacIntel"&&navigator.maxTouchPoints>1);const parts=location.pathname.split("/").filter(Boolean);const base=parts.length?`/${parts[0]}/`:"/";const wanted=base+((location.pathname.toLowerCase().includes("zone")||mobile)?"zone.html?v=4.9.5":"index.html?v=4.9.5");if(!sessionStorage.getItem("v44_404_recovered")){sessionStorage.setItem("v44_404_recovered","1");setTimeout(()=>location.replace(wanted),700)}})();</script></body></html>
 ```
 
 
 ## chat.html
 
 ```html
-<!DOCTYPE html><html lang="th"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="refresh" content="0;url=./zone.html?v=4.9.4"><title>ย้ายไป 2D Zone</title><script>location.replace("./zone.html?v=4.9.4");</script></head><body><p>ระบบแชตรวมย้ายเข้า 2D Zone แล้ว</p><a href="./zone.html?v=4.9.4">เข้า 2D Zone</a></body></html>
+<!DOCTYPE html><html lang="th"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="refresh" content="0;url=./zone.html?v=4.9.5"><title>ย้ายไป 2D Zone</title><script>location.replace("./zone.html?v=4.9.5");</script></head><body><p>ระบบแชตรวมย้ายเข้า 2D Zone แล้ว</p><a href="./zone.html?v=4.9.5">เข้า 2D Zone</a></body></html>
 ```

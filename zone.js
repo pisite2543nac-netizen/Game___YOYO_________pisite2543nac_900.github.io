@@ -5,13 +5,13 @@ import {
   serverTimestamp, query, orderBy, limit, Timestamp, runTransaction
 } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
 import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-functions.js";
-import { firebaseConfig, ADMIN_UID } from "./firebase-config.js?v=4.9.4";
-import { REWARD_ITEMS, RARITY_META, INVENTORY_CAPACITY, SHOP_BUYBACK_RATE } from "./reward-data.js?v=4.9.4";
-import { DEFAULT_CHARACTER } from "./character-system.js?v=4.9.4";
+import { firebaseConfig, ADMIN_UID } from "./firebase-config.js?v=4.9.5";
+import { REWARD_ITEMS, RARITY_META, INVENTORY_CAPACITY, SHOP_BUYBACK_RATE } from "./reward-data.js?v=4.9.5";
+import { DEFAULT_CHARACTER } from "./character-system.js?v=4.9.5";
 import {
   QUEST_CONFIG, DEFAULT_TEACHER_QUESTS, localDayKey, activeQuestLimit,
   canAccessQuest, clampQuestReward, questDifficultyName, questObjectiveLabel
-} from "./quest-system.js?v=4.9.4";
+} from "./quest-system.js?v=4.9.5";
 
 const firebaseApp=initializeApp(firebaseConfig);
 const auth=getAuth(firebaseApp);
@@ -289,7 +289,7 @@ async function acceptQuest(id){
 function startQuest(id){
   const q=teacherQuests.find(x=>x.id===id)||DEFAULT_TEACHER_QUESTS.find(x=>x.id===id);if(!q)return;
   if(isTouchOnly()){alert("รับภารกิจแล้ว กรุณาเปิดบัญชีนี้บนคอมพิวเตอร์เพื่อทำภารกิจ");return}
-  location.href=`./index.html?quest=${encodeURIComponent(id)}&v=4.9.4`;
+  location.href=`./index.html?quest=${encodeURIComponent(id)}&v=4.9.5`;
 }
 $("openWizardQuests").onclick=async()=>{await loadQuestProgress();renderQuestModal();$("zoneQuestModal").classList.remove("hidden")};
 $("closeWizardQuests").onclick=()=>$("zoneQuestModal").classList.add("hidden");

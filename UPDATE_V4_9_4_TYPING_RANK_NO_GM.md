@@ -1,4 +1,4 @@
-# V4.9.4 — Typing Performance Ranking + No GM Rank
+# V4.9.5 — Typing Performance Ranking + No GM Rank
 
 ## สูตร Ranking ใหม่
 ตัดคะแนน:

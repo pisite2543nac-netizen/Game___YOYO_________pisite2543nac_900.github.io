@@ -37,7 +37,7 @@ export const REWARD_ITEMS = [
 
   {id:"set2_spirit_wings",name:"ปีก Spirit Guardian",icon:"🪽",baseCost:9500,cost:9880,type:"wearable",slot:"back",rarity:"mythic",set:"set2",visual:"spirit_wings",description:"ปีกวิญญาณสีฟ้าขนาดใหญ่ ชุด 2 ราคา +30%"},
   {id:"set2_storm_aura",name:"Storm Code Aura",icon:"⚡",baseCost:12500,cost:13000,type:"wearable",slot:"aura",rarity:"mythic",set:"set2",visual:"storm_aura",description:"สายฟ้าหมุนรอบตัวละคร ชุด 2 ราคา +30%"}
-  // ===== V4.9.4 NEW COLLECTION =====
+  // ===== V4.9.5 NEW COLLECTION =====
   {id:"armor_silver_guard",name:"เกราะ Silver Guard",icon:"🛡️",cost:2800,type:"wearable",slot:"top",rarity:"epic",visual:"silver_armor",description:"เกราะเงินสำหรับนักรบสายโค้ด"},
   {id:"armor_gold_guard",name:"เกราะ Golden Guardian",icon:"🛡️",cost:5200,type:"wearable",slot:"top",rarity:"legendary",visual:"gold_armor",description:"เกราะทองพร้อมขอบเรืองแสง"},
   {id:"crown_violet",name:"มงกุฎม่วง Arcane",icon:"👑",cost:4200,type:"wearable",slot:"head",rarity:"legendary",visual:"violet_crown",description:"มงกุฎพลังเวทสีม่วง"},

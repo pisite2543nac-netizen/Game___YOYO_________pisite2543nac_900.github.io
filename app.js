@@ -8,14 +8,14 @@ import {
   serverTimestamp, query, where, orderBy, limit, onSnapshot, runTransaction
 } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
 import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-functions.js";
-import { firebaseConfig } from "./firebase-config.js?v=4.9.4";
-import { LANGUAGES, LESSONS, DIFFICULTIES } from "./lessons.js?v=4.9.4";
-import { REWARD_ITEMS, RARITY_META, INVENTORY_CAPACITY, SHOP_BUYBACK_RATE } from "./reward-data.js?v=4.9.4";
-import { DEFAULT_CHARACTER, DEFAULT_ZONE_STATE } from "./character-system.js?v=4.9.4";
-import { OFFICIAL_STAGES, OFFICIAL_TOTAL_SCORE } from "./official-data.js?v=4.9.4";
-import { RANKING_CONFIG, seasonIdFromDate, seasonRange, calculateRankMetrics, rankingClassKey, rankProfiles } from "./ranking-system.js?v=4.9.4";
-import { TOKEN_REWARD_CONFIG, calculateStageTokenReward, maxTokenForLesson, classKey } from "./economy-system.js?v=4.9.4";
-import { DEFAULT_TEACHER_QUESTS, localDayKey, questObjectiveMet, questObjectiveLabel, clampQuestReward } from "./quest-system.js?v=4.9.4";
+import { firebaseConfig } from "./firebase-config.js?v=4.9.5";
+import { LANGUAGES, LESSONS, DIFFICULTIES } from "./lessons.js?v=4.9.5";
+import { REWARD_ITEMS, RARITY_META, INVENTORY_CAPACITY, SHOP_BUYBACK_RATE } from "./reward-data.js?v=4.9.5";
+import { DEFAULT_CHARACTER, DEFAULT_ZONE_STATE } from "./character-system.js?v=4.9.5";
+import { OFFICIAL_STAGES, OFFICIAL_TOTAL_SCORE } from "./official-data.js?v=4.9.5";
+import { RANKING_CONFIG, seasonIdFromDate, seasonRange, calculateRankMetrics, rankingClassKey, rankProfiles } from "./ranking-system.js?v=4.9.5";
+import { TOKEN_REWARD_CONFIG, calculateStageTokenReward, maxTokenForLesson, classKey } from "./economy-system.js?v=4.9.5";
+import { DEFAULT_TEACHER_QUESTS, localDayKey, questObjectiveMet, questObjectiveLabel, clampQuestReward } from "./quest-system.js?v=4.9.5";
 
 const firebaseApp = initializeApp(firebaseConfig);
 const auth = getAuth(firebaseApp);
@@ -42,6 +42,8 @@ const state = {
 };
 
 const studentEmail = id => `${String(id).trim()}@student.thc-nr.local`;
+let authRoutePromise=null;
+let authActionInProgress=false;
 const esc = v => String(v ?? "").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;");
 const fmtDate = v => { try { return v?.toDate?.().toLocaleString("th-TH") || "-"; } catch { return "-"; } };
 const fmtTime = s => { s=Math.max(0,s); return `${Math.floor(s/60).toString().padStart(2,"0")}:${Math.floor(s%60).toString().padStart(2,"0")}`; };
@@ -142,6 +144,7 @@ async function ensureProfileDefaults(){
   if(!snap.exists()) return;
   const d = snap.data();
   const patch = {};
+  let academicProfileComplete = true;
   if(typeof d.tokenBalance !== "number") {
     patch.tokenBalance = typeof d.pointsBalance === "number" ? d.pointsBalance : 0;
   }
@@ -213,68 +216,140 @@ $("major")?.addEventListener("change",syncDepartmentFromMajor);
 
 
 $("registerForm").addEventListener("submit",async e=>{
-  e.preventDefault(); if(!registerValid()) return;
+  e.preventDefault();
+  if(!registerValid())return;
+  const button=$("registerButton"),oldText=button.textContent;
+  button.disabled=true;button.textContent="กำลังสมัคร...";
+  $("registerMessage").textContent="";
+  authActionInProgress=true;
   try{
     const sid=$("studentId").value.trim();
     const cred=await createUserWithEmailAndPassword(auth,studentEmail(sid),$("password").value);
     state.uid=cred.user.uid;
-    await requestLoginFullscreen();
-    const p={
-      uid:state.uid,studentId:sid,fullName:$("fullName").value.trim(),
-      educationLevel:$("educationLevel").value,classroom:$("classroom").value,
+
+    const academic=normalizeAcademicSelection($("department").value,$("major").value);
+    const profile={
+      uid:state.uid,
+      studentId:sid,
+      fullName:$("fullName").value.trim(),
+      educationLevel:$("educationLevel").value,
+      classroom:$("classroom").value,
       classKey:classKey($("educationLevel").value,$("classroom").value),
-      department:normalizeAcademicSelection($("department").value,$("major").value).department,
-      major:normalizeAcademicSelection($("department").value,$("major").value).major,role:"student",status:"active",
-      tokenBalance:0,tokenLifetime:0,inventory:[],inventoryCapacity:INVENTORY_CAPACITY,
-      officialProgress:{},officialSubmitted:false,
+      department:academic.department,
+      major:academic.major,
+      role:"student",
+      status:"active",
+      tokenBalance:0,
+      tokenLifetime:0,
+      inventory:[],
+      inventoryCapacity:INVENTORY_CAPACITY,
+      officialProgress:{},
+      officialSubmitted:false,
       rank:{seasonId:null,rating:0,tierId:"bronze",tierName:"Bronze"},
       progress:{html:{maxUnlockedStage:1},python:{maxUnlockedStage:1}},
       character:{...DEFAULT_CHARACTER,displayName:$("fullName").value.trim()},
       zone:{...DEFAULT_ZONE_STATE},
-      createdAt:serverTimestamp(),updatedAt:serverTimestamp()
+      createdAt:serverTimestamp(),
+      updatedAt:serverTimestamp()
     };
-    await setDoc(doc(db,"users",state.uid),p);
+
+    // Write the Firestore user immediately after Authentication account creation.
+    await setDoc(doc(db,"users",state.uid),profile,{merge:true});
+    await requestLoginFullscreen();
     await routeAuthenticatedStudent();
   }catch(err){
-    $("registerMessage").textContent = err.code==="auth/email-already-in-use" ? "เลขนักศึกษานี้ลงทะเบียนแล้ว" : "ลงทะเบียนไม่สำเร็จ: "+err.message;
+    console.error("register:",err);
+    if(err?.code==="auth/email-already-in-use"){
+      $("registerMessage").textContent="รหัสนักศึกษานี้มีบัญชีอยู่แล้ว กรุณา Login หรือให้ Admin ลบบัญชีเดิม";
+    }else if(err?.code==="permission-denied"){
+      $("registerMessage").textContent="สมัคร Auth สำเร็จ แต่ Firestore Rules ไม่อนุญาตให้สร้าง Profile กรุณา Publish firestore.rules V4.9.5";
+    }else{
+      $("registerMessage").textContent="ลงทะเบียนไม่สำเร็จ: "+(err?.message||String(err));
+    }
+  }finally{
+    authActionInProgress=false;
+    button.textContent=oldText;
+    updateRegister();
   }
 });
 
 $("loginForm").addEventListener("submit",async e=>{
   e.preventDefault();
+  const sid=$("loginStudentId").value.trim();
+  const password=$("loginPassword").value;
+  const button=$("loginForm").querySelector('button[type="submit"]');
+  const oldText=button?.textContent||"เข้าสู่ระบบ";
+  if(button){button.disabled=true;button.textContent="กำลังเข้าสู่ระบบ...";}
+  $("loginMessage").textContent="";
+  authActionInProgress=true;
   try{
-    const cred=await signInWithEmailAndPassword(auth,studentEmail($("loginStudentId").value.trim()),$("loginPassword").value);
+    const cred=await signInWithEmailAndPassword(auth,studentEmail(sid),password);
     state.uid=cred.user.uid;
     await requestLoginFullscreen();
     await routeAuthenticatedStudent();
-  }catch{
-    $("loginMessage").textContent="เลขนักศึกษาหรือรหัสผ่านไม่ถูกต้อง";
+  }catch(error){
+    console.error("login:",error);
+    if(["auth/invalid-credential","auth/user-not-found","auth/wrong-password"].includes(error?.code)){
+      $("loginMessage").textContent="รหัสนักศึกษาหรือรหัสผ่านไม่ถูกต้อง";
+    }else if(error?.code==="permission-denied"){
+      $("loginMessage").textContent="Login Auth สำเร็จ แต่ Firestore Rules ปฏิเสธการอ่านข้อมูล User กรุณา Publish firestore.rules V4.9.5";
+    }else if(error?.message==="USER_PROFILE_NOT_READY"){
+      $("loginMessage").textContent="พบบัญชี Login แต่ไม่พบข้อมูล User ใน Firestore ให้ Admin ตรวจหรือลบบัญชีนี้แล้วสมัครใหม่";
+    }else{
+      $("loginMessage").textContent="เปิดบัญชีไม่สำเร็จ: "+(error?.message||String(error));
+    }
+  }finally{
+    authActionInProgress=false;
+    if(button){button.disabled=false;button.textContent=oldText;}
   }
 });
 
-async function routeAuthenticatedStudent(){
-  // createUserWithEmailAndPassword จะยิง onAuthStateChanged ก่อน setDoc(users/{uid}) ได้
-  // จึง retry สั้น ๆ เพื่อป้องกันหน้า Login กระพริบ/แจ้งไม่พบ User ตอนสมัครใหม่
-  for(let i=0;i<6&&!state.player;i++){
-    await ensureProfileDefaults();
-    if(!state.player) await new Promise(resolve=>setTimeout(resolve,250));
-  }
-  if(!state.player) throw new Error("ไม่พบข้อมูลผู้ใช้");
-
-  const requestedQuest=new URLSearchParams(location.search).get("quest");
-  // มือถือ/แท็บเล็ตยังเข้าได้เฉพาะ 2D Zone ตามกติกาเดิม
-  if(isMobileOrTabletDevice() && ["male","female"].includes(state.player?.character?.gender)){
+async function waitForStudentProfile(maxWaitMs=6000){
+  const started=Date.now();
+  while(Date.now()-started<maxWaitMs){
     try{
-      await syncPublicProfile();
-      await writePresence("zone");
+      const snap=await getDoc(doc(db,"users",state.uid));
+      if(snap.exists())return snap;
     }catch(error){
-      console.warn("mobile route sync skipped:", error);
+      if(error?.code==="permission-denied")throw error;
+      console.warn("wait profile:",error);
     }
-    location.replace("./zone.html?v=4.9.4");
-    return;
+    await new Promise(resolve=>setTimeout(resolve,250));
   }
+  return null;
+}
+async function routeAuthenticatedStudent(){
+  if(authRoutePromise)return authRoutePromise;
+  authRoutePromise=(async()=>{
+    if(!auth.currentUser)throw new Error("AUTH_SESSION_MISSING");
+    state.uid=auth.currentUser.uid;
 
-  await enterPortal();
+    // Registration can trigger onAuthStateChanged before users/{uid} is written.
+    // Wait for the profile document instead of treating it as a failed login.
+    const profileSnap=await waitForStudentProfile(6000);
+    if(!profileSnap)throw new Error("USER_PROFILE_NOT_READY");
+
+    await ensureProfileDefaults();
+    if(!state.player)throw new Error("USER_PROFILE_LOAD_FAILED");
+
+    // Old accounts are allowed in even if academic data is missing.
+    // enterPortal will offer the profile repair modal instead of blocking access.
+    const requestedQuest=new URLSearchParams(location.search).get("quest");
+
+    if(isMobileOrTabletDevice() && ["male","female"].includes(state.player?.character?.gender)){
+      try{
+        await syncPublicProfile();
+        await writePresence("zone");
+      }catch(error){
+        console.warn("mobile route sync skipped:",error);
+      }
+      location.replace("./zone.html?v=4.9.5");
+      return;
+    }
+
+    await enterPortal();
+  })().finally(()=>{authRoutePromise=null;});
+  return authRoutePromise;
 }
 
 function profileMajorOptions(current){
@@ -572,7 +647,7 @@ async function maybeLaunchQuestFromUrl(){
   if(!id||state.questLaunchHandled||!state.uid||!state.player)return false;
   state.questLaunchHandled=true;
   if(isMobileOrTabletDevice()){
-    location.replace("./zone.html?v=4.9.4");
+    location.replace("./zone.html?v=4.9.5");
     return true;
   }
   const quest=await resolveTeacherQuest(id);
@@ -887,7 +962,7 @@ $("nextLevelButton").onclick=async()=>{
   state.lesson=next;state.difficulty=DIFFICULTIES.find(x=>x.id===next.difficulty);
   prepareClassic();showScreen("gameScreen");await requestRealFullscreen();setTimeout(()=>$("typingInput").focus({preventScroll:true}),100);
 };
-$("questZoneButton").onclick=()=>{location.href="./zone.html?v=4.9.4"};
+$("questZoneButton").onclick=()=>{location.href="./zone.html?v=4.9.5"};
 $("portalButton").onclick=async()=>{state.activeQuest=null;history.replaceState(null,"",location.pathname);await ensureProfileDefaults();await enterPortal()};
 
 function renderRewardShop(){
@@ -1155,7 +1230,7 @@ async function saveCharacterGender(gender){
 
   // มือถือ/แท็บเล็ตใช้เฉพาะ 2D Zone หลังเลือกตัวละครเสร็จ
   if(isMobileOrTabletDevice()){
-    location.replace("./zone.html?v=4.9.4");
+    location.replace("./zone.html?v=4.9.5");
   }
 }
 
@@ -1741,15 +1816,35 @@ if ($("mobileExitButton")) {
 updateDeviceUX();
 
 onAuthStateChanged(auth,async user=>{
-  if(!user){state.uid=null;state.player=null;showScreen("authScreen");return;}
-  if(user.email==="pisit_2000@thc-nr.local"){location.replace("./admin.html?v=4.9.4");return;}
+  if(!user){
+    state.uid=null;
+    state.player=null;
+    if(!authActionInProgress)showScreen("authScreen");
+    return;
+  }
+
+  if(user.email==="pisit_2000@thc-nr.local"){
+    location.replace("./admin.html?v=4.9.5");
+    return;
+  }
+
   state.uid=user.uid;
+
+  // During an explicit Login/Register submit, that handler owns routing.
+  if(authActionInProgress)return;
+
   try{
     await routeAuthenticatedStudent();
   }catch(error){
-    console.error("auth route:",error);
+    console.error("auth observer route:",error);
     showScreen("authScreen");
-    $("loginMessage").textContent="เปิดบัญชีไม่สำเร็จ กรุณา Reload แล้วลองใหม่";
+    if(error?.code==="permission-denied"){
+      $("loginMessage").textContent="Firebase Rules ปฏิเสธการอ่าน User · กรุณา Publish firestore.rules V4.9.5";
+    }else if(error?.message==="USER_PROFILE_NOT_READY"){
+      $("loginMessage").textContent="บัญชี Authentication มีอยู่ แต่ไม่พบ Profile ใน Firestore · ให้ Admin ลบบัญชีเดิมแล้วสมัครใหม่";
+    }else{
+      $("loginMessage").textContent="เปิดบัญชีไม่สำเร็จ: "+(error?.message||String(error));
+    }
   }
 });
 

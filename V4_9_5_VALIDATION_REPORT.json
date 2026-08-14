@@ -1,0 +1,16 @@
+{
+  "syntax_app.js": true,
+  "syntax_admin.js": true,
+  "syntax_zone.js": true,
+  "syntax_ranking-system.js": true,
+  "syntax_quest-system.js": true,
+  "syntax_economy-system.js": true,
+  "academic_var_declared": true,
+  "single_flight_auth": true,
+  "profile_wait": true,
+  "register_profile_write": true,
+  "auth_observer_guard": true,
+  "permission_error_visible": true,
+  "missing_profile_visible": true,
+  "all_passed": true
+}
