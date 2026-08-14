@@ -4,27 +4,17 @@ import {
   getFirestore, collection, doc, getDocs, setDoc, deleteDoc, updateDoc,
   writeBatch, serverTimestamp, onSnapshot, Timestamp, query, orderBy, limit
 } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
-import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-functions.js";
-import { firebaseConfig, ADMIN_USERNAME, ADMIN_EMAIL, ADMIN_UID } from "./firebase-config.js?v=5.0.0";
-import { DEFAULT_MODES, DEFAULT_LEVELS } from "./default-data.js?v=5.0.0";
-import { seasonIdFromDate, seasonRange, calculateRankMetrics, rankingClassKey } from "./ranking-system.js?v=5.0.0";
-import { DEFAULT_TEACHER_QUESTS, clampQuestReward, questDifficultyName, questObjectiveLabel, defaultMinRankForDifficulty, rewardRange } from "./quest-system.js?v=5.0.0";
+import { firebaseConfig, ADMIN_USERNAME, ADMIN_EMAIL, ADMIN_UID } from "./firebase-config.js?v=4.7.2";
+import { DEFAULT_MODES, DEFAULT_LEVELS } from "./default-data.js?v=4.7.2";
+import { seasonIdFromDate, seasonRange, calculateRankMetrics, rankingClassKey } from "./ranking-system.js?v=4.7.2";
+import { DEFAULT_TEACHER_QUESTS, clampQuestReward, questDifficultyName, questObjectiveLabel, defaultMinRankForDifficulty, rewardRange } from "./quest-system.js?v=4.7.2";
 
-const app=initializeApp(firebaseConfig),auth=getAuth(app),db=getFirestore(app),cloudFunctions=getFunctions(app,"asia-southeast1"),$=id=>document.getElementById(id);
-const adminResetStudentPassword=httpsCallable(cloudFunctions,"adminResetStudentPassword");
-const adminDeleteStudentAccount=httpsCallable(cloudFunctions,"adminDeleteStudentAccount");
-const adminAuditStudentAccounts=httpsCallable(cloudFunctions,"adminAuditStudentAccounts");
-const adminRepairStudentDatabase=httpsCallable(cloudFunctions,"adminRepairStudentDatabase");
+const app=initializeApp(firebaseConfig),auth=getAuth(app),db=getFirestore(app),$=id=>document.getElementById(id);
 let cache={users:[],attempts:[],levels:[],modes:[],official:[],zonePositions:[],zoneModeration:[],zoneMessages:[],zoneArchive:[],rankingSettings:{},teacherQuests:[]},unsubs=[];
 let knownUserIds=null;
 let selectedAdminClass="";
 let adminClassSearchTerm="";
-let selectedAdminDepartment="";
-let adminDepartmentSearchTerm="";
-let selectedAdminMajor="";
-let adminMajorSearchTerm="";
 let adminRankClock=null;
-let passwordResetTargetUid=null;
 
 const isAdmin=user=>!!user&&user.uid===ADMIN_UID;
 const dateValue=v=>{try{return v?.toDate?.()?.getTime?.()||0}catch{return 0}};
@@ -53,40 +43,9 @@ onAuthStateChanged(auth,user=>{
   const ok=isAdmin(user);$("adminLogin").classList.toggle("hidden",ok);$("adminDashboard").classList.toggle("hidden",!ok);
   unsubs.forEach(fn=>fn());unsubs=[];
   clearInterval(adminRankClock);adminRankClock=null;
-  if(ok){startRealtime();adminRankClock=setInterval(()=>{renderRanking();renderClassrooms();renderDepartments();renderMajors();renderRankingSchedule()},30000);}
+  if(ok){startRealtime();adminRankClock=setInterval(()=>{renderRanking();renderClassrooms();renderRankingSchedule()},30000);}
 });
 
-
-function renderStudentAccountAudit(data={}){
-  const title=$("studentAccountAuditTitle"),text=$("studentAccountAuditText"),stats=$("studentAccountAuditStats");
-  if(!title||!text||!stats)return;
-  const healthy=Number(data.missingProfiles||0)===0&&Number(data.missingAuth||0)===0&&Number(data.invalidStudentIds||0)===0&&Number(data.duplicateStudentIds||0)===0;
-  title.textContent=healthy?"ระบบบัญชี User ปกติ":"พบข้อมูลที่ควรตรวจ/ซ่อม";
-  text.textContent=healthy
-    ?"Firebase Authentication และ Firestore users สอดคล้องกัน"
-    :`Profile หาย ${Number(data.missingProfiles||0)} · Auth หาย ${Number(data.missingAuth||0)} · รหัสไม่ใช่ 8 หลัก ${Number(data.invalidStudentIds||0)} · รหัสซ้ำ ${Number(data.duplicateStudentIds||0)}`;
-  stats.innerHTML=[
-    ["AUTH",Number(data.authStudentCount||0)],["FIRESTORE",Number(data.firestoreUserCount||0)],
-    ["PROFILE หาย",Number(data.missingProfiles||0)],["AUTH หาย",Number(data.missingAuth||0)]
-  ].map(([k,v])=>`<div><span>${esc(k)}</span><strong>${v}</strong></div>`).join("");
-  $("studentAccountAuditCard")?.classList.toggle("warning",!healthy);
-}
-if($("auditStudentAccounts"))$("auditStudentAccounts").onclick=async()=>{
-  const btn=$("auditStudentAccounts"),old=btn.textContent;btn.disabled=true;btn.textContent="กำลังตรวจ...";
-  try{const result=await adminAuditStudentAccounts({});renderStudentAccountAudit(result.data||{});showAdminToast("ตรวจระบบบัญชีแล้ว","ไม่มีการแก้ไขหรือลบข้อมูล");}
-  catch(error){showAdminToast("ตรวจบัญชีไม่สำเร็จ",error.message||String(error),true)}
-  finally{btn.disabled=false;btn.textContent=old}
-};
-if($("repairStudentDatabase"))$("repairStudentDatabase").onclick=async()=>{
-  if(!confirm("ซ่อมฐานข้อมูล User โดยไม่ล้างคะแนน/Token/Inventory/ประวัติใช้งาน?\\n\\nระบบจะสร้าง Profile ที่หายจากบัญชี Auth, จัด field แผนก/สาขา และ sync public_profiles เท่านั้น"))return;
-  const btn=$("repairStudentDatabase"),old=btn.textContent;btn.disabled=true;btn.textContent="กำลังซ่อม...";
-  try{
-    const result=await adminRepairStudentDatabase({});
-    renderStudentAccountAudit(result.data?.audit||{});
-    showAdminToast("ซ่อมฐานข้อมูลเสร็จ",`สร้าง Profile ${Number(result.data?.createdProfiles||0)} · ปรับ Profile ${Number(result.data?.updatedProfiles||0)}`);
-  }catch(error){showAdminToast("ซ่อมฐานข้อมูลไม่สำเร็จ",error.message||String(error),true)}
-  finally{btn.disabled=false;btn.textContent=old}
-};
 function startRealtime(){
   unsubs.push(onSnapshot(collection(db,"users"),snap=>{
     const next=snap.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>dateValue(b.createdAt)-dateValue(a.createdAt));
@@ -107,7 +66,7 @@ function startRealtime(){
   const archiveQuery=query(collection(db,"zone_chat_archive"),orderBy("createdAt","desc"),limit(1000));
   unsubs.push(onSnapshot(archiveQuery,snap=>{cache.zoneArchive=snap.docs.map(d=>({id:d.id,...d.data()})).filter(x=>x.zoneId===ACTIVE_ZONE_ID);renderAll()},error=>{cache.zoneArchive=[];console.warn("zone archive:",error)}));
 }
-function renderAll(){renderMetrics();renderResults();renderUsers();renderClassrooms();renderDepartments();renderMajors();renderLevels();renderOfficial();renderRanking();renderRankingSchedule();renderTeacherQuests();renderZoneControl();renderZoneChatLog()}
+function renderAll(){renderMetrics();renderResults();renderUsers();renderClassrooms();renderLevels();renderOfficial();renderRanking();renderRankingSchedule();renderTeacherQuests();renderZoneControl();renderZoneChatLog()}
 function renderMetrics(){
   const completed=cache.attempts.filter(x=>x.status==="completed");
   const avg=completed.length?Math.round(completed.reduce((s,x)=>s+Number(x.score||0),0)/completed.length):0;
@@ -119,138 +78,19 @@ function renderResults(){
     const stage=x.stage??x.levelNo??"-";
     const mode=x.modeName||x.mode||"-";
     const pvp=x.pvpResult?` · ${String(x.pvpResult).toUpperCase()}`:"";
-    return `<tr><td>${formatDate(x.createdAt)}</td><td>${esc(x.studentId)}</td><td><strong>${esc(x.fullName)}</strong></td><td>${esc(x.educationLevel||"")}${esc(x.classroom||"")}</td><td>${esc(x.department||"ไม่ระบุแผนก")}</td><td>${esc(x.major||"ไม่ระบุสาขาวิชา")}</td><td>${esc(mode)}${esc(pvp)}</td><td>${esc(stage)}</td><td><span class="status status-${esc(x.status)}">${esc(x.status)}</span></td><td><strong>${Number(x.score||0).toLocaleString()}</strong></td><td>${esc(x.wpm??0)}</td><td>${esc(x.accuracy??0)}%</td><td><button class="mini-delete" data-delete-attempt="${x.id}">ลบ</button></td></tr>`;
-  }).join("")||`<tr><td colspan="13" class="empty">ยังไม่มีผลการเล่น</td></tr>`;
+    return `<tr><td>${formatDate(x.createdAt)}</td><td>${esc(x.studentId)}</td><td><strong>${esc(x.fullName)}</strong></td><td>${esc(x.educationLevel||"")}${esc(x.classroom||"")}</td><td>${esc(mode)}${esc(pvp)}</td><td>${esc(stage)}</td><td><span class="status status-${esc(x.status)}">${esc(x.status)}</span></td><td><strong>${Number(x.score||0).toLocaleString()}</strong></td><td>${esc(x.wpm??0)}</td><td>${esc(x.accuracy??0)}%</td><td><button class="mini-delete" data-delete-attempt="${x.id}">ลบ</button></td></tr>`;
+  }).join("")||`<tr><td colspan="12" class="empty">ยังไม่มีผลการเล่น</td></tr>`;
   document.querySelectorAll("[data-delete-attempt]").forEach(b=>b.onclick=async()=>{if(confirm("ลบผลรายการนี้?"))await deleteDoc(doc(db,"attempts",b.dataset.deleteAttempt))});
 }
 function compareStudentId(a,b){
   const av=String(a?.studentId??""),bv=String(b?.studentId??"");
   return av.localeCompare(bv,"th",{numeric:true,sensitivity:"base"});
 }
-const MAIN_MAJOR_VALUES=["เทคโนโลยีสารสนเทศ","ธุรกิจดิจิทัล"];
-function normalizeLegacyMajorValue(raw){
-  const value=String(raw||"").trim();
-  const compact=value.replace(/\s+/g,"");
-  if(["ธุรกิจดิจิทัล","ธุรกิจดิทัล","ดิจิทัลธุรกิจ"].includes(compact))return {value:"ธุรกิจดิจิทัล",kind:"digital"};
-  if(["สารสนเทศ","เทคโนโลยีสารสนเทศ"].includes(compact)||value==="ไอที"||value==="IT")return {value:"เทคโนโลยีสารสนเทศ",kind:"information"};
-  // ค่าอื่น เช่นข้อความผสม จะคงค่าเดิมไว้เป็นสาขาแยก ไม่บังคับรวมเข้ากับ 2 กลุ่มหลัก
-  return {value:value||"ไม่ระบุสาขาวิชา",kind:"separate"};
-}
-function legacyAcademicLooksLikeMajor(raw){return /สารสนเทศ|ดิจิทัล|ธุรกิจดิทัล/i.test(String(raw||""))}
-function normalizedUserAcademicData(user={}){
-  const department=String(user.department||"").trim();
-  const major=String(user.major||"").trim();
-  if(legacyAcademicLooksLikeMajor(department)){
-    const source=major&&major!=="ไม่ระบุสาขาวิชา"?major:department;
-    const normalized=normalizeLegacyMajorValue(source);
-    return {department:"คอมพิวเตอร์",major:normalized.value,kind:normalized.kind,needsMigration:true};
-  }
-  const normalized=normalizeLegacyMajorValue(major);
-  return {department:department||"ไม่ระบุแผนก",major:normalized.value,kind:normalized.kind,needsMigration:major!==normalized.value};
-}
-function usersNeedingAcademicMigration(){
-  return cache.users.filter(u=>normalizedUserAcademicData(u).needsMigration);
-}
 function renderUsers(){
   const users=[...cache.users].sort(compareStudentId);
-  const need=usersNeedingAcademicMigration();
-  const note=$("userDataMigrationStatus");
-  if(note){
-    note.classList.toggle("needs-fix",need.length>0);
-    note.innerHTML=need.length
-      ?`<strong>พบ User เดิม ${need.length} คนที่ต้องจัดแผนก/สาขาวิชาใหม่</strong><span>กดปุ่มจัดกลุ่มเพื่อแก้ Firestore จริง · ธุรกิจดิจิทัลและสารสนเทศจะไม่ถูกรวมกัน</span>`
-      :`<strong>ข้อมูล User ถูกโครงสร้างแล้ว</strong><span>แผนก = คอมพิวเตอร์ · สาขาวิชาแยกเป็น เทคโนโลยีสารสนเทศ / ธุรกิจดิจิทัล / ค่าอื่นแยกตามเดิม</span>`;
-  }
-  $("usersBody").innerHTML=users.map(x=>{
-    const academic=normalizedUserAcademicData(x);
-    return `<tr>
-      <td>${formatDate(x.createdAt)}</td>
-      <td>${esc(x.studentId)}</td>
-      <td><strong>${esc(x.fullName)}</strong></td>
-      <td>${esc(x.educationLevel||"")}${esc(x.classroom||"")}</td>
-      <td><strong>${esc(academic.department)}</strong>${academic.needsMigration?`<br><small class="data-fix-hint">รอย้ายข้อมูล</small>`:""}</td>
-      <td>${esc(academic.major)}</td>
-      <td><strong>${Number(x.tokenBalance||0).toLocaleString()}</strong></td>
-      <td><span class="status status-active">${esc(x.status||"active")}</span></td>
-      <td><button class="btn btn-small secondary" data-reset-password="${x.id}">ตั้งรหัสใหม่</button></td>
-      <td><button class="mini-delete" data-delete-user="${x.id}">ลบข้อมูล</button></td>
-    </tr>`;
-  }).join("")||`<tr><td colspan="10" class="empty">ยังไม่มีสมาชิก</td></tr>`;
-
-  document.querySelectorAll("[data-delete-user]").forEach(b=>b.onclick=async()=>{
-    const user=cache.users.find(x=>x.id===b.dataset.deleteUser);if(!user)return;
-    if(!confirm(`ลบบัญชี ${user.studentId||""} - ${user.fullName||""}?\n\nระบบจะลบทั้ง Firebase Authentication และข้อมูล Firestore ที่เกี่ยวข้อง\nหลังลบแล้วรหัสนักศึกษานี้สามารถสมัครใหม่ได้`))return;
-    b.disabled=true;const oldText=b.textContent;b.textContent="กำลังลบ...";
-    try{
-      const result=await adminDeleteStudentAccount({targetUid:user.id});
-      showAdminToast("ลบบัญชีสำเร็จ",`${user.studentId||""} สมัครใหม่ได้แล้ว`);
-    }catch(error){showAdminToast("ลบบัญชีไม่สำเร็จ",error.message||String(error),true);}
-    finally{b.disabled=false;b.textContent=oldText;}
-  });
-  document.querySelectorAll("[data-reset-password]").forEach(btn=>btn.onclick=()=>{
-    const user=cache.users.find(x=>x.id===btn.dataset.resetPassword);if(!user)return;
-    passwordResetTargetUid=user.id;
-    $("passwordResetStudent").textContent=user.studentId||"-";
-    $("passwordResetName").textContent=user.fullName||"-";
-    $("adminNewStudentPassword").value="";
-    $("passwordResetModal").classList.remove("hidden");
-  });
+  $("usersBody").innerHTML=users.map(x=>`<tr><td>${formatDate(x.createdAt)}</td><td>${esc(x.studentId)}</td><td><strong>${esc(x.fullName)}</strong></td><td>${esc(x.educationLevel||"")}${esc(x.classroom||"")}</td><td><strong>${Number(x.tokenBalance||0).toLocaleString()}</strong></td><td><span class="status status-active">${esc(x.status||"active")}</span></td><td><button class="mini-delete" data-delete-user="${x.id}">ลบข้อมูล</button></td></tr>`).join("")||`<tr><td colspan="8" class="empty">ยังไม่มีสมาชิก</td></tr>`;
+  document.querySelectorAll("[data-delete-user]").forEach(b=>b.onclick=async()=>{if(confirm("ลบข้อมูลสมาชิกจาก Firestore? หมายเหตุ: บัญชี Authentication ต้องลบใน Firebase Console แยกต่างหาก"))await deleteDoc(doc(db,"users",b.dataset.deleteUser))});
 }
-if($("migrateInformationUsers"))$("migrateInformationUsers").onclick=async()=>{
-  const targets=usersNeedingAcademicMigration();
-  if(!targets.length){
-    showAdminToast("ไม่พบข้อมูลที่ต้องย้าย","User ทุกคนแยกแผนก/สาขาวิชาถูกต้องแล้ว");
-    return;
-  }
-  if(!confirm(`พบ ${targets.length} User\n\nระบบจะเปลี่ยน:\nแผนก → คอมพิวเตอร์\nสารสนเทศ → เทคโนโลยีสารสนเทศ\nธุรกิจดิจิทัล → ธุรกิจดิจิทัล\nค่าอื่น → เก็บแยกตามค่าเดิม\n\nยืนยันแก้ข้อมูล Firestore?`))return;
-  const button=$("migrateInformationUsers"),oldText=button.textContent;
-  button.disabled=true;button.textContent="กำลังย้ายข้อมูล...";
-  try{
-    const chunks=[];
-    for(let i=0;i<targets.length;i+=400)chunks.push(targets.slice(i,i+400));
-    let changed=0;
-    for(const chunk of chunks){
-      const batch=writeBatch(db);
-      chunk.forEach(user=>{
-        const academic=normalizedUserAcademicData(user);
-        batch.update(doc(db,"users",user.id),{
-          department:"คอมพิวเตอร์",
-          major:academic.major,
-          academicDataMigratedAt:serverTimestamp(),
-          updatedAt:serverTimestamp()
-        });
-        batch.set(doc(db,"public_profiles",user.id),{
-          department:"คอมพิวเตอร์",
-          major:academic.major,
-          updatedAt:serverTimestamp()
-        },{merge:true});
-        changed++;
-      });
-      await batch.commit();
-    }
-    showAdminToast("ย้ายข้อมูลสำเร็จ",`แก้ไข ${changed} User แล้ว · แผนก = คอมพิวเตอร์`);
-  }catch(error){
-    console.error("academic migration:",error);
-    showAdminToast("ย้ายข้อมูลไม่สำเร็จ",error.message||String(error),true);
-  }finally{
-    button.disabled=false;button.textContent=oldText;
-  }
-};
-
-function randomTemporaryPassword(){
-  const chars="ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789";let out="";
-  crypto.getRandomValues(new Uint32Array(10)).forEach(n=>out+=chars[n%chars.length]);return out;
-}
-if($("generateStudentPassword"))$("generateStudentPassword").onclick=()=>{$("adminNewStudentPassword").value=randomTemporaryPassword()};
-if($("closePasswordResetModal"))$("closePasswordResetModal").onclick=()=>$("passwordResetModal").classList.add("hidden");
-if($("confirmStudentPasswordReset"))$("confirmStudentPasswordReset").onclick=async()=>{
-  const password=$("adminNewStudentPassword").value;if(!passwordResetTargetUid||password.length<6){alert("รหัสผ่านต้องอย่างน้อย 6 ตัวอักษร");return}
-  if(!confirm("ยืนยันตั้งรหัสผ่านใหม่ให้นักศึกษารายนี้?"))return;
-  try{
-    await adminResetStudentPassword({targetUid:passwordResetTargetUid,newPassword:password});
-    $("passwordResetModal").classList.add("hidden");showAdminToast("ตั้งรหัสผ่านใหม่สำเร็จ","แจ้งรหัสใหม่ให้นักศึกษาได้เลย");
-  }catch(error){showAdminToast("ตั้งรหัสผ่านไม่สำเร็จ",error.message||String(error),true)}
-};
 function renderLevels(){
   $("levelCards").innerHTML=cache.levels.map(x=>`<article class="level-admin-card"><div><span>LEVEL ${esc(x.levelNo)}</span><h3>${esc(x.title)}</h3><p>${esc(x.language)} · ${esc(x.difficulty)} · ${esc(x.basePoints)} pts</p></div><div class="button-row"><button class="btn ghost btn-small" data-edit-level="${x.id}">แก้ไข</button><button class="btn danger btn-small" data-delete-level="${x.id}">ลบ</button></div></article>`).join("");
   document.querySelectorAll("[data-edit-level]").forEach(b=>b.onclick=()=>{const x=cache.levels.find(l=>l.id===b.dataset.editLevel);if(!x)return;$("editLevelNo").value=x.levelNo;$("editTitle").value=x.title;$("editLanguage").value=x.language;$("editDifficulty").value=x.difficulty;$("editBasePoints").value=x.basePoints;$("editTimeLimit").value=x.timeLimit;$("editMultiplier").value=x.difficultyMultiplier;$("editDescription").value=x.description||"";$("editCode").value=x.code;window.scrollTo({top:$("levelForm").offsetTop-30,behavior:"smooth"})});
@@ -264,13 +104,12 @@ function renderOfficial(){
     <td>${esc(x.studentId)}</td>
     <td><strong>${esc(x.fullName)}</strong></td>
     <td>${esc(x.educationLevel||"")}${esc(x.classroom||"")}</td>
-    <td>${esc(x.department||"ไม่ระบุแผนก")}</td>
-    <td>${esc(x.major||"ไม่ระบุสาขาวิชา")}</td>
+    
     <td>${esc(x.completedStages||0)}/30</td>
     <td><strong>${Number(x.totalScore||0).toFixed(2)} / ${Number(x.maxScore||40)}</strong></td>
     <td>${Number(x.avgAccuracy||0).toFixed(1)}%</td>
     <td>${Number(x.avgWpm||0).toFixed(1)}</td>
-  </tr>`).join("")||`<tr><td colspan="13" class="empty">ยังไม่มีผู้ส่งงานทางการ</td></tr>`;
+  </tr>`).join("")||`<tr><td colspan="9" class="empty">ยังไม่มีผู้ส่งงานทางการ</td></tr>`;
 }
 
 function tsMillis(v){
@@ -306,27 +145,17 @@ function userPlayedStages(uid){
 }
 function officialForUser(uid){return cache.official.find(x=>x.uid===uid||x.id===uid)||null}
 function classKeyForUser(u){return rankingClassKey(u.educationLevel,u.classroom)||"ไม่ระบุห้อง"}
-function departmentKeyForUser(u){return normalizedUserAcademicData(u).department}
-function majorKeyForUser(u){return normalizedUserAcademicData(u).major}
-function assignScopedPosition(rows,keyName,positionName){
-  const groups=new Map();
-  rows.forEach(r=>{const key=r[keyName];if(!groups.has(key))groups.set(key,[]);groups.get(key).push(r)});
-  for(const list of groups.values()){
-    list.sort((a,b)=>b.rating-a.rating||compareStudentId(a.user,b.user));
-    list.forEach((r,i)=>r[positionName]=i+1);
-  }
-}
 function buildAdminRankingRows(){
   const rows=cache.users.map(u=>{
     const attempts=seasonAttemptsForUser(u.id);
     const days=new Set(attempts.map(a=>a.createdAt?.toDate?.()?.toISOString().slice(0,10)).filter(Boolean)).size;
-    const m=calculateRankMetrics(attempts);
-    return {user:u,classKey:classKeyForUser(u),departmentKey:departmentKeyForUser(u),majorKey:majorKeyForUser(u),...m};
-  }).sort((a,b)=>b.rating-a.rating||compareStudentId(a.user,b.user));
+    const m=calculateRankMetrics(attempts,days);
+    return {user:u,classKey:classKeyForUser(u),...m};
+  }).sort((a,b)=>b.rating-a.rating||String(a.user.studentId||"").localeCompare(String(b.user.studentId||"")));
   rows.forEach((r,i)=>r.globalPosition=i+1);
-  assignScopedPosition(rows,"classKey","classPosition");
-  assignScopedPosition(rows,"departmentKey","departmentPosition");
-  assignScopedPosition(rows,"majorKey","majorPosition");
+  const groups=new Map();
+  rows.forEach(r=>{if(!groups.has(r.classKey))groups.set(r.classKey,[]);groups.get(r.classKey).push(r)});
+  groups.forEach(list=>list.sort((a,b)=>b.rating-a.rating||a.globalPosition-b.globalPosition).forEach((r,i)=>r.classPosition=i+1));
   return rows;
 }
 function adminClassKeys(){
@@ -340,32 +169,14 @@ function roomLevelLabel(room){
   const m=String(room).match(/^(ปวช|ปวส)\.?(\d)/i);
   return m?`${m[1]}.${m[2]}`:"อื่น ๆ";
 }
-function adminDepartmentKeys(){
-  return [...new Set(cache.users.map(departmentKeyForUser))].sort((a,b)=>a.localeCompare(b,"th",{numeric:true,sensitivity:"base"}));
-}
-function adminMajorKeys(){
-  return [...new Set(cache.users.map(majorKeyForUser))].sort((a,b)=>a.localeCompare(b,"th",{numeric:true,sensitivity:"base"}));
-}
 function syncAdminClassSelectors(){
-  const classes=adminClassKeys(),classSel=$("adminRankingClassFilter"),departmentSel=$("adminRankingDepartmentFilter"),majorSel=$("adminRankingMajorFilter");
-  if(classSel){
-    const old=classSel.value;
-    classSel.innerHTML=`<option value="">ทุกห้อง</option>`+classes.map(k=>`<option value="${esc(k)}">${esc(k)}</option>`).join("");
-    classSel.value=classes.includes(old)?old:"";
+  const keys=adminClassKeys(),rankSel=$("adminRankingClassFilter");
+  if(rankSel){
+    const old=rankSel.value;
+    rankSel.innerHTML=`<option value="">ทุกห้อง</option>`+keys.map(k=>`<option value="${esc(k)}">${esc(k)}</option>`).join("");
+    rankSel.value=keys.includes(old)?old:"";
   }
-  const departments=adminDepartmentKeys();
-  if(departmentSel){
-    const old=departmentSel.value;
-    departmentSel.innerHTML=`<option value="">ทุกแผนก</option>`+departments.map(k=>`<option value="${esc(k)}">${esc(k)}</option>`).join("");
-    departmentSel.value=departments.includes(old)?old:"";
-  }
-  const majors=adminMajorKeys();
-  if(majorSel){
-    const old=majorSel.value;
-    majorSel.innerHTML=`<option value="">ทุกสาขาวิชา</option>`+majors.map(k=>`<option value="${esc(k)}">${esc(k)}</option>`).join("");
-    majorSel.value=majors.includes(old)?old:"";
-  }
-  if(selectedAdminClass&&!classes.includes(selectedAdminClass))selectedAdminClass="";
+  if(selectedAdminClass&&!keys.includes(selectedAdminClass))selectedAdminClass="";
 }
 function filteredAdminClassKeys(){
   const keys=adminClassKeys(),q=normalizeRoomSearch(adminClassSearchTerm);
@@ -423,7 +234,7 @@ function renderClassrooms(){
   if(!selectedAdminClass){
     $("adminClassroomTitle").textContent="เลือกห้องด้านบน";
     $("adminClassroomSummary").textContent="ยังไม่ได้เลือกห้อง";
-    $("adminClassroomBody").innerHTML=`<tr><td colspan="13" class="empty">ค้นหาแล้วกดเลือกห้อง เช่น ปวช.2/1</td></tr>`;
+    $("adminClassroomBody").innerHTML=`<tr><td colspan="10" class="empty">ค้นหาแล้วกดเลือกห้อง เช่น ปวช.2/1</td></tr>`;
     return;
   }
 
@@ -436,10 +247,10 @@ function renderClassrooms(){
       <td>${index+1}</td><td><strong>${esc(r.user.studentId||"-")}</strong></td><td>${esc(r.user.fullName||"-")}</td>
       <td>${adminRankShieldHTML(r)}<br><small>${esc(r.tierName)} · ${r.rating}</small></td><td><strong>${stages}</strong></td>
       <td>${normal.toLocaleString()}</td><td><strong>${Number(official?.totalScore||0).toFixed(2)}</strong> / 40</td>
-      <td><strong>#${r.classPosition||"-"}</strong> · ${r.rating}</td><td><strong>#${r.departmentPosition||"-"}</strong> · ${r.rating}</td><td><strong>#${r.majorPosition||"-"}</strong> · ${r.rating}</td><td><strong>#${r.globalPosition}</strong> · ${r.rating}</td>
+      <td><strong>#${r.classPosition||"-"}</strong> · ${r.rating}</td><td><strong>#${r.globalPosition}</strong> · ${r.rating}</td>
       <td>${Number(r.user.tokenBalance||0).toLocaleString()}</td>
     </tr>`;
-  }).join("")||`<tr><td colspan="13" class="empty">ยังไม่มีสมาชิกในห้องนี้</td></tr>`;
+  }).join("")||`<tr><td colspan="10" class="empty">ยังไม่มีสมาชิกในห้องนี้</td></tr>`;
 }
 if($("adminClassSearchInput"))$("adminClassSearchInput").addEventListener("input",e=>{
   adminClassSearchTerm=e.target.value.trim();renderClassrooms();
@@ -451,107 +262,37 @@ if($("clearAdminClassSearch"))$("clearAdminClassSearch").onclick=()=>{
 };
 if($("adminRankingClassFilter"))$("adminRankingClassFilter").onchange=()=>renderRanking();
 
-function filterNamedKeys(keys,term){
-  const q=String(term||"").toLowerCase().replace(/\s+/g,"");
-  return q?keys.filter(k=>String(k).toLowerCase().replace(/\s+/g,"").includes(q)):keys;
-}
-function scopedAdminRow(r,index,scope){
-  const official=officialForUser(r.user.id),normal=userNormalScore(r.user.id),stages=userPlayedStages(r.user.id);
-  const scopeFirst=scope==="department"
-    ?`<td>${esc(r.majorKey)}</td><td>${esc(r.classKey)}</td>`
-    :`<td>${esc(r.departmentKey)}</td><td>${esc(r.classKey)}</td>`;
-  const positions=scope==="department"
-    ?`<td><strong>#${r.departmentPosition||"-"}</strong> · ${r.rating}</td><td><strong>#${r.majorPosition||"-"}</strong> · ${r.rating}</td>`
-    :`<td><strong>#${r.majorPosition||"-"}</strong> · ${r.rating}</td><td><strong>#${r.departmentPosition||"-"}</strong> · ${r.rating}</td>`;
-  return `<tr><td>${index+1}</td><td><strong>${esc(r.user.studentId||"-")}</strong></td><td>${esc(r.user.fullName||"-")}</td>${scopeFirst}
-    <td>${adminRankShieldHTML(r)}<br><small>${esc(r.tierName)} · ${r.rating}</small></td>
-    <td>${stages}</td><td>${normal.toLocaleString()}</td><td><strong>${Number(official?.totalScore||0).toFixed(2)}</strong> / 40</td>
-    ${positions}<td><strong>#${r.classPosition||"-"}</strong> · ${r.rating}</td><td><strong>#${r.globalPosition||"-"}</strong> · ${r.rating}</td>
-    <td>${Number(r.user.tokenBalance||0).toLocaleString()}</td></tr>`;
-}
-function renderDepartments(){
-  if(!$("adminDepartmentBody"))return;
-  const rows=buildAdminRankingRows(),all=adminDepartmentKeys(),keys=filterNamedKeys(all,adminDepartmentSearchTerm);
-  if(selectedAdminDepartment&&!all.includes(selectedAdminDepartment))selectedAdminDepartment="";
-  if(!selectedAdminDepartment&&keys.length===1)selectedAdminDepartment=keys[0];
-  $("adminDepartmentTotal").textContent=`${all.length} แผนก`;
-  $("adminDepartmentSearchResult").textContent=adminDepartmentSearchTerm?`พบ ${keys.length} แผนก`:"แสดงทุกแผนก";
-  $("adminDepartmentCards").innerHTML=keys.map(k=>{
-    const members=rows.filter(r=>r.departmentKey===k);
-    return `<button class="admin-major-button ${k===selectedAdminDepartment?"active":""}" data-admin-department="${esc(k)}"><strong>${esc(k)}</strong><small>${members.length} คน · ${new Set(members.map(r=>r.majorKey)).size} สาขาวิชา</small></button>`;
-  }).join("")||`<div class="admin-room-no-result">ไม่พบแผนก</div>`;
-  document.querySelectorAll("[data-admin-department]").forEach(btn=>btn.onclick=()=>{selectedAdminDepartment=btn.dataset.adminDepartment;renderDepartments()});
-  if(!selectedAdminDepartment){
-    $("adminDepartmentTitle").textContent="เลือกแผนกด้านบน";$("adminDepartmentSummary").textContent="ยังไม่ได้เลือกแผนก";
-    $("adminDepartmentBody").innerHTML=`<tr><td colspan="14" class="empty">เลือกแผนกเพื่อดูรายชื่อ</td></tr>`;return;
-  }
-  const list=rows.filter(r=>r.departmentKey===selectedAdminDepartment).sort((a,b)=>compareStudentId(a.user,b.user));
-  $("adminDepartmentTitle").textContent=selectedAdminDepartment;$("adminDepartmentSummary").textContent=`${list.length} คน · เรียงตามรหัสนักศึกษา`;
-  $("adminDepartmentBody").innerHTML=list.map((r,i)=>scopedAdminRow(r,i,"department")).join("")||`<tr><td colspan="14" class="empty">ยังไม่มีสมาชิก</td></tr>`;
-}
-function renderMajors(){
-  if(!$("adminMajorBody"))return;
-  const rows=buildAdminRankingRows(),all=adminMajorKeys(),keys=filterNamedKeys(all,adminMajorSearchTerm);
-  if(selectedAdminMajor&&!all.includes(selectedAdminMajor))selectedAdminMajor="";
-  if(!selectedAdminMajor&&keys.length===1)selectedAdminMajor=keys[0];
-  $("adminMajorTotal").textContent=`${all.length} สาขาวิชา`;
-  $("adminMajorSearchResult").textContent=adminMajorSearchTerm?`พบ ${keys.length} สาขาวิชา`:"แสดงทุกสาขาวิชา";
-  $("adminMajorCards").innerHTML=keys.map(k=>{
-    const members=rows.filter(r=>r.majorKey===k);
-    return `<button class="admin-major-button ${k===selectedAdminMajor?"active":""}" data-admin-major="${esc(k)}"><strong>${esc(k)}</strong><small>${members.length} คน · ${new Set(members.map(r=>r.departmentKey)).size} แผนก</small></button>`;
-  }).join("")||`<div class="admin-room-no-result">ไม่พบสาขาวิชา</div>`;
-  document.querySelectorAll("[data-admin-major]").forEach(btn=>btn.onclick=()=>{selectedAdminMajor=btn.dataset.adminMajor;renderMajors()});
-  if(!selectedAdminMajor){
-    $("adminMajorTitle").textContent="เลือกสาขาวิชาด้านบน";$("adminMajorSummary").textContent="ยังไม่ได้เลือกสาขาวิชา";
-    $("adminMajorBody").innerHTML=`<tr><td colspan="14" class="empty">เลือกสาขาวิชาเพื่อดูรายชื่อ</td></tr>`;return;
-  }
-  const list=rows.filter(r=>r.majorKey===selectedAdminMajor).sort((a,b)=>compareStudentId(a.user,b.user));
-  $("adminMajorTitle").textContent=selectedAdminMajor;$("adminMajorSummary").textContent=`${list.length} คน · เรียงตามรหัสนักศึกษา`;
-  $("adminMajorBody").innerHTML=list.map((r,i)=>scopedAdminRow(r,i,"major")).join("")||`<tr><td colspan="14" class="empty">ยังไม่มีสมาชิก</td></tr>`;
-}
-if($("adminDepartmentSearchInput"))$("adminDepartmentSearchInput").oninput=e=>{adminDepartmentSearchTerm=e.target.value.trim();renderDepartments()};
-if($("clearAdminDepartmentSearch"))$("clearAdminDepartmentSearch").onclick=()=>{adminDepartmentSearchTerm="";$("adminDepartmentSearchInput").value="";renderDepartments()};
-if($("adminMajorSearchInput"))$("adminMajorSearchInput").oninput=e=>{adminMajorSearchTerm=e.target.value.trim();renderMajors()};
-if($("clearAdminMajorSearch"))$("clearAdminMajorSearch").onclick=()=>{adminMajorSearchTerm="";$("adminMajorSearchInput").value="";renderMajors()};
-if($("adminRankingDepartmentFilter"))$("adminRankingDepartmentFilter").onchange=()=>renderRanking();
-if($("adminRankingMajorFilter"))$("adminRankingMajorFilter").onchange=()=>renderRanking();
-
 function renderRanking(){
   if(!$("rankingBody"))return;
   syncAdminClassSelectors();
-  const seasonId=seasonIdFromDate(new Date()),range=effectiveSeasonRange();
-  const classFilter=$("adminRankingClassFilter")?.value||"";
-  const departmentFilter=$("adminRankingDepartmentFilter")?.value||"";
-  const majorFilter=$("adminRankingMajorFilter")?.value||"";
+  const seasonId=seasonIdFromDate(new Date()),range=effectiveSeasonRange(),filter=$("adminRankingClassFilter")?.value||"";
   $("adminSeasonId").textContent=seasonId;
   $("adminSeasonRange").textContent=`${range.start.toLocaleString("th-TH")} – ${range.end.toLocaleString("th-TH")}`;
   let rows=buildAdminRankingRows();
-  if(departmentFilter)rows=rows.filter(r=>r.departmentKey===departmentFilter);
-  if(majorFilter)rows=rows.filter(r=>r.majorKey===majorFilter);
-  if(classFilter)rows=rows.filter(r=>r.classKey===classFilter);
+  if(filter)rows=rows.filter(r=>r.classKey===filter);
   $("rankingBody").innerHTML=rows.map(r=>`<tr>
-    <td><strong>#${r.globalPosition}</strong></td><td><strong>#${r.departmentPosition||"-"}</strong></td>
-    <td><strong>#${r.majorPosition||"-"}</strong></td><td><strong>#${r.classPosition||"-"}</strong></td>
+    <td><strong>#${r.globalPosition}</strong></td>
+    <td><strong>#${r.classPosition||"-"}</strong></td>
     <td>${esc(r.user.fullName)}<br><small>${esc(r.user.studentId)}</small></td>
-    <td><small>${esc(r.departmentKey)}<br>${esc(r.majorKey)}<br>${esc(r.classKey)}</small></td>
+    <td>${esc(r.classKey)}</td>
     <td>${adminRankShieldHTML(r)} <strong>${esc(r.tierName)}</strong></td>
-    <td><strong>${r.rating}</strong></td><td>${r.speed}</td><td>${r.accuracy}</td><td>${r.completionTime}</td><td>${r.avgWpm}</td><td>${r.avgAccuracy}</td><td>${r.avgSeconds?`${r.avgSeconds}s`:"-"}</td>
-  </tr>`).join("")||`<tr><td colspan="15" class="empty">ยังไม่มีข้อมูล Ranking</td></tr>`;
+    <td><strong>${r.rating}</strong></td><td>${r.diligence}</td><td>${r.accuracy}</td><td>${r.speed}</td><td>${r.consistency}</td><td>${r.avgWpm}</td>
+  </tr>`).join("")||`<tr><td colspan="11" class="empty">ยังไม่มีข้อมูล Ranking</td></tr>`;
 }
 
 async function persistRanking(){
   const seasonId=seasonIdFromDate(new Date()),rows=buildAdminRankingRows();
   let batch=writeBatch(db),writes=0;
   for(const r of rows){
-    const rank={seasonId,rating:r.rating,tierId:r.tierId,tierName:r.tierName,tierIcon:r.tierIcon,accuracy:r.accuracy,speed:r.speed,completionTime:r.completionTime,avgWpm:r.avgWpm,avgAccuracy:r.avgAccuracy,avgSeconds:r.avgSeconds,bestWpm:r.bestWpm,bestAccuracy:r.bestAccuracy,bestSeconds:r.bestSeconds,completedAttempts:r.completedAttempts,updatedAt:new Date().toISOString(),resetBoundaryAt:rankResetBoundaryMs()?new Date(rankResetBoundaryMs()).toISOString():null};
-    batch.set(doc(db,"rankings",`${seasonId}_${r.user.id}`),{seasonId,uid:r.user.id,studentId:r.user.studentId,fullName:r.user.fullName,classKey:r.classKey,department:r.departmentKey,major:r.majorKey,globalPosition:r.globalPosition,departmentPosition:r.departmentPosition,majorPosition:r.majorPosition,classPosition:r.classPosition,...rank,updatedAt:serverTimestamp()},{merge:true});writes++;
+    const rank={seasonId,rating:r.rating,tierId:r.tierId,tierName:r.tierName,tierIcon:r.tierIcon,diligence:r.diligence,accuracy:r.accuracy,speed:r.speed,consistency:r.consistency,avgWpm:r.avgWpm,avgAccuracy:r.avgAccuracy,completedAttempts:r.completedAttempts,activeDayCount:r.activeDayCount,updatedAt:new Date().toISOString(),resetBoundaryAt:rankResetBoundaryMs()?new Date(rankResetBoundaryMs()).toISOString():null};
+    batch.set(doc(db,"rankings",`${seasonId}_${r.user.id}`),{seasonId,uid:r.user.id,studentId:r.user.studentId,fullName:r.user.fullName,classKey:r.classKey,globalPosition:r.globalPosition,classPosition:r.classPosition,...rank,updatedAt:serverTimestamp()},{merge:true});writes++;
     batch.set(doc(db,"users",r.user.id),{rank,updatedAt:serverTimestamp()},{merge:true});writes++;
-    batch.set(doc(db,"public_profiles",r.user.id),{rank,educationLevel:r.user.educationLevel||"",classroom:r.user.classroom||"",classKey:r.classKey,department:r.departmentKey,major:r.majorKey,updatedAt:serverTimestamp()},{merge:true});writes++;
+    batch.set(doc(db,"public_profiles",r.user.id),{rank,educationLevel:r.user.educationLevel||"",classroom:r.user.classroom||"",classKey:r.classKey,updatedAt:serverTimestamp()},{merge:true});writes++;
     if(writes>=420){await batch.commit();batch=writeBatch(db);writes=0;}
   }
   if(writes)await batch.commit();
 }
-function bronzeResetRank(resetAt){return {seasonId:seasonIdFromDate(resetAt),rating:0,tierId:"bronze",tierName:"Bronze",tierIcon:"🥉",accuracy:0,speed:0,completionTime:0,avgWpm:0,avgAccuracy:0,avgSeconds:0,bestWpm:0,bestAccuracy:0,bestSeconds:0,completedAttempts:0,updatedAt:resetAt.toISOString(),resetBoundaryAt:resetAt.toISOString()}}
+function bronzeResetRank(resetAt){return {seasonId:seasonIdFromDate(resetAt),rating:0,tierId:"bronze",tierName:"Bronze",tierIcon:"🥉",diligence:0,accuracy:0,speed:0,consistency:0,avgWpm:0,avgAccuracy:0,completedAttempts:0,activeDayCount:0,updatedAt:resetAt.toISOString(),resetBoundaryAt:resetAt.toISOString()}}
 async function executeRankingResetNow(){
   if(!confirm("ยืนยันรีแรงค์ตอนนี้? Rank ของ User ทุกคนจะกลับ Bronze 0 และผลงานก่อนเวลานี้จะไม่ถูกนำมาคำนวณในรอบใหม่"))return;
   const now=new Date(),rank=bronzeResetRank(now),version=`manual_${now.getTime()}`;
@@ -579,7 +320,7 @@ if($("saveRankResetSchedule"))$("saveRankResetSchedule").onclick=async()=>{
 };
 if($("clearRankResetSchedule"))$("clearRankResetSchedule").onclick=async()=>{await setDoc(doc(db,"system_settings","ranking"),{nextResetAt:null,notice:"",updatedAt:serverTimestamp()},{merge:true});showAdminToast("ยกเลิกกำหนดการแล้ว")};
 if($("resetRankingNow"))$("resetRankingNow").onclick=executeRankingResetNow;
-if($("recalculateRanking"))$("recalculateRanking").onclick=async()=>{await persistRanking();showAdminToast("คำนวณ Ranking ใหม่แล้ว","อัปเดตแรงค์รวม / แผนก / สาขาวิชา / ห้อง")};
+if($("recalculateRanking"))$("recalculateRanking").onclick=async()=>{await persistRanking();showAdminToast("คำนวณ Ranking ใหม่แล้ว","อัปเดตทั้งแรงค์รวมและแรงค์รายห้อง")};
 
 if($("exportOfficialCsv"))$("exportOfficialCsv").onclick=()=>{
   const h=["submitted_at","student_id","name","class","department","completed","score","max_score","accuracy","wpm"];
@@ -915,19 +656,7 @@ $("levelForm").addEventListener("submit",async e=>{e.preventDefault();const n=Nu
 $("seedDefaults").onclick=async()=>{if(!confirm("คืนค่า 4 โหมดและ 12 Level เริ่มต้น?"))return;const batch=writeBatch(db);DEFAULT_MODES.forEach(x=>{const {id,...data}=x;batch.set(doc(db,"game_modes",id),{...data,id,isActive:true},{merge:true})});DEFAULT_LEVELS.forEach(x=>batch.set(doc(db,"levels",`level_${String(x.levelNo).padStart(2,"0")}`),{...x,isActive:true},{merge:true}));await batch.commit()};
 async function deleteCollectionDocs(name){const rows=await getDocs(collection(db,name));let batch=writeBatch(db),count=0;for(const item of rows.docs){batch.delete(item.ref);if(++count>=450){await batch.commit();batch=writeBatch(db);count=0}}if(count)await batch.commit()}
 $("deleteResults").onclick=async()=>{if(confirm("ยืนยันลบผลทั้งหมด?"))await deleteCollectionDocs("attempts")};
-$("deleteUsers").onclick=async()=>{
-  const users=cache.users.filter(u=>u.id!==ADMIN_UID);
-  if(!users.length)return;
-  if(!confirm(`ยืนยันลบ User ทั้งหมด ${users.length} คน?\n\nจะลบทั้ง Authentication + Firestore และทุกคนสามารถสมัครใหม่ได้`))return;
-  const typed=prompt('พิมพ์ DELETE ALL เพื่อยืนยัน');if(typed!=="DELETE ALL")return;
-  const btn=$("deleteUsers"),old=btn.textContent;btn.disabled=true;
-  let ok=0,failed=0;
-  for(const user of users){
-    btn.textContent=`กำลังลบ ${ok+failed+1}/${users.length}`;
-    try{await adminDeleteStudentAccount({targetUid:user.id});ok++;}catch(error){failed++;console.warn("delete user",user.id,error)}
-  }
-  btn.disabled=false;btn.textContent=old;showAdminToast("ลบ User ทั้งหมดเสร็จ",`สำเร็จ ${ok} · ไม่สำเร็จ ${failed}`,failed>0);
-};
+$("deleteUsers").onclick=async()=>{if(confirm("ยืนยันลบข้อมูลสมาชิกทั้งหมดจาก Firestore? บัญชี Authentication จะไม่ถูกลบ"))await deleteCollectionDocs("users")};
 function downloadFile(name,text,type){const blob=new Blob([text],{type}),url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download=name;a.click();URL.revokeObjectURL(url)}
 $("exportCsv").onclick=()=>{const h=["date","student_id","name","level","classroom","department","mode","game_level","status","score","wpm","accuracy","mistakes","time_seconds"],q=v=>`"${String(v??"").replaceAll('"','""')}"`,rows=cache.attempts.map(x=>[formatDate(x.createdAt),x.studentId,x.fullName,x.educationLevel,x.classroom,x.department,x.modeName,(x.stage??x.levelNo),x.status,x.score,x.wpm,x.accuracy,x.mistakes,x.elapsedSeconds].map(q).join(","));downloadFile("code_typing_results.csv","\ufeff"+h.join(",")+"\n"+rows.join("\n"),"text/csv;charset=utf-8")};
 $("exportJson").onclick=()=>downloadFile("code_typing_backup.json",JSON.stringify({

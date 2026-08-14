@@ -5,13 +5,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#102c3d">
   <title>2D Zone | Code Typing Academy</title>
-  <link rel="stylesheet" href="./style.css?v=5.0.0">
+  <link rel="stylesheet" href="./style.css?v=4.7.2">
 </head>
 <body class="zone47-page">
   <div id="zoneGate" class="zone47-gate">
     <div class="zone47-gate-card">
       <div class="zone47-gate-icon">🌙</div>
-      <span class="section-kicker">2D SOCIAL ZONE · V4.7.0</span>
+      <span class="section-kicker">2D SOCIAL ZONE · V4.7.2.0</span>
       <h1 id="zoneGateTitle">กำลังเข้าสู่ 2D Zone</h1>
       <p id="zoneGateText">กำลังเชื่อมต่อผู้เล่น แชต ร้านค้า และภารกิจ...</p>
       <div id="zoneGateHelp" class="zone47-gate-help hidden"></div>
@@ -30,11 +30,10 @@
         <div id="zoneMyShield"></div>
         <div><strong id="zoneMyStudentId">-</strong><small><i></i><span id="zoneOnlineCount">1</span> online</small></div>
       </div>
-      <div class="zone47-token"><span>🪙 Token</span><strong id="zoneTokenBalance">0</strong><small id="zoneCheckinMini">Check-in 0/60m</small></div>
+      <div class="zone47-token"><span>🪙 Token</span><strong id="zoneTokenBalance">0</strong></div>
       <div class="zone47-actions">
         <button id="openWizardQuests" class="btn ghost" type="button">🧙 ภารกิจ</button>
         <button id="openZoneShop" class="btn ghost" type="button">🛒 ร้านค้า</button>
-        <button id="openZoneBag" class="btn ghost" type="button">🎒 กระเป๋า <span id="zoneBagCount">0/25</span></button>
         <button id="openZoneChatHistory" class="btn ghost" type="button">💬 แชต</button>
         <a id="openAdminPanel" class="btn ghost hidden" href="./admin.html">Admin</a>
         <a id="leaveZoneButton" class="btn danger" href="./index.html">ออก</a>
@@ -111,19 +110,6 @@
     </div>
   </div>
 
-
-  <div id="zoneBagModal" class="zone47-modal hidden">
-    <div class="zone47-modal-card">
-      <button id="closeZoneBag" class="zone47-modal-close" type="button">✕</button>
-      <div class="zone47-shop-head">
-        <div><span class="section-kicker">INVENTORY BAG</span><h2>🎒 กระเป๋าไอเท็ม</h2><p>ความจุสูงสุด 25 ไอเท็ม · สวม/ถอด/ขายคืนร้านได้จากที่นี่</p></div>
-        <div class="zone47-shop-wallet"><span>ความจุ</span><strong id="zoneBagCapacity">0 / 25</strong></div>
-      </div>
-      <div class="zone-bag-rule">ขายคืนร้านได้รับ <strong>30%</strong> ของราคาขายปัจจุบัน · หากกำลังสวมอยู่ ระบบจะถอดให้อัตโนมัติ</div>
-      <div id="zoneBagGrid" class="zone47-shop-grid"></div>
-    </div>
-  </div>
-
   <div id="zoneChatHistoryModal" class="zone47-modal hidden">
     <div class="zone47-modal-card">
       <button id="closeZoneChatHistory" class="zone47-modal-close" type="button">✕</button>
@@ -132,6 +118,6 @@
     </div>
   </div>
 
-  <script type="module" src="./zone.js?v=5.0.0"></script>
+  <script type="module" src="./zone.js?v=4.7.2"></script>
 </body>
 </html>

@@ -1,0 +1,22 @@
+{
+  "syntax:app.js": true,
+  "syntax:admin.js": true,
+  "syntax:zone.js": true,
+  "syntax:quest-system.js": true,
+  "syntax:ranking-system.js": true,
+  "syntax:economy-system.js": true,
+  "syntax:reward-data.js": true,
+  "syntax:character-system.js": true,
+  "syntax:firebase-config.js": true,
+  "department_removed": true,
+  "student_8_digits": true,
+  "firebase_new_project": true,
+  "student_new_domain": true,
+  "admin_uid_correct": true,
+  "wizard_preserved": true,
+  "shop_preserved": true,
+  "horizontal_controls": true,
+  "register_button": true,
+  "login_submit": true,
+  "all_passed": true
+}

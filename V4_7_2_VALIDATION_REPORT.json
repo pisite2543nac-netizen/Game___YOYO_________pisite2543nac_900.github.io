@@ -1,0 +1,17 @@
+{
+  "syntax:app.js": true,
+  "syntax:admin.js": true,
+  "syntax:zone.js": true,
+  "syntax:ranking-system.js": true,
+  "syntax:quest-system.js": true,
+  "syntax:economy-system.js": true,
+  "syntax:reward-data.js": true,
+  "syntax:character-system.js": true,
+  "syntax:firebase-config.js": true,
+  "project_thc_nr": true,
+  "student_domain_old": true,
+  "admin_email_old": true,
+  "admin_uid_old": true,
+  "no_new_project": true,
+  "all_passed": true
+}

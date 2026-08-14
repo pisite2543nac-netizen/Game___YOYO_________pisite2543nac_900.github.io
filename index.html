@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1">
   <title>ระบบเกมพิมพ์ Code | วิทยาลัยเทคนิคนางรอง</title>
-  <link rel="stylesheet" href="./style.css?v=5.0.0">
+  <link rel="stylesheet" href="./style.css?v=4.7.2">
 </head>
 <body>
 <header class="site-header">
@@ -30,16 +30,12 @@
     <section id="loginPanel" class="auth-panel">
       <span class="section-kicker">STUDENT LOGIN</span>
       <h2>เข้าสู่ระบบผู้เล่น</h2>
-      <p class="muted-line">ใช้รหัสผู้ใช้หรือเลขประจำตัวนักศึกษา และรหัสผ่านที่สร้างไว้ตอนลงทะเบียน</p>
-
-      <div id="userAccessStatus" class="user-access-status">
-        รองรับรหัส User ทั้งแบบตัวเลข และตัวอักษร+ตัวเลข เช่น <strong>nkseza2000</strong>
-      </div>
+      <p class="muted-line">ใช้เลขประจำตัวนักศึกษาและรหัสผ่านที่สร้างไว้ตอนลงทะเบียน</p>
 
       <form id="loginForm" class="form-grid">
         <label>
-          <span>รหัสผู้ใช้ / เลขประจำตัวนักศึกษา</span>
-          <input id="loginStudentId" inputmode="numeric" autocomplete="username" pattern="[0-9]{8}" minlength="8" maxlength="8" required placeholder="เช่น 11111111">
+          <span>เลขประจำตัวนักศึกษา</span>
+          <input id="loginStudentId" inputmode="numeric" pattern="[0-9]{8}" minlength="8" maxlength="8" required placeholder="เช่น 11111111">
         </label>
         <label>
           <span>รหัสผ่าน</span>
@@ -58,12 +54,12 @@
     <section id="registerPanel" class="auth-panel hidden">
       <span class="section-kicker">NEW STUDENT ACCOUNT</span>
       <h2>ลงทะเบียนผู้เล่น</h2>
-      <p class="muted-line">ลงทะเบียนครั้งแรกเพียงครั้งเดียว จากนั้นใช้รหัสผู้ใช้/เลขนักศึกษาและรหัสผ่าน Login ได้</p>
+      <p class="muted-line">ลงทะเบียนครั้งแรกเพียงครั้งเดียว จากนั้นใช้เลขนักศึกษาและรหัสผ่าน Login ได้</p>
 
       <form id="registerForm" class="form-grid">
         <label>
-          <span>รหัสผู้ใช้ / เลขประจำตัวนักศึกษา</span>
-          <input id="studentId" inputmode="numeric" autocomplete="username" pattern="[0-9]{8}" minlength="8" maxlength="8" required placeholder="รหัสนักศึกษา 8 หลัก เช่น 11111111">
+          <span>เลขประจำตัวนักศึกษา</span>
+          <input id="studentId" inputmode="numeric" pattern="[0-9]{8}" minlength="8" maxlength="8" required placeholder="เช่น 11111111">
         </label>
 
         <label>
@@ -91,26 +87,7 @@
             <option>/4</option><option>/5</option><option>/6</option>
           </select>
         </label>
-
-        <label>
-          <span>แผนก</span>
-          <select id="department" required>
-            <option value="">-- เลือกแผนก --</option>
-            <option value="คอมพิวเตอร์">คอมพิวเตอร์</option>
-            <option value="อิเล็กทรอนิกส์">อิเล็กทรอนิกส์</option>
-          </select>
-        </label>
-
-        <label>
-          <span>สาขาวิชา</span>
-          <select id="major" required>
-            <option value="">-- เลือกสาขาวิชา --</option>
-            <option value="เทคโนโลยีสารสนเทศ">เทคโนโลยีสารสนเทศ</option>
-            <option value="ธุรกิจดิจิทัล">ธุรกิจดิจิทัล</option>
-          </select>
-        </label>
-
-        <label>
+<label>
           <span>สร้างรหัสผ่าน</span>
           <div class="password-row">
             <input id="password" type="password" minlength="6" required placeholder="อย่างน้อย 6 ตัวอักษร">
@@ -147,7 +124,6 @@
         <p id="portalWelcome">-</p>
       </div>
       <div class="portal-head-actions">
-          <button id="openEditProfileButton" class="btn ghost" type="button">✏️ แก้ไขข้อมูลส่วนตัว</button>
         <button id="openCharacterProfileButton" class="btn character-profile-entry" type="button">🧍 ดูตัวละคร</button>
         <a href="zone.html" class="btn zone-entry-main">🌙 2D Zone</a>
         <button id="logoutUserButton" class="btn ghost">ออกจากระบบ</button>
@@ -160,21 +136,8 @@
       <div class="card portal-stat"><span>คะแนนสูงสุด</span><strong id="userBestScore">0</strong></div>
       <div class="card portal-stat"><span>WPM สูงสุด</span><strong id="userBestWpm">0</strong></div>
       <div class="card portal-stat points-stat"><span>Token สะสม</span><strong id="userTokens">0</strong><small>TOKENS</small></div>
-      <div class="card portal-stat rank-stat"><span>Rank รอบปัจจุบัน</span><strong id="userRank">-</strong><small id="rankSeasonLabel">ADMIN RESET</small></div>
+      <div class="card portal-stat rank-stat"><span>Rank Season</span><strong id="userRank">-</strong><small id="rankSeasonLabel">60 DAYS</small></div>
     </div>
-
-    
-    <section id="dailyCheckinCard" class="card daily-checkin-card">
-      <div class="daily-checkin-icon">🎁</div>
-      <div class="daily-checkin-copy">
-        <span class="section-kicker">DAILY FULLSCREEN CHECK-IN</span>
-        <h3>ใช้งานครบ 1 ชั่วโมง รับ 10 Token</h3>
-        <p>นับเฉพาะเวลาที่หน้าเว็บเปิดใช้งานอยู่และอยู่ในโหมดเต็มหน้าจอ · รับได้วันละ 1 ครั้ง</p>
-        <div class="daily-checkin-track"><div id="dailyCheckinProgress"></div></div>
-        <small id="dailyCheckinStatus">กำลังเตรียมระบบเช็กอิน...</small>
-      </div>
-      <strong id="dailyCheckinReward">+10 🪙</strong>
-    </section>
 
     <section id="rankResetNotice" class="card rank-reset-user-notice hidden">
       <div class="rank-reset-user-icon">🏆</div>
@@ -349,21 +312,17 @@
       <article class="card leaderboard-card ranking-dual-card">
         <div class="section-title compact">
           <div>
-            <span class="section-kicker">4-SCOPE RANKING · 60 DAY SEASON</span>
-            <h2>Ranking รวม / แผนก / สาขาวิชา / ห้อง</h2>
-            <p class="muted-line">คะแนน Rank คำนวณจาก WPM 40% + Accuracy 40% + เวลาจบเร็ว 20% แล้วจัดอันดับแยกตามแต่ละกลุ่ม</p>
+            <span class="section-kicker">DUAL RANKING · 60 DAY SEASON</span>
+            <h2>Ranking รวม / Ranking ห้อง</h2>
+            <p class="muted-line">แรงค์รวมใช้ผู้เล่นทุกคน ส่วนแรงค์ห้องเทียบเฉพาะเพื่อนห้องเดียวกัน</p>
           </div>
           <div id="leaderboardSeason" class="season-chip">SEASON</div>
         </div>
-        <div class="ranking-mode-switch ranking-mode-switch-four">
-          <button id="rankingModeOverall" class="ranking-mode-btn active" type="button">🌐 รวมทั้งหมด</button>
-          <button id="rankingModeDepartment" class="ranking-mode-btn" type="button">🏢 แผนก <span id="departmentRankingLabel">-</span></button>
-          <button id="rankingModeMajor" class="ranking-mode-btn" type="button">🎓 สาขาวิชา <span id="majorRankingLabel">-</span></button>
-          <button id="rankingModeClass" class="ranking-mode-btn" type="button">🏫 ห้อง <span id="classRankingLabel">-</span></button>
+        <div class="ranking-mode-switch">
+          <button id="rankingModeOverall" class="ranking-mode-btn active" type="button">🌐 แรงค์รวมทั้งหมด</button>
+          <button id="rankingModeClass" class="ranking-mode-btn" type="button">🏫 แรงค์ห้อง <span id="classRankingLabel">-</span></button>
         </div>
         <div id="topRankingList" class="top-ranking-list"></div>
-        <div id="departmentRankingList" class="top-ranking-list hidden"></div>
-        <div id="majorRankingList" class="top-ranking-list hidden"></div>
         <div id="classRankingList" class="top-ranking-list hidden"></div>
         <div class="rank-shield-legend" aria-label="ระดับแรงค์">
           <div><span class="rank-shield rank-bronze small"><span class="rank-shield-letter">B</span></span><b>Bronze</b></div>
@@ -545,7 +504,7 @@
 </main>
 
 <footer><div class="wrap">ระบบเกมพิมพ์ Code · วิทยาลัยเทคนิคนางรอง</div></footer>
-<script type="module" src="./app.js?v=5.0.0"></script>
+<script type="module" src="./app.js?v=4.7.2"></script>
 
   <div id="characterSetupModal" class="character-modal hidden">
     <div class="character-modal-card character-setup-card">
@@ -629,64 +588,6 @@
           </div>
           <div id="characterInventoryList" class="character-inventory-list"></div>
         </section>
-      </div>
-    </div>
-  </div>
-
-
-  <div id="editProfileModal" class="modal hidden">
-    <div class="modal-card user-profile-edit-card">
-      <button id="closeEditProfileButton" class="modal-close" type="button">✕</button>
-      <span class="section-kicker">USER PROFILE</span>
-      <h2>แก้ไขข้อมูลส่วนตัว</h2>
-      <p class="muted-line">ปรับแผนกและสาขาวิชาให้ถูกต้อง ระบบจะใช้ข้อมูลนี้กับ Ranking และหน้า Admin ทั้งหมด</p>
-
-      <div class="user-profile-edit-grid">
-        <label>
-          <span>รหัสนักศึกษา</span>
-          <input id="editProfileStudentId" disabled>
-        </label>
-        <label>
-          <span>ชื่อ-นามสกุล</span>
-          <input id="editProfileFullName" required>
-        </label>
-        <label>
-          <span>ระดับชั้น</span>
-          <select id="editProfileEducationLevel" required>
-            <option value="ปวช.1">ปวช.1</option><option value="ปวช.2">ปวช.2</option><option value="ปวช.3">ปวช.3</option>
-            <option value="ปวส.1">ปวส.1</option><option value="ปวส.2">ปวส.2</option>
-          </select>
-        </label>
-        <label>
-          <span>ห้อง</span>
-          <select id="editProfileClassroom" required>
-            <option value="/1">/1</option><option value="/2">/2</option><option value="/3">/3</option>
-            <option value="/4">/4</option><option value="/5">/5</option><option value="/6">/6</option>
-          </select>
-        </label>
-        <label>
-          <span>แผนก</span>
-          <select id="editProfileDepartment" required>
-            <option value="คอมพิวเตอร์">คอมพิวเตอร์</option>
-            <option value="อิเล็กทรอนิกส์">อิเล็กทรอนิกส์</option>
-          </select>
-        </label>
-        <label>
-          <span>สาขาวิชา</span>
-          <select id="editProfileMajor" required>
-            <option value="เทคโนโลยีสารสนเทศ">เทคโนโลยีสารสนเทศ</option>
-            <option value="ธุรกิจดิจิทัล">ธุรกิจดิจิทัล</option>
-          </select>
-        </label>
-      </div>
-
-      <div class="user-profile-edit-note">
-        ถ้าเลือกสาขาเทคโนโลยีสารสนเทศหรือธุรกิจดิจิทัล ระบบจะกำหนดแผนกเป็น <strong>คอมพิวเตอร์</strong> อัตโนมัติ
-      </div>
-
-      <div class="modal-actions">
-        <button id="saveEditProfileButton" class="btn primary" type="button">บันทึกข้อมูล</button>
-        <button id="cancelEditProfileButton" class="btn ghost" type="button">ยกเลิก</button>
       </div>
     </div>
   </div>

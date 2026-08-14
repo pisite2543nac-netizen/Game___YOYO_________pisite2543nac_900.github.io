@@ -1,15 +1,16 @@
 export const RANKING_CONFIG = {
-  seasonDays: null,
-  automaticReset: false,
+  seasonDays: 60,
+
   weights: {
-    speed: 0.40,
-    accuracy: 0.40,
-    completionTime: 0.20
+    diligence: 0.35,
+    accuracy: 0.30,
+    speed: 0.20,
+    consistency: 0.15
   },
-  targets: {
-    targetWpm: 80,
-    fastestReferenceSeconds: 90
-  },
+
+  // WPM เทียบกับช่วงคะแนนความเร็ว 0-100
+  speedReferenceWpm: 80,
+
   tiers: [
     {id:"bronze", name:"Bronze", icon:"🥉", min:0},
     {id:"silver", name:"Silver", icon:"🥈", min:35},
@@ -21,95 +22,88 @@ export const RANKING_CONFIG = {
 };
 
 export function seasonIdFromDate(date = new Date()) {
-  return "MANUAL";
+  const epoch = Date.UTC(2026, 0, 1);
+  const days = Math.floor((date.getTime() - epoch) / 86400000);
+  const season = Math.floor(Math.max(0, days) / RANKING_CONFIG.seasonDays) + 1;
+  return `S${String(season).padStart(3, "0")}`;
 }
 
 export function seasonRange(date = new Date()) {
-  return {
-    start: new Date(Date.UTC(2026,0,1)),
-    end: new Date(Date.UTC(2099,11,31,23,59,59,999))
-  };
+  const epoch = Date.UTC(2026, 0, 1);
+  const days = Math.floor((date.getTime() - epoch) / 86400000);
+  const seasonIndex = Math.floor(Math.max(0, days) / RANKING_CONFIG.seasonDays);
+  const start = new Date(epoch + seasonIndex * RANKING_CONFIG.seasonDays * 86400000);
+  const end = new Date(start.getTime() + RANKING_CONFIG.seasonDays * 86400000 - 1);
+  return { start, end };
 }
 
-export function rankTierFromRating(rating=0){
-  const r=Math.max(0,Math.min(100,Number(rating)||0));
-  const tiers=[...RANKING_CONFIG.tiers].sort((a,b)=>b.min-a.min);
-  return tiers.find(t=>r>=t.min)||RANKING_CONFIG.tiers[0];
-}
+export function calculateRankMetrics(attempts, activeDayCount = 0) {
+  const completed = attempts.filter(a => a.status === "completed");
+  const total = completed.length;
 
-export function calculateRankMetrics(attempts=[]){
-  const completed=(attempts||[]).filter(a=>{
-    const status=String(a.status||"").toLowerCase();
-    return ["completed","complete","passed","success"].includes(status);
-  });
-  const total=completed.length;
-  if(!total){
-    const tier=rankTierFromRating(0);
-    return {
-      rating:0,tierId:tier.id,tierName:tier.name,tierIcon:tier.icon,
-      speed:0,accuracy:0,completionTime:0,
-      avgWpm:0,avgAccuracy:0,avgSeconds:0,
-      bestWpm:0,bestAccuracy:0,bestSeconds:0,completedAttempts:0
-    };
+  const avgAccuracy = total
+    ? completed.reduce((s,a)=>s + Number(a.accuracy || 0), 0) / total
+    : 0;
+
+  const avgWpm = total
+    ? completed.reduce((s,a)=>s + Number(a.wpm || 0), 0) / total
+    : 0;
+
+  // ความขยัน: จำนวนด่าน + จำนวนวันที่กลับมาใช้งาน
+  const attemptFactor = Math.min(100, total * 2.5);
+  const dayFactor = Math.min(100, activeDayCount * 4);
+  const diligence = attemptFactor * 0.65 + dayFactor * 0.35;
+
+  // ความเร็ว: ไม่ให้ความเร็วสูงอย่างเดียวชนะ Accuracy
+  const speed = Math.min(100, (avgWpm / RANKING_CONFIG.speedReferenceWpm) * 100);
+
+  // ความสม่ำเสมอ: Accuracy กระจายน้อย + มีหลายรอบ
+  let consistency = 0;
+  if (total) {
+    const mean = avgAccuracy;
+    const variance = completed.reduce((s,a)=>{
+      const d = Number(a.accuracy || 0) - mean;
+      return s + d*d;
+    },0) / total;
+    const std = Math.sqrt(variance);
+    const stability = Math.max(0, 100 - std * 2);
+    const volume = Math.min(100, total * 4);
+    consistency = stability * 0.7 + volume * 0.3;
   }
-  const wpms=completed.map(a=>Number(a.wpm||0)).filter(Number.isFinite);
-  const accuracies=completed.map(a=>Number(a.accuracy||0)).filter(Number.isFinite);
-  const seconds=completed.map(a=>{
-    const raw=Number(a.elapsedSeconds ?? a.elapsed ?? a.timeSeconds ?? a.durationSeconds ?? 0);
-    return Number.isFinite(raw)&&raw>0?raw:null;
-  }).filter(v=>v!==null);
-  const avg=a=>a.length?a.reduce((x,y)=>x+y,0)/a.length:0;
-  const avgWpm=avg(wpms),avgAccuracy=avg(accuracies),avgSeconds=avg(seconds);
-  const speed=Math.max(0,Math.min(100,(avgWpm/RANKING_CONFIG.targets.targetWpm)*100));
-  const accuracy=Math.max(0,Math.min(100,avgAccuracy));
-  const completionTime=avgSeconds>0
-    ?Math.max(0,Math.min(100,(RANKING_CONFIG.targets.fastestReferenceSeconds/avgSeconds)*100))
-    :0;
-  const rating=Math.round(
-    speed*RANKING_CONFIG.weights.speed+
-    accuracy*RANKING_CONFIG.weights.accuracy+
-    completionTime*RANKING_CONFIG.weights.completionTime
+
+  const accuracy = Math.max(0, Math.min(100, avgAccuracy));
+
+  const rating = Math.round(
+    diligence * RANKING_CONFIG.weights.diligence +
+    accuracy * RANKING_CONFIG.weights.accuracy +
+    speed * RANKING_CONFIG.weights.speed +
+    consistency * RANKING_CONFIG.weights.consistency
   );
-  const tier=rankTierFromRating(rating);
+
+  const tiers = [...RANKING_CONFIG.tiers].sort((a,b)=>b.min-a.min);
+  const tier = tiers.find(t => rating >= t.min) || RANKING_CONFIG.tiers[0];
+
   return {
-    rating,tierId:tier.id,tierName:tier.name,tierIcon:tier.icon,
-    speed:Math.round(speed),accuracy:Math.round(accuracy),completionTime:Math.round(completionTime),
-    avgWpm:Math.round(avgWpm*10)/10,avgAccuracy:Math.round(avgAccuracy*100)/100,avgSeconds:Math.round(avgSeconds*10)/10,
-    bestWpm:wpms.length?Math.max(...wpms):0,bestAccuracy:accuracies.length?Math.max(...accuracies):0,
-    bestSeconds:seconds.length?Math.min(...seconds):0,completedAttempts:total
+    rating,
+    tierId: tier.id,
+    tierName: tier.name,
+    tierIcon: tier.icon,
+    diligence: Math.round(diligence),
+    accuracy: Math.round(accuracy),
+    speed: Math.round(speed),
+    consistency: Math.round(consistency),
+    avgWpm: Math.round(avgWpm * 10) / 10,
+    avgAccuracy: Math.round(avgAccuracy * 10) / 10,
+    completedAttempts: total,
+    activeDayCount
   };
 }
+
 
 export function rankingClassKey(educationLevel,classroom){
   return `${String(educationLevel||"").trim()}${String(classroom||"").trim()}`;
 }
 
 export function rankProfiles(profiles,limit=10){
-  return [...(profiles||[])]
-    .filter(p=>p?.isAdmin!==true && p?.studentId!=="GM")
-    .sort((a,b)=>Number(b?.rank?.rating||0)-Number(a?.rank?.rating||0))
-    .slice(0,limit);
-}
-
-function normalizeLegacyAcademicMajor(raw){
-  const value=String(raw||"").trim();
-  const compact=value.replace(/\s+/g,"");
-  if(["ธุรกิจดิจิทัล","ธุรกิจดิทัล","ดิจิทัลธุรกิจ"].includes(compact))return "ธุรกิจดิจิทัล";
-  if(["สารสนเทศ","เทคโนโลยีสารสนเทศ"].includes(compact)||value==="ไอที"||value==="IT")return "เทคโนโลยีสารสนเทศ";
-  return value||"ไม่ระบุสาขาวิชา";
-}
-function legacyAcademicLooksLikeMajor(raw){
-  return /สารสนเทศ|ดิจิทัล|ธุรกิจดิทัล/i.test(String(raw||""));
-}
-export function rankingDepartmentKey(user){
-  const department=String(user?.department||"").trim();
-  if(legacyAcademicLooksLikeMajor(department))return "คอมพิวเตอร์";
-  return department||"ไม่ระบุแผนก";
-}
-export function rankingMajorKey(user){
-  const department=String(user?.department||"").trim();
-  const major=String(user?.major||"").trim();
-  if(major&&major!=="ไม่ระบุสาขาวิชา")return normalizeLegacyAcademicMajor(major);
-  if(legacyAcademicLooksLikeMajor(department))return normalizeLegacyAcademicMajor(department);
-  return "ไม่ระบุสาขาวิชา";
+  return [...profiles].sort((a,b)=>Number(b?.rank?.rating||0)-Number(a?.rank?.rating||0)).slice(0,limit);
 }

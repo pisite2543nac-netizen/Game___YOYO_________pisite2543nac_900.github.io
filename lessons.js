@@ -1,5 +1,5 @@
-import { HTML_LEVELS } from "./levels-html.js?v=5.0.0";
-import { PYTHON_LEVELS } from "./levels-python.js?v=5.0.0";
+import { HTML_LEVELS } from "./levels-html.js?v=4.7.2";
+import { PYTHON_LEVELS } from "./levels-python.js?v=4.7.2";
 
 export const LANGUAGES = [
   {
