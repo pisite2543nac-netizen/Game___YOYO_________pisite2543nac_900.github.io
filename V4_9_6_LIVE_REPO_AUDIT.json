@@ -1,0 +1,23 @@
+{
+  "syntax_app.js": true,
+  "syntax_admin.js": true,
+  "syntax_zone.js": true,
+  "syntax_ranking-system.js": true,
+  "syntax_quest-system.js": true,
+  "syntax_economy-system.js": true,
+  "syntax_reward-data.js": true,
+  "syntax_character-system.js": true,
+  "syntax_functions/index.js": true,
+  "local_import_exports_ok": true,
+  "local_import_export_issues": [],
+  "html_js_required_ids_ok": true,
+  "id_issues": {
+    "index.html": [],
+    "admin.html": [],
+    "zone.html": []
+  },
+  "functions_directory_ok": true,
+  "ranking_required_exports_ok": true,
+  "rank_weights_40_40_20": true,
+  "all_passed": true
+}

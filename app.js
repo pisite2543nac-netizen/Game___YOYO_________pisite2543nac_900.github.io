@@ -8,14 +8,14 @@ import {
   serverTimestamp, query, where, orderBy, limit, onSnapshot, runTransaction
 } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
 import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-functions.js";
-import { firebaseConfig } from "./firebase-config.js?v=4.9.5";
-import { LANGUAGES, LESSONS, DIFFICULTIES } from "./lessons.js?v=4.9.5";
-import { REWARD_ITEMS, RARITY_META, INVENTORY_CAPACITY, SHOP_BUYBACK_RATE } from "./reward-data.js?v=4.9.5";
-import { DEFAULT_CHARACTER, DEFAULT_ZONE_STATE } from "./character-system.js?v=4.9.5";
-import { OFFICIAL_STAGES, OFFICIAL_TOTAL_SCORE } from "./official-data.js?v=4.9.5";
-import { RANKING_CONFIG, seasonIdFromDate, seasonRange, calculateRankMetrics, rankingClassKey, rankProfiles } from "./ranking-system.js?v=4.9.5";
-import { TOKEN_REWARD_CONFIG, calculateStageTokenReward, maxTokenForLesson, classKey } from "./economy-system.js?v=4.9.5";
-import { DEFAULT_TEACHER_QUESTS, localDayKey, questObjectiveMet, questObjectiveLabel, clampQuestReward } from "./quest-system.js?v=4.9.5";
+import { firebaseConfig } from "./firebase-config.js?v=4.9.6";
+import { LANGUAGES, LESSONS, DIFFICULTIES } from "./lessons.js?v=4.9.6";
+import { REWARD_ITEMS, RARITY_META, INVENTORY_CAPACITY, SHOP_BUYBACK_RATE } from "./reward-data.js?v=4.9.6";
+import { DEFAULT_CHARACTER, DEFAULT_ZONE_STATE } from "./character-system.js?v=4.9.6";
+import { OFFICIAL_STAGES, OFFICIAL_TOTAL_SCORE } from "./official-data.js?v=4.9.6";
+import { RANKING_CONFIG, seasonIdFromDate, seasonRange, calculateRankMetrics, rankingClassKey, rankingDepartmentKey, rankingMajorKey, rankProfiles } from "./ranking-system.js?v=4.9.6";
+import { TOKEN_REWARD_CONFIG, calculateStageTokenReward, maxTokenForLesson, classKey } from "./economy-system.js?v=4.9.6";
+import { DEFAULT_TEACHER_QUESTS, localDayKey, questObjectiveMet, questObjectiveLabel, clampQuestReward } from "./quest-system.js?v=4.9.6";
 
 const firebaseApp = initializeApp(firebaseConfig);
 const auth = getAuth(firebaseApp);
@@ -262,7 +262,7 @@ $("registerForm").addEventListener("submit",async e=>{
     if(err?.code==="auth/email-already-in-use"){
       $("registerMessage").textContent="รหัสนักศึกษานี้มีบัญชีอยู่แล้ว กรุณา Login หรือให้ Admin ลบบัญชีเดิม";
     }else if(err?.code==="permission-denied"){
-      $("registerMessage").textContent="สมัคร Auth สำเร็จ แต่ Firestore Rules ไม่อนุญาตให้สร้าง Profile กรุณา Publish firestore.rules V4.9.5";
+      $("registerMessage").textContent="สมัคร Auth สำเร็จ แต่ Firestore Rules ไม่อนุญาตให้สร้าง Profile กรุณา Publish firestore.rules V4.9.6";
     }else{
       $("registerMessage").textContent="ลงทะเบียนไม่สำเร็จ: "+(err?.message||String(err));
     }
@@ -292,7 +292,7 @@ $("loginForm").addEventListener("submit",async e=>{
     if(["auth/invalid-credential","auth/user-not-found","auth/wrong-password"].includes(error?.code)){
       $("loginMessage").textContent="รหัสนักศึกษาหรือรหัสผ่านไม่ถูกต้อง";
     }else if(error?.code==="permission-denied"){
-      $("loginMessage").textContent="Login Auth สำเร็จ แต่ Firestore Rules ปฏิเสธการอ่านข้อมูล User กรุณา Publish firestore.rules V4.9.5";
+      $("loginMessage").textContent="Login Auth สำเร็จ แต่ Firestore Rules ปฏิเสธการอ่านข้อมูล User กรุณา Publish firestore.rules V4.9.6";
     }else if(error?.message==="USER_PROFILE_NOT_READY"){
       $("loginMessage").textContent="พบบัญชี Login แต่ไม่พบข้อมูล User ใน Firestore ให้ Admin ตรวจหรือลบบัญชีนี้แล้วสมัครใหม่";
     }else{
@@ -343,7 +343,7 @@ async function routeAuthenticatedStudent(){
       }catch(error){
         console.warn("mobile route sync skipped:",error);
       }
-      location.replace("./zone.html?v=4.9.5");
+      location.replace("./zone.html?v=4.9.6");
       return;
     }
 
@@ -647,7 +647,7 @@ async function maybeLaunchQuestFromUrl(){
   if(!id||state.questLaunchHandled||!state.uid||!state.player)return false;
   state.questLaunchHandled=true;
   if(isMobileOrTabletDevice()){
-    location.replace("./zone.html?v=4.9.5");
+    location.replace("./zone.html?v=4.9.6");
     return true;
   }
   const quest=await resolveTeacherQuest(id);
@@ -962,7 +962,7 @@ $("nextLevelButton").onclick=async()=>{
   state.lesson=next;state.difficulty=DIFFICULTIES.find(x=>x.id===next.difficulty);
   prepareClassic();showScreen("gameScreen");await requestRealFullscreen();setTimeout(()=>$("typingInput").focus({preventScroll:true}),100);
 };
-$("questZoneButton").onclick=()=>{location.href="./zone.html?v=4.9.5"};
+$("questZoneButton").onclick=()=>{location.href="./zone.html?v=4.9.6"};
 $("portalButton").onclick=async()=>{state.activeQuest=null;history.replaceState(null,"",location.pathname);await ensureProfileDefaults();await enterPortal()};
 
 function renderRewardShop(){
@@ -1033,6 +1033,7 @@ function rankBoundaryFromSettings(settings=state.rankSettings,now=Date.now()){
   const last=timestampMs(settings?.lastResetAt),next=timestampMs(settings?.nextResetAt);return Math.max(last,(next&&next<=now)?next:0);
 }
 function effectiveRankForProfile(p){
+  if(p?.isAdmin===true||p?.studentId==="GM")return null;
   const boundary=rankBoundaryFromSettings();if(!boundary)return p?.rank||{};const updated=Date.parse(p?.rank?.updatedAt||"")||0;
   if(updated>=boundary)return p?.rank||{};
   return {tierId:"bronze",tierName:"Bronze",tierIcon:"🥉",rating:0};
@@ -1230,7 +1231,7 @@ async function saveCharacterGender(gender){
 
   // มือถือ/แท็บเล็ตใช้เฉพาะ 2D Zone หลังเลือกตัวละครเสร็จ
   if(isMobileOrTabletDevice()){
-    location.replace("./zone.html?v=4.9.5");
+    location.replace("./zone.html?v=4.9.6");
   }
 }
 
@@ -1824,7 +1825,7 @@ onAuthStateChanged(auth,async user=>{
   }
 
   if(user.email==="pisit_2000@thc-nr.local"){
-    location.replace("./admin.html?v=4.9.5");
+    location.replace("./admin.html?v=4.9.6");
     return;
   }
 
@@ -1839,7 +1840,7 @@ onAuthStateChanged(auth,async user=>{
     console.error("auth observer route:",error);
     showScreen("authScreen");
     if(error?.code==="permission-denied"){
-      $("loginMessage").textContent="Firebase Rules ปฏิเสธการอ่าน User · กรุณา Publish firestore.rules V4.9.5";
+      $("loginMessage").textContent="Firebase Rules ปฏิเสธการอ่าน User · กรุณา Publish firestore.rules V4.9.6";
     }else if(error?.message==="USER_PROFILE_NOT_READY"){
       $("loginMessage").textContent="บัญชี Authentication มีอยู่ แต่ไม่พบ Profile ใน Firestore · ให้ Admin ลบบัญชีเดิมแล้วสมัครใหม่";
     }else{

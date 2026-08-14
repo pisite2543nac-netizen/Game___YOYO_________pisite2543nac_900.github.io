@@ -5,10 +5,10 @@ import {
   writeBatch, serverTimestamp, onSnapshot, Timestamp, query, orderBy, limit
 } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
 import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-functions.js";
-import { firebaseConfig, ADMIN_USERNAME, ADMIN_EMAIL, ADMIN_UID } from "./firebase-config.js?v=4.9.5";
-import { DEFAULT_MODES, DEFAULT_LEVELS } from "./default-data.js?v=4.9.5";
-import { seasonIdFromDate, seasonRange, calculateRankMetrics, rankingClassKey } from "./ranking-system.js?v=4.9.5";
-import { DEFAULT_TEACHER_QUESTS, clampQuestReward, questDifficultyName, questObjectiveLabel, defaultMinRankForDifficulty, rewardRange } from "./quest-system.js?v=4.9.5";
+import { firebaseConfig, ADMIN_USERNAME, ADMIN_EMAIL, ADMIN_UID } from "./firebase-config.js?v=4.9.6";
+import { DEFAULT_MODES, DEFAULT_LEVELS } from "./default-data.js?v=4.9.6";
+import { seasonIdFromDate, seasonRange, calculateRankMetrics, rankingClassKey } from "./ranking-system.js?v=4.9.6";
+import { DEFAULT_TEACHER_QUESTS, clampQuestReward, questDifficultyName, questObjectiveLabel, defaultMinRankForDifficulty, rewardRange } from "./quest-system.js?v=4.9.6";
 
 const app=initializeApp(firebaseConfig),auth=getAuth(app),db=getFirestore(app),cloudFunctions=getFunctions(app,"asia-southeast1"),$=id=>document.getElementById(id);
 const adminResetStudentPassword=httpsCallable(cloudFunctions,"adminResetStudentPassword");
@@ -510,7 +510,7 @@ async function persistRanking(){
   const seasonId=seasonIdFromDate(new Date()),rows=buildAdminRankingRows();
   let batch=writeBatch(db),writes=0;
   for(const r of rows){
-    const rank={seasonId,rating:r.rating,tierId:r.tierId,tierName:r.tierName,tierIcon:r.tierIcon,diligence:r.diligence,accuracy:r.accuracy,speed:r.speed,consistency:r.consistency,avgWpm:r.avgWpm,avgAccuracy:r.avgAccuracy,completedAttempts:r.completedAttempts,activeDayCount:r.activeDayCount,updatedAt:new Date().toISOString(),resetBoundaryAt:rankResetBoundaryMs()?new Date(rankResetBoundaryMs()).toISOString():null};
+    const rank={seasonId,rating:r.rating,tierId:r.tierId,tierName:r.tierName,tierIcon:r.tierIcon,accuracy:r.accuracy,speed:r.speed,completionTime:r.completionTime,avgWpm:r.avgWpm,avgAccuracy:r.avgAccuracy,avgSeconds:r.avgSeconds,bestWpm:r.bestWpm,bestAccuracy:r.bestAccuracy,bestSeconds:r.bestSeconds,completedAttempts:r.completedAttempts,updatedAt:new Date().toISOString(),resetBoundaryAt:rankResetBoundaryMs()?new Date(rankResetBoundaryMs()).toISOString():null};
     batch.set(doc(db,"rankings",`${seasonId}_${r.user.id}`),{seasonId,uid:r.user.id,studentId:r.user.studentId,fullName:r.user.fullName,classKey:r.classKey,department:r.departmentKey,major:r.majorKey,globalPosition:r.globalPosition,departmentPosition:r.departmentPosition,majorPosition:r.majorPosition,classPosition:r.classPosition,...rank,updatedAt:serverTimestamp()},{merge:true});writes++;
     batch.set(doc(db,"users",r.user.id),{rank,updatedAt:serverTimestamp()},{merge:true});writes++;
     batch.set(doc(db,"public_profiles",r.user.id),{rank,educationLevel:r.user.educationLevel||"",classroom:r.user.classroom||"",classKey:r.classKey,department:r.departmentKey,major:r.majorKey,updatedAt:serverTimestamp()},{merge:true});writes++;
@@ -518,7 +518,7 @@ async function persistRanking(){
   }
   if(writes)await batch.commit();
 }
-function bronzeResetRank(resetAt){return {seasonId:seasonIdFromDate(resetAt),rating:0,tierId:"bronze",tierName:"Bronze",tierIcon:"🥉",diligence:0,accuracy:0,speed:0,consistency:0,avgWpm:0,avgAccuracy:0,completedAttempts:0,activeDayCount:0,updatedAt:resetAt.toISOString(),resetBoundaryAt:resetAt.toISOString()}}
+function bronzeResetRank(resetAt){return {seasonId:seasonIdFromDate(resetAt),rating:0,tierId:"bronze",tierName:"Bronze",tierIcon:"🥉",accuracy:0,speed:0,completionTime:0,avgWpm:0,avgAccuracy:0,avgSeconds:0,bestWpm:0,bestAccuracy:0,bestSeconds:0,completedAttempts:0,updatedAt:resetAt.toISOString(),resetBoundaryAt:resetAt.toISOString()}}
 async function executeRankingResetNow(){
   if(!confirm("ยืนยันรีแรงค์ตอนนี้? Rank ของ User ทุกคนจะกลับ Bronze 0 และผลงานก่อนเวลานี้จะไม่ถูกนำมาคำนวณในรอบใหม่"))return;
   const now=new Date(),rank=bronzeResetRank(now),version=`manual_${now.getTime()}`;
