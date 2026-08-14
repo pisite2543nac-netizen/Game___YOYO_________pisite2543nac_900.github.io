@@ -5,13 +5,14 @@ import {
   writeBatch, serverTimestamp, onSnapshot, Timestamp, query, orderBy, limit
 } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
 import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-functions.js";
-import { firebaseConfig, ADMIN_USERNAME, ADMIN_EMAIL, ADMIN_UID } from "./firebase-config.js?v=4.9.0";
-import { DEFAULT_MODES, DEFAULT_LEVELS } from "./default-data.js?v=4.9.0";
-import { seasonIdFromDate, seasonRange, calculateRankMetrics, rankingClassKey } from "./ranking-system.js?v=4.9.0";
-import { DEFAULT_TEACHER_QUESTS, clampQuestReward, questDifficultyName, questObjectiveLabel, defaultMinRankForDifficulty, rewardRange } from "./quest-system.js?v=4.9.0";
+import { firebaseConfig, ADMIN_USERNAME, ADMIN_EMAIL, ADMIN_UID } from "./firebase-config.js?v=4.9.2";
+import { DEFAULT_MODES, DEFAULT_LEVELS } from "./default-data.js?v=4.9.2";
+import { seasonIdFromDate, seasonRange, calculateRankMetrics, rankingClassKey } from "./ranking-system.js?v=4.9.2";
+import { DEFAULT_TEACHER_QUESTS, clampQuestReward, questDifficultyName, questObjectiveLabel, defaultMinRankForDifficulty, rewardRange } from "./quest-system.js?v=4.9.2";
 
 const app=initializeApp(firebaseConfig),auth=getAuth(app),db=getFirestore(app),cloudFunctions=getFunctions(app,"asia-southeast1"),$=id=>document.getElementById(id);
 const adminResetStudentPassword=httpsCallable(cloudFunctions,"adminResetStudentPassword");
+const adminDeleteStudentAccount=httpsCallable(cloudFunctions,"adminDeleteStudentAccount");
 let cache={users:[],attempts:[],levels:[],modes:[],official:[],zonePositions:[],zoneModeration:[],zoneMessages:[],zoneArchive:[],rankingSettings:{},teacherQuests:[]},unsubs=[];
 let knownUserIds=null;
 let selectedAdminClass="";
@@ -93,17 +94,116 @@ function compareStudentId(a,b){
   const av=String(a?.studentId??""),bv=String(b?.studentId??"");
   return av.localeCompare(bv,"th",{numeric:true,sensitivity:"base"});
 }
+const MAIN_MAJOR_VALUES=["เทคโนโลยีสารสนเทศ","ธุรกิจดิจิทัล"];
+function normalizeLegacyMajorValue(raw){
+  const value=String(raw||"").trim();
+  const compact=value.replace(/\s+/g,"");
+  if(["ธุรกิจดิจิทัล","ธุรกิจดิทัล","ดิจิทัลธุรกิจ"].includes(compact))return {value:"ธุรกิจดิจิทัล",kind:"digital"};
+  if(["สารสนเทศ","เทคโนโลยีสารสนเทศ"].includes(compact)||value==="ไอที"||value==="IT")return {value:"เทคโนโลยีสารสนเทศ",kind:"information"};
+  // ค่าอื่น เช่นข้อความผสม จะคงค่าเดิมไว้เป็นสาขาแยก ไม่บังคับรวมเข้ากับ 2 กลุ่มหลัก
+  return {value:value||"ไม่ระบุสาขาวิชา",kind:"separate"};
+}
+function legacyAcademicLooksLikeMajor(raw){return /สารสนเทศ|ดิจิทัล|ธุรกิจดิทัล/i.test(String(raw||""))}
+function normalizedUserAcademicData(user={}){
+  const department=String(user.department||"").trim();
+  const major=String(user.major||"").trim();
+  if(legacyAcademicLooksLikeMajor(department)){
+    const source=major&&major!=="ไม่ระบุสาขาวิชา"?major:department;
+    const normalized=normalizeLegacyMajorValue(source);
+    return {department:"คอมพิวเตอร์",major:normalized.value,kind:normalized.kind,needsMigration:true};
+  }
+  const normalized=normalizeLegacyMajorValue(major);
+  return {department:department||"ไม่ระบุแผนก",major:normalized.value,kind:normalized.kind,needsMigration:major!==normalized.value};
+}
+function usersNeedingAcademicMigration(){
+  return cache.users.filter(u=>normalizedUserAcademicData(u).needsMigration);
+}
 function renderUsers(){
   const users=[...cache.users].sort(compareStudentId);
-  $("usersBody").innerHTML=users.map(x=>`<tr><td>${formatDate(x.createdAt)}</td><td>${esc(x.studentId)}</td><td><strong>${esc(x.fullName)}</strong></td><td>${esc(x.educationLevel||"")}${esc(x.classroom||"")}</td><td>${esc(x.department||"ไม่ระบุแผนก")}</td><td>${esc(x.major||"ไม่ระบุสาขาวิชา")}</td><td><strong>${Number(x.tokenBalance||0).toLocaleString()}</strong></td><td><span class="status status-active">${esc(x.status||"active")}</span></td><td><button class="btn btn-small secondary" data-reset-password="${x.id}">ตั้งรหัสใหม่</button></td><td><button class="mini-delete" data-delete-user="${x.id}">ลบข้อมูล</button></td></tr>`).join("")||`<tr><td colspan="10" class="empty">ยังไม่มีสมาชิก</td></tr>`;
-  document.querySelectorAll("[data-delete-user]").forEach(b=>b.onclick=async()=>{if(confirm("ลบข้อมูลสมาชิกจาก Firestore? หมายเหตุ: บัญชี Authentication ต้องลบใน Firebase Console แยกต่างหาก"))await deleteDoc(doc(db,"users",b.dataset.deleteUser))});
+  const need=usersNeedingAcademicMigration();
+  const note=$("userDataMigrationStatus");
+  if(note){
+    note.classList.toggle("needs-fix",need.length>0);
+    note.innerHTML=need.length
+      ?`<strong>พบ User เดิม ${need.length} คนที่ต้องจัดแผนก/สาขาวิชาใหม่</strong><span>กดปุ่มจัดกลุ่มเพื่อแก้ Firestore จริง · ธุรกิจดิจิทัลและสารสนเทศจะไม่ถูกรวมกัน</span>`
+      :`<strong>ข้อมูล User ถูกโครงสร้างแล้ว</strong><span>แผนก = คอมพิวเตอร์ · สาขาวิชาแยกเป็น เทคโนโลยีสารสนเทศ / ธุรกิจดิจิทัล / ค่าอื่นแยกตามเดิม</span>`;
+  }
+  $("usersBody").innerHTML=users.map(x=>{
+    const academic=normalizedUserAcademicData(x);
+    return `<tr>
+      <td>${formatDate(x.createdAt)}</td>
+      <td>${esc(x.studentId)}</td>
+      <td><strong>${esc(x.fullName)}</strong></td>
+      <td>${esc(x.educationLevel||"")}${esc(x.classroom||"")}</td>
+      <td><strong>${esc(academic.department)}</strong>${academic.needsMigration?`<br><small class="data-fix-hint">รอย้ายข้อมูล</small>`:""}</td>
+      <td>${esc(academic.major)}</td>
+      <td><strong>${Number(x.tokenBalance||0).toLocaleString()}</strong></td>
+      <td><span class="status status-active">${esc(x.status||"active")}</span></td>
+      <td><button class="btn btn-small secondary" data-reset-password="${x.id}">ตั้งรหัสใหม่</button></td>
+      <td><button class="mini-delete" data-delete-user="${x.id}">ลบข้อมูล</button></td>
+    </tr>`;
+  }).join("")||`<tr><td colspan="10" class="empty">ยังไม่มีสมาชิก</td></tr>`;
+
+  document.querySelectorAll("[data-delete-user]").forEach(b=>b.onclick=async()=>{
+    const user=cache.users.find(x=>x.id===b.dataset.deleteUser);if(!user)return;
+    if(!confirm(`ลบบัญชี ${user.studentId||""} - ${user.fullName||""}?\n\nระบบจะลบทั้ง Firebase Authentication และข้อมูล Firestore ที่เกี่ยวข้อง\nหลังลบแล้วรหัสนักศึกษานี้สามารถสมัครใหม่ได้`))return;
+    b.disabled=true;const oldText=b.textContent;b.textContent="กำลังลบ...";
+    try{
+      const result=await adminDeleteStudentAccount({targetUid:user.id});
+      showAdminToast("ลบบัญชีสำเร็จ",`${user.studentId||""} สมัครใหม่ได้แล้ว`);
+    }catch(error){showAdminToast("ลบบัญชีไม่สำเร็จ",error.message||String(error),true);}
+    finally{b.disabled=false;b.textContent=oldText;}
+  });
   document.querySelectorAll("[data-reset-password]").forEach(btn=>btn.onclick=()=>{
     const user=cache.users.find(x=>x.id===btn.dataset.resetPassword);if(!user)return;
     passwordResetTargetUid=user.id;
-    $("passwordResetStudent").textContent=user.studentId||"-";$("passwordResetName").textContent=user.fullName||"-";
-    $("adminNewStudentPassword").value="";$("passwordResetModal").classList.remove("hidden");
+    $("passwordResetStudent").textContent=user.studentId||"-";
+    $("passwordResetName").textContent=user.fullName||"-";
+    $("adminNewStudentPassword").value="";
+    $("passwordResetModal").classList.remove("hidden");
   });
 }
+if($("migrateInformationUsers"))$("migrateInformationUsers").onclick=async()=>{
+  const targets=usersNeedingAcademicMigration();
+  if(!targets.length){
+    showAdminToast("ไม่พบข้อมูลที่ต้องย้าย","User ทุกคนแยกแผนก/สาขาวิชาถูกต้องแล้ว");
+    return;
+  }
+  if(!confirm(`พบ ${targets.length} User\n\nระบบจะเปลี่ยน:\nแผนก → คอมพิวเตอร์\nสารสนเทศ → เทคโนโลยีสารสนเทศ\nธุรกิจดิจิทัล → ธุรกิจดิจิทัล\nค่าอื่น → เก็บแยกตามค่าเดิม\n\nยืนยันแก้ข้อมูล Firestore?`))return;
+  const button=$("migrateInformationUsers"),oldText=button.textContent;
+  button.disabled=true;button.textContent="กำลังย้ายข้อมูล...";
+  try{
+    const chunks=[];
+    for(let i=0;i<targets.length;i+=400)chunks.push(targets.slice(i,i+400));
+    let changed=0;
+    for(const chunk of chunks){
+      const batch=writeBatch(db);
+      chunk.forEach(user=>{
+        const academic=normalizedUserAcademicData(user);
+        batch.update(doc(db,"users",user.id),{
+          department:"คอมพิวเตอร์",
+          major:academic.major,
+          academicDataMigratedAt:serverTimestamp(),
+          updatedAt:serverTimestamp()
+        });
+        batch.set(doc(db,"public_profiles",user.id),{
+          department:"คอมพิวเตอร์",
+          major:academic.major,
+          updatedAt:serverTimestamp()
+        },{merge:true});
+        changed++;
+      });
+      await batch.commit();
+    }
+    showAdminToast("ย้ายข้อมูลสำเร็จ",`แก้ไข ${changed} User แล้ว · แผนก = คอมพิวเตอร์`);
+  }catch(error){
+    console.error("academic migration:",error);
+    showAdminToast("ย้ายข้อมูลไม่สำเร็จ",error.message||String(error),true);
+  }finally{
+    button.disabled=false;button.textContent=oldText;
+  }
+};
+
 function randomTemporaryPassword(){
   const chars="ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789";let out="";
   crypto.getRandomValues(new Uint32Array(10)).forEach(n=>out+=chars[n%chars.length]);return out;
@@ -173,8 +273,8 @@ function userPlayedStages(uid){
 }
 function officialForUser(uid){return cache.official.find(x=>x.uid===uid||x.id===uid)||null}
 function classKeyForUser(u){return rankingClassKey(u.educationLevel,u.classroom)||"ไม่ระบุห้อง"}
-function departmentKeyForUser(u){return rankingDepartmentKey(u)}
-function majorKeyForUser(u){return rankingMajorKey(u)}
+function departmentKeyForUser(u){return normalizedUserAcademicData(u).department}
+function majorKeyForUser(u){return normalizedUserAcademicData(u).major}
 function assignScopedPosition(rows,keyName,positionName){
   const groups=new Map();
   rows.forEach(r=>{const key=r[keyName];if(!groups.has(key))groups.set(key,[]);groups.get(key).push(r)});
@@ -782,7 +882,19 @@ $("levelForm").addEventListener("submit",async e=>{e.preventDefault();const n=Nu
 $("seedDefaults").onclick=async()=>{if(!confirm("คืนค่า 4 โหมดและ 12 Level เริ่มต้น?"))return;const batch=writeBatch(db);DEFAULT_MODES.forEach(x=>{const {id,...data}=x;batch.set(doc(db,"game_modes",id),{...data,id,isActive:true},{merge:true})});DEFAULT_LEVELS.forEach(x=>batch.set(doc(db,"levels",`level_${String(x.levelNo).padStart(2,"0")}`),{...x,isActive:true},{merge:true}));await batch.commit()};
 async function deleteCollectionDocs(name){const rows=await getDocs(collection(db,name));let batch=writeBatch(db),count=0;for(const item of rows.docs){batch.delete(item.ref);if(++count>=450){await batch.commit();batch=writeBatch(db);count=0}}if(count)await batch.commit()}
 $("deleteResults").onclick=async()=>{if(confirm("ยืนยันลบผลทั้งหมด?"))await deleteCollectionDocs("attempts")};
-$("deleteUsers").onclick=async()=>{if(confirm("ยืนยันลบข้อมูลสมาชิกทั้งหมดจาก Firestore? บัญชี Authentication จะไม่ถูกลบ"))await deleteCollectionDocs("users")};
+$("deleteUsers").onclick=async()=>{
+  const users=cache.users.filter(u=>u.id!==ADMIN_UID);
+  if(!users.length)return;
+  if(!confirm(`ยืนยันลบ User ทั้งหมด ${users.length} คน?\n\nจะลบทั้ง Authentication + Firestore และทุกคนสามารถสมัครใหม่ได้`))return;
+  const typed=prompt('พิมพ์ DELETE ALL เพื่อยืนยัน');if(typed!=="DELETE ALL")return;
+  const btn=$("deleteUsers"),old=btn.textContent;btn.disabled=true;
+  let ok=0,failed=0;
+  for(const user of users){
+    btn.textContent=`กำลังลบ ${ok+failed+1}/${users.length}`;
+    try{await adminDeleteStudentAccount({targetUid:user.id});ok++;}catch(error){failed++;console.warn("delete user",user.id,error)}
+  }
+  btn.disabled=false;btn.textContent=old;showAdminToast("ลบ User ทั้งหมดเสร็จ",`สำเร็จ ${ok} · ไม่สำเร็จ ${failed}`,failed>0);
+};
 function downloadFile(name,text,type){const blob=new Blob([text],{type}),url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download=name;a.click();URL.revokeObjectURL(url)}
 $("exportCsv").onclick=()=>{const h=["date","student_id","name","level","classroom","department","mode","game_level","status","score","wpm","accuracy","mistakes","time_seconds"],q=v=>`"${String(v??"").replaceAll('"','""')}"`,rows=cache.attempts.map(x=>[formatDate(x.createdAt),x.studentId,x.fullName,x.educationLevel,x.classroom,x.department,x.modeName,(x.stage??x.levelNo),x.status,x.score,x.wpm,x.accuracy,x.mistakes,x.elapsedSeconds].map(q).join(","));downloadFile("code_typing_results.csv","\ufeff"+h.join(",")+"\n"+rows.join("\n"),"text/csv;charset=utf-8")};
 $("exportJson").onclick=()=>downloadFile("code_typing_backup.json",JSON.stringify({

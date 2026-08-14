@@ -105,12 +105,25 @@ export function rankProfiles(profiles,limit=10){
 }
 
 
-export function rankingDepartmentKey(user){
-  const value=String(user?.department||"").trim();
-  return value||"ไม่ระบุแผนก";
-}
-
-export function rankingMajorKey(user){
-  const value=String(user?.major||"").trim();
+function normalizeLegacyAcademicMajor(raw){
+  const value=String(raw||"").trim();
+  const compact=value.replace(/\s+/g,"");
+  if(["ธุรกิจดิจิทัล","ธุรกิจดิทัล","ดิจิทัลธุรกิจ"].includes(compact))return "ธุรกิจดิจิทัล";
+  if(["สารสนเทศ","เทคโนโลยีสารสนเทศ"].includes(compact)||value==="ไอที"||value==="IT")return "เทคโนโลยีสารสนเทศ";
   return value||"ไม่ระบุสาขาวิชา";
+}
+function legacyAcademicLooksLikeMajor(raw){
+  return /สารสนเทศ|ดิจิทัล|ธุรกิจดิทัล/i.test(String(raw||""));
+}
+export function rankingDepartmentKey(user){
+  const department=String(user?.department||"").trim();
+  if(legacyAcademicLooksLikeMajor(department)) return "คอมพิวเตอร์";
+  return department||"ไม่ระบุแผนก";
+}
+export function rankingMajorKey(user){
+  const department=String(user?.department||"").trim();
+  const major=String(user?.major||"").trim();
+  if(major&&major!=="ไม่ระบุสาขาวิชา")return normalizeLegacyAcademicMajor(major);
+  if(legacyAcademicLooksLikeMajor(department))return normalizeLegacyAcademicMajor(department);
+  return "ไม่ระบุสาขาวิชา";
 }

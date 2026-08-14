@@ -8,14 +8,14 @@ import {
   serverTimestamp, query, where, orderBy, limit, onSnapshot, runTransaction
 } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
 import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-functions.js";
-import { firebaseConfig } from "./firebase-config.js?v=4.9.0";
-import { LANGUAGES, LESSONS, DIFFICULTIES } from "./lessons.js?v=4.9.0";
-import { REWARD_ITEMS, RARITY_META, INVENTORY_CAPACITY, SHOP_BUYBACK_RATE } from "./reward-data.js?v=4.9.0";
-import { DEFAULT_CHARACTER, DEFAULT_ZONE_STATE } from "./character-system.js?v=4.9.0";
-import { OFFICIAL_STAGES, OFFICIAL_TOTAL_SCORE } from "./official-data.js?v=4.9.0";
-import { RANKING_CONFIG, seasonIdFromDate, seasonRange, calculateRankMetrics, rankingClassKey, rankProfiles } from "./ranking-system.js?v=4.9.0";
-import { TOKEN_REWARD_CONFIG, calculateStageTokenReward, maxTokenForLesson, classKey } from "./economy-system.js?v=4.9.0";
-import { DEFAULT_TEACHER_QUESTS, localDayKey, questObjectiveMet, questObjectiveLabel, clampQuestReward } from "./quest-system.js?v=4.9.0";
+import { firebaseConfig } from "./firebase-config.js?v=4.9.2";
+import { LANGUAGES, LESSONS, DIFFICULTIES } from "./lessons.js?v=4.9.2";
+import { REWARD_ITEMS, RARITY_META, INVENTORY_CAPACITY, SHOP_BUYBACK_RATE } from "./reward-data.js?v=4.9.2";
+import { DEFAULT_CHARACTER, DEFAULT_ZONE_STATE } from "./character-system.js?v=4.9.2";
+import { OFFICIAL_STAGES, OFFICIAL_TOTAL_SCORE } from "./official-data.js?v=4.9.2";
+import { RANKING_CONFIG, seasonIdFromDate, seasonRange, calculateRankMetrics, rankingClassKey, rankProfiles } from "./ranking-system.js?v=4.9.2";
+import { TOKEN_REWARD_CONFIG, calculateStageTokenReward, maxTokenForLesson, classKey } from "./economy-system.js?v=4.9.2";
+import { DEFAULT_TEACHER_QUESTS, localDayKey, questObjectiveMet, questObjectiveLabel, clampQuestReward } from "./quest-system.js?v=4.9.2";
 
 const firebaseApp = initializeApp(firebaseConfig);
 const auth = getAuth(firebaseApp);
@@ -105,6 +105,18 @@ function maxUnlocked(languageId){
   return Number(state.player?.progress?.[languageId]?.maxUnlockedStage || 1);
 }
 
+function normalizeLegacyMajorValue(raw){
+  const value=String(raw||"").trim();
+  const compact=value.replace(/\s+/g,"");
+  if(["ธุรกิจดิจิทัล","ธุรกิจดิทัล","ดิจิทัลธุรกิจ"].includes(compact))return {value:"ธุรกิจดิจิทัล",kind:"digital"};
+  if(["สารสนเทศ","เทคโนโลยีสารสนเทศ","ไอที","IT"].includes(value)||["สารสนเทศ","เทคโนโลยีสารสนเทศ"].includes(compact))return {value:"เทคโนโลยีสารสนเทศ",kind:"information"};
+  // ค่าเก่าที่ไม่ตรง 2 กลุ่มหลักจะเก็บเป็นสาขาแยกของตัวเอง ไม่รวมมั่วกับกลุ่มอื่น
+  return {value:value||"ไม่ระบุสาขาวิชา",kind:"separate"};
+}
+function isLegacyAcademicValue(raw){
+  const v=String(raw||"").trim();
+  return /สารสนเทศ|ดิจิทัล|ดิจิทัล|ธุรกิจดิทัล|เทคโนโลยีสารสนเทศ/i.test(v);
+}
 async function ensureProfileDefaults(){
   if(!state.uid) return;
   const ref = doc(db,"users",state.uid);
@@ -138,8 +150,16 @@ async function ensureProfileDefaults(){
     };
   }
   if(!d.classKey && d.educationLevel && d.classroom) patch.classKey=classKey(d.educationLevel,d.classroom);
-  if(d.department===undefined) patch.department="ไม่ระบุแผนก";
-  if(d.major===undefined) patch.major="ไม่ระบุสาขาวิชา";
+  const oldDepartment=String(d.department||"").trim();
+  const oldMajor=String(d.major||"").trim();
+  const normalizedMajor=normalizeLegacyMajorValue(oldMajor||oldDepartment);
+  if(isLegacyAcademicValue(oldDepartment)){
+    patch.department="คอมพิวเตอร์";
+    if(!oldMajor||oldMajor==="ไม่ระบุสาขาวิชา") patch.major=normalizedMajor.value;
+  }else{
+    if(d.department===undefined) patch.department="ไม่ระบุแผนก";
+    if(d.major===undefined) patch.major="ไม่ระบุสาขาวิชา";
+  }
   if(!d.zone) patch.zone = {...DEFAULT_ZONE_STATE};
   if(Object.keys(patch).length) await updateDoc(ref,patch);
   const refreshed = await getDoc(ref);
@@ -158,6 +178,15 @@ function registerValid(){
 }
 function updateRegister(){ $("registerButton").disabled = !registerValid(); }
 ["studentId","fullName","educationLevel","classroom","department","major","password","confirmPassword","acceptRules"].forEach(id=>$(id).addEventListener("input",updateRegister));
+function syncDepartmentFromMajor(){
+  const major=$("major")?.value||"";
+  if(["เทคโนโลยีสารสนเทศ","ธุรกิจดิจิทัล"].includes(major)){
+    $("department").value="คอมพิวเตอร์";
+  }
+  updateRegister();
+}
+$("major")?.addEventListener("change",syncDepartmentFromMajor);
+
 
 $("registerForm").addEventListener("submit",async e=>{
   e.preventDefault(); if(!registerValid()) return;
@@ -170,7 +199,8 @@ $("registerForm").addEventListener("submit",async e=>{
       uid:state.uid,studentId:sid,fullName:$("fullName").value.trim(),
       educationLevel:$("educationLevel").value,classroom:$("classroom").value,
       classKey:classKey($("educationLevel").value,$("classroom").value),
-      department:$("department").value,major:$("major").value,role:"student",status:"active",
+      department:["เทคโนโลยีสารสนเทศ","ธุรกิจดิจิทัล"].includes($("major").value)?"คอมพิวเตอร์":$("department").value,
+      major:$("major").value,role:"student",status:"active",
       tokenBalance:0,tokenLifetime:0,inventory:[],inventoryCapacity:INVENTORY_CAPACITY,
       officialProgress:{},officialSubmitted:false,
       rank:{seasonId:null,rating:0,tierId:"bronze",tierName:"Bronze"},
@@ -216,7 +246,7 @@ async function routeAuthenticatedStudent(){
     }catch(error){
       console.warn("mobile route sync skipped:", error);
     }
-    location.replace("./zone.html?v=4.9.0");
+    location.replace("./zone.html?v=4.9.2");
     return;
   }
 
@@ -455,7 +485,7 @@ async function maybeLaunchQuestFromUrl(){
   if(!id||state.questLaunchHandled||!state.uid||!state.player)return false;
   state.questLaunchHandled=true;
   if(isMobileOrTabletDevice()){
-    location.replace("./zone.html?v=4.9.0");
+    location.replace("./zone.html?v=4.9.2");
     return true;
   }
   const quest=await resolveTeacherQuest(id);
@@ -770,7 +800,7 @@ $("nextLevelButton").onclick=async()=>{
   state.lesson=next;state.difficulty=DIFFICULTIES.find(x=>x.id===next.difficulty);
   prepareClassic();showScreen("gameScreen");await requestRealFullscreen();setTimeout(()=>$("typingInput").focus({preventScroll:true}),100);
 };
-$("questZoneButton").onclick=()=>{location.href="./zone.html?v=4.9.0"};
+$("questZoneButton").onclick=()=>{location.href="./zone.html?v=4.9.2"};
 $("portalButton").onclick=async()=>{state.activeQuest=null;history.replaceState(null,"",location.pathname);await ensureProfileDefaults();await enterPortal()};
 
 function renderRewardShop(){
@@ -1038,7 +1068,7 @@ async function saveCharacterGender(gender){
 
   // มือถือ/แท็บเล็ตใช้เฉพาะ 2D Zone หลังเลือกตัวละครเสร็จ
   if(isMobileOrTabletDevice()){
-    location.replace("./zone.html?v=4.9.0");
+    location.replace("./zone.html?v=4.9.2");
   }
 }
 
@@ -1625,7 +1655,7 @@ updateDeviceUX();
 
 onAuthStateChanged(auth,async user=>{
   if(!user){state.uid=null;state.player=null;showScreen("authScreen");return;}
-  if(user.email==="pisit_2000@thc-nr.local"){location.replace("./admin.html?v=4.9.0");return;}
+  if(user.email==="pisit_2000@thc-nr.local"){location.replace("./admin.html?v=4.9.2");return;}
   state.uid=user.uid;
   try{
     await routeAuthenticatedStudent();

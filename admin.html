@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Admin | ระบบเกมพิมพ์ Code</title>
-  <link rel="stylesheet" href="./style.css?v=4.9.0">
+  <link rel="stylesheet" href="./style.css?v=4.9.2">
 </head>
 <body class="admin-page">
   <main class="wrap admin-wrap">
@@ -38,7 +38,7 @@
           <p>ผู้จัดทำ: นายพิสิษฐ์ หุนตระนี ครูพิเศษสอน</p>
         </div>
         <div>
-          <a class="btn gm-zone-entry" href="./zone.html?v=4.9.0">🌙 เข้า 2D Zone · GM</a>
+          <a class="btn gm-zone-entry" href="./zone.html?v=4.9.2">🌙 เข้า 2D Zone · GM</a>
           <a class="btn ghost" href="index.html">หน้าผู้เล่น</a>
           <button id="logoutAdmin" class="btn secondary">ออกจากระบบ</button>
         </div>
@@ -78,6 +78,11 @@
             <button id="deleteResults" class="btn danger">ลบผลทั้งหมด</button>
           </div>
         </div>
+        <div id="userDataMigrationStatus" class="admin-data-migration-note">
+          <strong>โครงสร้างข้อมูลที่ถูกต้อง:</strong>
+          <span>แผนก = คอมพิวเตอร์</span>
+          <span>สาขาวิชา = เทคโนโลยีสารสนเทศ / สารสนเทศและธุรกิจดิจิทัล</span>
+        </div>
         <div class="table-wrap">
           <table>
             <thead>
@@ -98,7 +103,10 @@
             <h2>ข้อมูลสมาชิก User</h2>
             <p>สมาชิกที่ลงทะเบียนบัญชีเข้าสู่ระบบเกม · Firebase ไม่สามารถแสดงรหัสผ่านเดิมได้ จึงใช้การตั้งรหัสผ่านใหม่แบบปลอดภัยแทน</p>
           </div>
-          <button id="deleteUsers" class="btn danger">ลบข้อมูลทั้งหมด</button>
+          <div class="admin-user-tools">
+            <button id="migrateInformationUsers" class="btn secondary" type="button">🔄 จัดกลุ่มสาขาวิชาเดิมให้ถูกต้อง</button>
+            <button id="deleteUsers" class="btn danger">ลบ User ทั้งหมด (Auth + DB)</button>
+          </div>
         </div>
         <div class="table-wrap">
           <table>
@@ -378,7 +386,7 @@
           <div class="admin-world-chat-input-row">
             <textarea id="gmWorldChatInput" maxlength="120" rows="2" placeholder="GM พิมพ์ข้อความถึงผู้เล่นทุกคน..."></textarea>
             <button id="sendGmWorldChat" class="btn primary" type="button">ส่งในแชตโลก</button>
-            <a class="btn gm-zone-entry" href="./zone.html?v=4.9.0#world-chat">เข้า World Chat</a>
+            <a class="btn gm-zone-entry" href="./zone.html?v=4.9.2#world-chat">เข้า World Chat</a>
           </div>
         </div>
 
@@ -423,6 +431,6 @@
   </div>
 
   <div id="adminToast" class="admin-toast hidden" aria-live="polite"></div>
-  <script type="module" src="./admin.js?v=4.9.0"></script>
+  <script type="module" src="./admin.js?v=4.9.2"></script>
 </body>
 </html>

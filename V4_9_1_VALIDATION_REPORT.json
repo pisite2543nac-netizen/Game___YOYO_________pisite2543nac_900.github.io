@@ -1,0 +1,16 @@
+{
+  "syntax_app.js": true,
+  "syntax_admin.js": true,
+  "syntax_ranking-system.js": true,
+  "syntax_zone.js": true,
+  "syntax_quest-system.js": true,
+  "syntax_economy-system.js": true,
+  "major_has_information_technology": true,
+  "department_has_computer": true,
+  "registration_auto_computer": true,
+  "admin_migration_button": true,
+  "admin_migration_logic": true,
+  "legacy_display_normalization": true,
+  "ranking_legacy_normalization": true,
+  "all_passed": true
+}
