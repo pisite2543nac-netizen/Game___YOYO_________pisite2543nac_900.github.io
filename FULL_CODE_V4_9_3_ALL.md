@@ -1,7 +1,6 @@
 # FULL CODE V4.9.3
 
 
-
 ## index.html
 
 ```html
@@ -108,7 +107,8 @@
           <span>สาขาวิชา</span>
           <select id="major" required>
             <option value="">-- เลือกสาขาวิชา --</option>
-            <option value="สารสนเทศและธุรกิจดิจิทัล">สารสนเทศและธุรกิจดิจิทัล</option>
+            <option value="เทคโนโลยีสารสนเทศ">เทคโนโลยีสารสนเทศ</option>
+            <option value="ธุรกิจดิจิทัล">ธุรกิจดิจิทัล</option>
           </select>
         </label>
 
@@ -149,6 +149,7 @@
         <p id="portalWelcome">-</p>
       </div>
       <div class="portal-head-actions">
+          <button id="openEditProfileButton" class="btn ghost" type="button">✏️ แก้ไขข้อมูลส่วนตัว</button>
         <button id="openCharacterProfileButton" class="btn character-profile-entry" type="button">🧍 ดูตัวละคร</button>
         <a href="zone.html" class="btn zone-entry-main">🌙 2D Zone</a>
         <button id="logoutUserButton" class="btn ghost">ออกจากระบบ</button>
@@ -161,8 +162,21 @@
       <div class="card portal-stat"><span>คะแนนสูงสุด</span><strong id="userBestScore">0</strong></div>
       <div class="card portal-stat"><span>WPM สูงสุด</span><strong id="userBestWpm">0</strong></div>
       <div class="card portal-stat points-stat"><span>Token สะสม</span><strong id="userTokens">0</strong><small>TOKENS</small></div>
-      <div class="card portal-stat rank-stat"><span>Rank Season</span><strong id="userRank">-</strong><small id="rankSeasonLabel">60 DAYS</small></div>
+      <div class="card portal-stat rank-stat"><span>Rank รอบปัจจุบัน</span><strong id="userRank">-</strong><small id="rankSeasonLabel">ADMIN RESET</small></div>
     </div>
+
+    
+    <section id="dailyCheckinCard" class="card daily-checkin-card">
+      <div class="daily-checkin-icon">🎁</div>
+      <div class="daily-checkin-copy">
+        <span class="section-kicker">DAILY FULLSCREEN CHECK-IN</span>
+        <h3>ใช้งานครบ 1 ชั่วโมง รับ 10 Token</h3>
+        <p>นับเฉพาะเวลาที่หน้าเว็บเปิดใช้งานอยู่และอยู่ในโหมดเต็มหน้าจอ · รับได้วันละ 1 ครั้ง</p>
+        <div class="daily-checkin-track"><div id="dailyCheckinProgress"></div></div>
+        <small id="dailyCheckinStatus">กำลังเตรียมระบบเช็กอิน...</small>
+      </div>
+      <strong id="dailyCheckinReward">+10 🪙</strong>
+    </section>
 
     <section id="rankResetNotice" class="card rank-reset-user-notice hidden">
       <div class="rank-reset-user-icon">🏆</div>
@@ -621,6 +635,64 @@
     </div>
   </div>
 
+
+  <div id="editProfileModal" class="modal hidden">
+    <div class="modal-card user-profile-edit-card">
+      <button id="closeEditProfileButton" class="modal-close" type="button">✕</button>
+      <span class="section-kicker">USER PROFILE</span>
+      <h2>แก้ไขข้อมูลส่วนตัว</h2>
+      <p class="muted-line">ปรับแผนกและสาขาวิชาให้ถูกต้อง ระบบจะใช้ข้อมูลนี้กับ Ranking และหน้า Admin ทั้งหมด</p>
+
+      <div class="user-profile-edit-grid">
+        <label>
+          <span>รหัสนักศึกษา</span>
+          <input id="editProfileStudentId" disabled>
+        </label>
+        <label>
+          <span>ชื่อ-นามสกุล</span>
+          <input id="editProfileFullName" required>
+        </label>
+        <label>
+          <span>ระดับชั้น</span>
+          <select id="editProfileEducationLevel" required>
+            <option value="ปวช.1">ปวช.1</option><option value="ปวช.2">ปวช.2</option><option value="ปวช.3">ปวช.3</option>
+            <option value="ปวส.1">ปวส.1</option><option value="ปวส.2">ปวส.2</option>
+          </select>
+        </label>
+        <label>
+          <span>ห้อง</span>
+          <select id="editProfileClassroom" required>
+            <option value="/1">/1</option><option value="/2">/2</option><option value="/3">/3</option>
+            <option value="/4">/4</option><option value="/5">/5</option><option value="/6">/6</option>
+          </select>
+        </label>
+        <label>
+          <span>แผนก</span>
+          <select id="editProfileDepartment" required>
+            <option value="คอมพิวเตอร์">คอมพิวเตอร์</option>
+            <option value="อิเล็กทรอนิกส์">อิเล็กทรอนิกส์</option>
+          </select>
+        </label>
+        <label>
+          <span>สาขาวิชา</span>
+          <select id="editProfileMajor" required>
+            <option value="เทคโนโลยีสารสนเทศ">เทคโนโลยีสารสนเทศ</option>
+            <option value="ธุรกิจดิจิทัล">ธุรกิจดิจิทัล</option>
+          </select>
+        </label>
+      </div>
+
+      <div class="user-profile-edit-note">
+        ถ้าเลือกสาขาเทคโนโลยีสารสนเทศหรือธุรกิจดิจิทัล ระบบจะกำหนดแผนกเป็น <strong>คอมพิวเตอร์</strong> อัตโนมัติ
+      </div>
+
+      <div class="modal-actions">
+        <button id="saveEditProfileButton" class="btn primary" type="button">บันทึกข้อมูล</button>
+        <button id="cancelEditProfileButton" class="btn ghost" type="button">ยกเลิก</button>
+      </div>
+    </div>
+  </div>
+
 </body>
 </html>
 ```
@@ -709,6 +781,11 @@
             <button id="deleteResults" class="btn danger">ลบผลทั้งหมด</button>
           </div>
         </div>
+        <div id="userDataMigrationStatus" class="admin-data-migration-note">
+          <strong>โครงสร้างข้อมูลที่ถูกต้อง:</strong>
+          <span>แผนก = คอมพิวเตอร์</span>
+          <span>สาขาวิชา = เทคโนโลยีสารสนเทศ / สารสนเทศและธุรกิจดิจิทัล</span>
+        </div>
         <div class="table-wrap">
           <table>
             <thead>
@@ -727,14 +804,17 @@
         <div class="panel-title">
           <div>
             <h2>ข้อมูลสมาชิก User</h2>
-            <p>สมาชิกที่ลงทะเบียนบัญชีเข้าสู่ระบบเกม</p>
+            <p>สมาชิกที่ลงทะเบียนบัญชีเข้าสู่ระบบเกม · Firebase ไม่สามารถแสดงรหัสผ่านเดิมได้ จึงใช้การตั้งรหัสผ่านใหม่แบบปลอดภัยแทน</p>
           </div>
-          <button id="deleteUsers" class="btn danger">ลบข้อมูลทั้งหมด</button>
+          <div class="admin-user-tools">
+            <button id="migrateInformationUsers" class="btn secondary" type="button">🔄 จัดกลุ่มสาขาวิชาเดิมให้ถูกต้อง</button>
+            <button id="deleteUsers" class="btn danger">ลบ User ทั้งหมด (Auth + DB)</button>
+          </div>
         </div>
         <div class="table-wrap">
           <table>
             <thead>
-              <tr><th>วันเวลา</th><th>เลขนักศึกษา</th><th>ชื่อ-นามสกุล</th><th>ชั้น/ห้อง</th><th>แผนก</th><th>สาขาวิชา</th><th>แต้ม</th><th>สถานะ</th><th>จัดการ</th></tr>
+              <tr><th>วันเวลา</th><th>เลขนักศึกษา</th><th>ชื่อ-นามสกุล</th><th>ชั้น/ห้อง</th><th>แผนก</th><th>สาขาวิชา</th><th>แต้ม</th><th>สถานะ</th><th>รหัสผ่าน</th><th>จัดการ</th></tr>
             </thead>
             <tbody id="usersBody"></tbody>
           </table>
@@ -1039,6 +1119,20 @@
     </section>
   </main>
 
+  
+  <div id="passwordResetModal" class="admin-password-modal hidden">
+    <div class="admin-password-card">
+      <button id="closePasswordResetModal" class="admin-password-close" type="button">✕</button>
+      <span class="section-kicker">SECURE PASSWORD RESET</span>
+      <h2>ตั้งรหัสผ่านใหม่ให้นักศึกษา</h2>
+      <p><strong>ไม่สามารถดูรหัสผ่านเดิมได้</strong> ระบบจะตั้งรหัสใหม่ผ่าน Firebase Admin SDK ฝั่งเซิร์ฟเวอร์</p>
+      <div class="admin-password-user"><span>นักศึกษา</span><strong id="passwordResetStudent">-</strong><small id="passwordResetName">-</small></div>
+      <label><span>รหัสผ่านใหม่</span><div class="password-row"><input id="adminNewStudentPassword" type="text" minlength="6" placeholder="อย่างน้อย 6 ตัวอักษร"><button id="generateStudentPassword" class="btn ghost" type="button">สุ่มรหัส</button></div></label>
+      <div class="admin-password-actions"><button id="confirmStudentPasswordReset" class="btn danger" type="button">ตั้งรหัสผ่านใหม่</button></div>
+      <small>หลังตั้งเสร็จ ให้แจ้งรหัสให้นักศึกษาโดยตรง และไม่ควรบันทึกรหัสผ่านไว้ใน Firestore/GitHub</small>
+    </div>
+  </div>
+
   <div id="adminToast" class="admin-toast hidden" aria-live="polite"></div>
   <script type="module" src="./admin.js?v=4.9.3"></script>
 </body>
@@ -1082,10 +1176,11 @@
         <div id="zoneMyShield"></div>
         <div><strong id="zoneMyStudentId">-</strong><small><i></i><span id="zoneOnlineCount">1</span> online</small></div>
       </div>
-      <div class="zone47-token"><span>🪙 Token</span><strong id="zoneTokenBalance">0</strong></div>
+      <div class="zone47-token"><span>🪙 Token</span><strong id="zoneTokenBalance">0</strong><small id="zoneCheckinMini">Check-in 0/60m</small></div>
       <div class="zone47-actions">
         <button id="openWizardQuests" class="btn ghost" type="button">🧙 ภารกิจ</button>
         <button id="openZoneShop" class="btn ghost" type="button">🛒 ร้านค้า</button>
+        <button id="openZoneBag" class="btn ghost" type="button">🎒 กระเป๋า <span id="zoneBagCount">0/25</span></button>
         <button id="openZoneChatHistory" class="btn ghost" type="button">💬 แชต</button>
         <a id="openAdminPanel" class="btn ghost hidden" href="./admin.html">Admin</a>
         <a id="leaveZoneButton" class="btn danger" href="./index.html">ออก</a>
@@ -1159,6 +1254,19 @@
         <div class="zone47-shop-wallet"><span>Token</span><strong id="zoneShopBalance">0</strong></div>
       </div>
       <div id="zoneShopGrid" class="zone47-shop-grid"></div>
+    </div>
+  </div>
+
+
+  <div id="zoneBagModal" class="zone47-modal hidden">
+    <div class="zone47-modal-card">
+      <button id="closeZoneBag" class="zone47-modal-close" type="button">✕</button>
+      <div class="zone47-shop-head">
+        <div><span class="section-kicker">INVENTORY BAG</span><h2>🎒 กระเป๋าไอเท็ม</h2><p>ความจุสูงสุด 25 ไอเท็ม · สวม/ถอด/ขายคืนร้านได้จากที่นี่</p></div>
+        <div class="zone47-shop-wallet"><span>ความจุ</span><strong id="zoneBagCapacity">0 / 25</strong></div>
+      </div>
+      <div class="zone-bag-rule">ขายคืนร้านได้รับ <strong>30%</strong> ของราคาขายปัจจุบัน · หากกำลังสวมอยู่ ระบบจะถอดให้อัตโนมัติ</div>
+      <div id="zoneBagGrid" class="zone47-shop-grid"></div>
     </div>
   </div>
 
@@ -4296,6 +4404,26 @@ html,body.social-zone-page{
 .admin-selected-major{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:14px 0 8px;padding:12px 14px;border-left:4px solid #566fa5;border-radius:10px;background:#f3f6fb}.admin-selected-major>div span,.admin-selected-major>div strong{display:block}.admin-selected-major>div span{font-size:8px;color:#7c8695}.admin-selected-major>div strong{font-size:18px;color:#273f72;margin-top:2px}.admin-selected-major>span{font-size:9px;color:#66748a}
 @media(max-width:1000px){.ranking-mode-switch-four{grid-template-columns:repeat(2,minmax(0,1fr))}.admin-major-directory{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:650px){.ranking-mode-switch-four{grid-template-columns:1fr}.admin-major-search-card{grid-template-columns:1fr}.admin-major-search-meta{text-align:left}.admin-major-directory{grid-template-columns:1fr}.admin-selected-major{align-items:flex-start;flex-direction:column}}
+\n/* ===== V4.9.3 DAILY CHECK-IN / BAG / PASSWORD RESET ===== */\n.daily-checkin-card{display:grid;grid-template-columns:58px minmax(0,1fr) auto;gap:14px;align-items:center;border-left:5px solid #d7a72f;background:linear-gradient(180deg,#fffdf4,#fff8df)}\n.daily-checkin-icon{width:58px;height:58px;border-radius:16px;display:grid;place-items:center;background:#ffe9a5;font-size:30px}.daily-checkin-copy h3{margin:4px 0}.daily-checkin-copy p{margin:0;color:#6c7680;font-size:12px}.daily-checkin-track{height:9px;margin:10px 0 5px;border-radius:999px;background:#e5e9ec;overflow:hidden}.daily-checkin-track>div{width:0;height:100%;background:#d3a12d;transition:width .3s}.daily-checkin-copy small{color:#6d7780}.daily-checkin-card>strong{font-size:22px;color:#a77910}\n.zone47-token small{display:block;font-size:6px;color:#b8d0db;margin-top:2px}.zone-bag-rule{margin:12px 0;padding:9px 11px;border-radius:10px;background:#f4efe3;color:#6c5a3e;font-size:9px}.zone-bag-actions{display:grid;grid-template-columns:1fr 1fr;gap:5px;width:100%;margin-top:7px}.zone-bag-actions .btn{margin:0!important}\n.admin-password-modal{position:fixed;inset:0;z-index:60000;display:grid;place-items:center;padding:18px;background:rgba(5,18,27,.72);backdrop-filter:blur(7px)}.admin-password-modal.hidden{display:none!important}.admin-password-card{position:relative;width:min(560px,100%);padding:26px;background:#fff;border-radius:18px;border:1px solid #dce3e8;box-shadow:0 26px 80px rgba(0,0,0,.28)}.admin-password-card h2{margin:6px 0}.admin-password-card>p{color:#66737e;line-height:1.6}.admin-password-close{position:absolute;right:10px;top:10px;width:34px;height:34px;border:0;border-radius:9px;background:#edf1f4;cursor:pointer}.admin-password-user{margin:15px 0;padding:12px;border-radius:11px;background:#f5f8fa}.admin-password-user span,.admin-password-user strong,.admin-password-user small{display:block}.admin-password-user span{font-size:9px;color:#75828c}.admin-password-user strong{font-size:20px}.admin-password-user small{color:#65727d}.admin-password-card label>span{display:block;font-size:11px;font-weight:800;margin-bottom:6px}.admin-password-actions{display:flex;justify-content:flex-end;margin:14px 0}.immersive-app{min-height:100vh;min-height:100dvh}\n@media(max-width:650px){.daily-checkin-card{grid-template-columns:46px 1fr}.daily-checkin-icon{width:46px;height:46px}.daily-checkin-card>strong{grid-column:1/-1;text-align:right}}\n
+
+/* ===== V4.9.3 ACADEMIC DATA MIGRATION ===== */
+.admin-user-tools{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.admin-data-migration-note{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin:0 0 12px;padding:10px 12px;border:1px solid #cfe0d4;border-radius:11px;background:#f1f8f3;color:#315a3c}
+.admin-data-migration-note strong{font-size:9px}.admin-data-migration-note span{font-size:8px;color:#62766a}
+.admin-data-migration-note.needs-fix{border-color:#e1c36e;background:#fff8dc;color:#755a11}
+.admin-data-migration-note.needs-fix span{color:#846e31}
+.data-fix-hint{display:inline-block;margin-top:3px;padding:2px 5px;border-radius:999px;background:#fff1c7;color:#8a6510;font-size:6px;font-weight:800}
+
+
+/* ===== V4.9.3 USER PROFILE REPAIR ===== */
+.user-profile-edit-card{width:min(760px,calc(100vw - 28px))}
+.user-profile-edit-card h2{margin:6px 0}
+.user-profile-edit-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:16px 0}
+.user-profile-edit-grid label{display:grid;gap:6px}.user-profile-edit-grid label>span{font-size:9px;font-weight:800;color:#4c5d69}
+.user-profile-edit-grid input,.user-profile-edit-grid select{min-height:46px;border:1px solid #ccd7df;border-radius:10px;background:#fff;padding:0 11px;font:inherit}
+.user-profile-edit-grid input:disabled{background:#f0f3f5;color:#687781}
+.user-profile-edit-note{margin:4px 0 14px;padding:10px 12px;border-radius:10px;background:#eef6fa;color:#436174;font-size:9px;line-height:1.55}
+@media(max-width:650px){.user-profile-edit-grid{grid-template-columns:1fr}}
 
 ```
 
@@ -4312,9 +4440,10 @@ import {
   getFirestore, collection, doc, getDoc, getDocs, setDoc, addDoc, updateDoc, deleteDoc,
   serverTimestamp, query, where, orderBy, limit, onSnapshot, runTransaction
 } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
+import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-functions.js";
 import { firebaseConfig } from "./firebase-config.js?v=4.9.3";
 import { LANGUAGES, LESSONS, DIFFICULTIES } from "./lessons.js?v=4.9.3";
-import { REWARD_ITEMS, RARITY_META } from "./reward-data.js?v=4.9.3";
+import { REWARD_ITEMS, RARITY_META, INVENTORY_CAPACITY, SHOP_BUYBACK_RATE } from "./reward-data.js?v=4.9.3";
 import { DEFAULT_CHARACTER, DEFAULT_ZONE_STATE } from "./character-system.js?v=4.9.3";
 import { OFFICIAL_STAGES, OFFICIAL_TOTAL_SCORE } from "./official-data.js?v=4.9.3";
 import { RANKING_CONFIG, seasonIdFromDate, seasonRange, calculateRankMetrics, rankingClassKey, rankProfiles } from "./ranking-system.js?v=4.9.3";
@@ -4324,6 +4453,8 @@ import { DEFAULT_TEACHER_QUESTS, localDayKey, questObjectiveMet, questObjectiveL
 const firebaseApp = initializeApp(firebaseConfig);
 const auth = getAuth(firebaseApp);
 const db = getFirestore(firebaseApp);
+const cloudFunctions = getFunctions(firebaseApp,"asia-southeast1");
+const recordDailyCheckinHeartbeat = httpsCallable(cloudFunctions,"recordDailyCheckinHeartbeat");
 const $ = id => document.getElementById(id);
 
 const state = {
@@ -4340,13 +4471,58 @@ const state = {
   pvpRoomListUnsub:null,pvpStakeLocking:false,pvpCurrentShot:-1,pvpShotRecorded:-1,
   pvpAggregate:{typedChars:0,keys:0,mistakes:0,seconds:0},pvpPayoutClaimed:false,pvpWasActive:false,pvpTargetCode:"",pvpTurnSignature:null,pvpRecordedSignature:null,
   pvpCountdownTimer:null,pvpCountdownEndMs:0,rankSettingsUnsub:null,rankResetTimer:null,rankSettings:{},rankResetAppliedVersion:null,
-  activeQuest:null,questLaunchHandled:false
+  activeQuest:null,questLaunchHandled:false,dailyCheckinTimer:null,dailyCheckinState:null
 };
 
 const studentEmail = id => `${String(id).trim()}@student.thc-nr.local`;
 const esc = v => String(v ?? "").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;");
 const fmtDate = v => { try { return v?.toDate?.().toLocaleString("th-TH") || "-"; } catch { return "-"; } };
 const fmtTime = s => { s=Math.max(0,s); return `${Math.floor(s/60).toString().padStart(2,"0")}:${Math.floor(s%60).toString().padStart(2,"0")}`; };
+
+async function requestLoginFullscreen(){
+  document.body.classList.add("immersive-app");
+  try{
+    if(!document.fullscreenElement && document.documentElement.requestFullscreen){
+      await document.documentElement.requestFullscreen({navigationUI:"hide"});
+    }
+  }catch(error){
+    console.warn("Fullscreen ต้องอาศัย Browser/User gesture:",error);
+  }
+}
+function appLooksFullscreen(){
+  if(document.fullscreenElement)return true;
+  if(window.matchMedia?.("(display-mode: fullscreen)")?.matches)return true;
+  const h=window.visualViewport?.height||window.innerHeight;
+  const sh=window.screen?.height||h;
+  return h/sh>=0.90;
+}
+function renderDailyCheckinStatus(data={}){
+  state.dailyCheckinState=data;
+  const seconds=Math.max(0,Number(data.qualifiedSeconds||0));
+  const pct=Math.min(100,seconds/3600*100);
+  $("dailyCheckinProgress")&&($("dailyCheckinProgress").style.width=`${pct}%`);
+  if($("dailyCheckinStatus")){
+    if(data.rewarded)$("dailyCheckinStatus").textContent="เช็กอินวันนี้สำเร็จแล้ว · ได้รับ 10 Token";
+    else $("dailyCheckinStatus").textContent=`สะสม ${Math.floor(seconds/60)} / 60 นาที · ต้องเปิดหน้าเว็บและเต็มหน้าจอ`;
+  }
+}
+async function dailyCheckinPulse(){
+  if(!state.uid||document.visibilityState!=="visible"||!appLooksFullscreen())return;
+  try{
+    const result=await recordDailyCheckinHeartbeat({visible:true,fullscreen:true});
+    renderDailyCheckinStatus(result.data||{});
+    if(result.data?.justRewarded){
+      await ensureProfileDefaults();
+      $("userTokens")&&($("userTokens").textContent=Number(state.player?.tokenBalance||0).toLocaleString());
+      alert("เช็กอินประจำวันสำเร็จ! ได้รับ 10 Token");
+    }
+  }catch(error){console.warn("daily checkin:",error)}
+}
+function startDailyCheckin(){
+  clearInterval(state.dailyCheckinTimer);
+  dailyCheckinPulse();
+  state.dailyCheckinTimer=setInterval(dailyCheckinPulse,60000);
+}
 
 function showScreen(id){
   ["authScreen","userPortal","gameScreen","resultScreen","pvpGameScreen"].forEach(x => $(x)?.classList.toggle("hidden", x !== id));
@@ -4362,6 +4538,36 @@ function maxUnlocked(languageId){
   return Number(state.player?.progress?.[languageId]?.maxUnlockedStage || 1);
 }
 
+function normalizeLegacyMajorValue(raw){
+  const value=String(raw||"").trim();
+  const compact=value.replace(/\s+/g,"");
+  if(["ธุรกิจดิจิทัล","ธุรกิจดิทัล","ดิจิทัลธุรกิจ"].includes(compact))return {value:"ธุรกิจดิจิทัล",kind:"digital"};
+  if(["สารสนเทศ","เทคโนโลยีสารสนเทศ","ไอที","IT"].includes(value)||["สารสนเทศ","เทคโนโลยีสารสนเทศ"].includes(compact))return {value:"เทคโนโลยีสารสนเทศ",kind:"information"};
+  // ค่าเก่าที่ไม่ตรง 2 กลุ่มหลักจะเก็บเป็นสาขาแยกของตัวเอง ไม่รวมมั่วกับกลุ่มอื่น
+  return {value:value||"ไม่ระบุสาขาวิชา",kind:"separate"};
+}
+function isLegacyAcademicValue(raw){
+  const v=String(raw||"").trim();
+  return /สารสนเทศ|ดิจิทัล|ดิจิทัล|ธุรกิจดิทัล|เทคโนโลยีสารสนเทศ/i.test(v);
+}
+async function createStudentProfileDocument(user,data){
+  const ref=doc(db,"users",user.uid);
+  const academic=normalizeAcademicSelection(data.department,data.major);
+  await setDoc(ref,{
+    uid:user.uid,
+    studentId:data.studentId,
+    fullName:data.fullName,
+    educationLevel:data.educationLevel,
+    classroom:data.classroom,
+    classKey:classKey(data.educationLevel,data.classroom),
+    department:academic.department,
+    major:academic.major,
+    role:"student",status:"active",
+    tokenBalance:0,tokenLifetime:0,inventory:[],
+    character:{...DEFAULT_CHARACTER,equipped:{...DEFAULT_CHARACTER.equipped}},
+    createdAt:serverTimestamp(),updatedAt:serverTimestamp()
+  },{merge:true});
+}
 async function ensureProfileDefaults(){
   if(!state.uid) return;
   const ref = doc(db,"users",state.uid);
@@ -4376,6 +4582,7 @@ async function ensureProfileDefaults(){
     patch.tokenLifetime = typeof d.pointsLifetime === "number" ? d.pointsLifetime : 0;
   }
   if(!Array.isArray(d.inventory)) patch.inventory = [];
+  if(typeof d.inventoryCapacity!=="number") patch.inventoryCapacity=INVENTORY_CAPACITY;
   if(!d.progress) patch.progress = {html:{maxUnlockedStage:1},python:{maxUnlockedStage:1}};
   else {
     patch.progress = {
@@ -4394,8 +4601,16 @@ async function ensureProfileDefaults(){
     };
   }
   if(!d.classKey && d.educationLevel && d.classroom) patch.classKey=classKey(d.educationLevel,d.classroom);
-  if(d.department===undefined) patch.department="ไม่ระบุแผนก";
-  if(d.major===undefined) patch.major="ไม่ระบุสาขาวิชา";
+  const oldDepartment=String(d.department||"").trim();
+  const oldMajor=String(d.major||"").trim();
+  const normalizedMajor=normalizeLegacyMajorValue(oldMajor||oldDepartment);
+  if(isLegacyAcademicValue(oldDepartment)){
+    patch.department="คอมพิวเตอร์";
+    if(!oldMajor||oldMajor==="ไม่ระบุสาขาวิชา") patch.major=normalizedMajor.value;
+  }else{
+    if(d.department===undefined){patch.department="ไม่ระบุแผนก";academicProfileComplete=false;}
+    if(d.major===undefined){patch.major="ไม่ระบุสาขาวิชา";academicProfileComplete=false;}
+  }
   if(!d.zone) patch.zone = {...DEFAULT_ZONE_STATE};
   if(Object.keys(patch).length) await updateDoc(ref,patch);
   const refreshed = await getDoc(ref);
@@ -4409,11 +4624,26 @@ document.querySelectorAll("[data-toggle-password]").forEach(btn=>btn.onclick=()=
 function registerValid(){
   return /^\d+$/.test($("studentId").value.trim()) &&
     $("fullName").value.trim() && $("educationLevel").value && $("classroom").value &&
-    $("department").value && $("major").value && $("password").value.length >= 6 &&
+    normalizeAcademicSelection($("department").value,$("major").value).department && $("major").value && $("password").value.length >= 6 &&
     $("password").value === $("confirmPassword").value && $("acceptRules").checked;
+}
+function normalizeAcademicSelection(department,major){
+  const m=String(major||"").trim();
+  let d=String(department||"").trim();
+  if(["เทคโนโลยีสารสนเทศ","ธุรกิจดิจิทัล"].includes(m))d="คอมพิวเตอร์";
+  return {department:d,major:m};
 }
 function updateRegister(){ $("registerButton").disabled = !registerValid(); }
 ["studentId","fullName","educationLevel","classroom","department","major","password","confirmPassword","acceptRules"].forEach(id=>$(id).addEventListener("input",updateRegister));
+function syncDepartmentFromMajor(){
+  const major=$("major")?.value||"";
+  if(["เทคโนโลยีสารสนเทศ","ธุรกิจดิจิทัล"].includes(major)&&$("department")){
+    $("department").value="คอมพิวเตอร์";
+  }
+  updateRegister();
+}
+$("major")?.addEventListener("change",syncDepartmentFromMajor);
+
 
 $("registerForm").addEventListener("submit",async e=>{
   e.preventDefault(); if(!registerValid()) return;
@@ -4421,12 +4651,14 @@ $("registerForm").addEventListener("submit",async e=>{
     const sid=$("studentId").value.trim();
     const cred=await createUserWithEmailAndPassword(auth,studentEmail(sid),$("password").value);
     state.uid=cred.user.uid;
+    await requestLoginFullscreen();
     const p={
       uid:state.uid,studentId:sid,fullName:$("fullName").value.trim(),
       educationLevel:$("educationLevel").value,classroom:$("classroom").value,
       classKey:classKey($("educationLevel").value,$("classroom").value),
-      department:$("department").value,major:$("major").value,role:"student",status:"active",
-      tokenBalance:0,tokenLifetime:0,inventory:[],
+      department:normalizeAcademicSelection($("department").value,$("major").value).department,
+      major:normalizeAcademicSelection($("department").value,$("major").value).major,role:"student",status:"active",
+      tokenBalance:0,tokenLifetime:0,inventory:[],inventoryCapacity:INVENTORY_CAPACITY,
       officialProgress:{},officialSubmitted:false,
       rank:{seasonId:null,rating:0,tierId:"bronze",tierName:"Bronze"},
       progress:{html:{maxUnlockedStage:1},python:{maxUnlockedStage:1}},
@@ -4446,6 +4678,7 @@ $("loginForm").addEventListener("submit",async e=>{
   try{
     const cred=await signInWithEmailAndPassword(auth,studentEmail($("loginStudentId").value.trim()),$("loginPassword").value);
     state.uid=cred.user.uid;
+    await requestLoginFullscreen();
     await routeAuthenticatedStudent();
   }catch{
     $("loginMessage").textContent="เลขนักศึกษาหรือรหัสผ่านไม่ถูกต้อง";
@@ -4477,10 +4710,74 @@ async function routeAuthenticatedStudent(){
   await enterPortal();
 }
 
+function profileMajorOptions(current){
+  const defaults=["เทคโนโลยีสารสนเทศ","ธุรกิจดิจิทัล"];
+  const values=[...new Set([current,...defaults].filter(Boolean))];
+  $("editProfileMajor").innerHTML=values.map(v=>`<option value="${esc(v)}">${esc(v)}</option>`).join("");
+}
+function openEditProfile(){
+  if(!state.player)return;
+  $("editProfileStudentId").value=state.player.studentId||"";
+  $("editProfileFullName").value=state.player.fullName||"";
+  $("editProfileEducationLevel").value=state.player.educationLevel||"ปวช.1";
+  $("editProfileClassroom").value=state.player.classroom||"/1";
+  $("editProfileDepartment").value=state.player.department==="อิเล็กทรอนิกส์"?"อิเล็กทรอนิกส์":"คอมพิวเตอร์";
+  profileMajorOptions(state.player.major);
+  $("editProfileMajor").value=state.player.major||"เทคโนโลยีสารสนเทศ";
+  $("editProfileModal").classList.remove("hidden");
+}
+function closeEditProfile(){
+  $("editProfileModal").classList.add("hidden");
+}
+async function saveEditProfile(){
+  if(!state.uid||!state.player)return;
+  const fullName=$("editProfileFullName").value.trim();
+  const educationLevel=$("editProfileEducationLevel").value;
+  const classroom=$("editProfileClassroom").value;
+  const academic=normalizeAcademicSelection($("editProfileDepartment").value,$("editProfileMajor").value);
+  if(!fullName||!educationLevel||!classroom||!academic.department||!academic.major){
+    alert("กรุณากรอกข้อมูลให้ครบ");return;
+  }
+  const btn=$("saveEditProfileButton"),old=btn.textContent;btn.disabled=true;btn.textContent="กำลังบันทึก...";
+  try{
+    await updateDoc(doc(db,"users",state.uid),{
+      fullName,educationLevel,classroom,classKey:classKey(educationLevel,classroom),
+      department:academic.department,major:academic.major,
+      profileAcademicUpdatedAt:serverTimestamp(),updatedAt:serverTimestamp()
+    });
+    await setDoc(doc(db,"public_profiles",state.uid),{
+      uid:state.uid,studentId:state.player.studentId,fullName,
+      educationLevel,classroom,classKey:classKey(educationLevel,classroom),
+      department:academic.department,major:academic.major,
+      rank:state.player.rank||null,
+      character:state.player.character||DEFAULT_CHARACTER,
+      updatedAt:serverTimestamp()
+    },{merge:true});
+    state.player={...state.player,fullName,educationLevel,classroom,department:academic.department,major:academic.major};
+    $("portalWelcome").textContent=`${fullName} · ${state.player.studentId} · ${educationLevel}${classroom} · ${academic.department} · ${academic.major}`;
+    closeEditProfile();
+    await updateMyRank();
+    listenTopRanking();
+  }catch(error){
+    console.error("save profile:",error);alert("บันทึกข้อมูลไม่สำเร็จ: "+(error.message||error));
+  }finally{btn.disabled=false;btn.textContent=old}
+}
+$("openEditProfileButton")&&($("openEditProfileButton").onclick=openEditProfile);
+$("closeEditProfileButton")&&($("closeEditProfileButton").onclick=closeEditProfile);
+$("cancelEditProfileButton")&&($("cancelEditProfileButton").onclick=closeEditProfile);
+$("saveEditProfileButton")&&($("saveEditProfileButton").onclick=saveEditProfile);
+$("editProfileMajor")&&($("editProfileMajor").onchange=()=>{
+  if(["เทคโนโลยีสารสนเทศ","ธุรกิจดิจิทัล"].includes($("editProfileMajor").value))$("editProfileDepartment").value="คอมพิวเตอร์";
+});
+
 async function enterPortal(){
   await ensureProfileDefaults();
   showScreen("userPortal");
+  startDailyCheckin();
   $("portalWelcome").textContent=`${state.player.fullName} · ${state.player.studentId} · ${state.player.educationLevel}${state.player.classroom} · ${state.player.department||"ไม่ระบุแผนก"} · ${state.player.major||"ไม่ระบุสาขาวิชา"}`;
+  if(!state.player.department||!state.player.major||state.player.department==="ไม่ระบุแผนก"||state.player.major==="ไม่ระบุสาขาวิชา"){
+    setTimeout(()=>openEditProfile(),350);
+  }
   $("userTokens").textContent=Number(state.player.tokenBalance||0).toLocaleString();
   renderUserRank();
   renderLanguages();
@@ -5063,7 +5360,8 @@ async function redeemReward(id){
       const balance=Number(d.tokenBalance||0);
       const inv=Array.isArray(d.inventory)?d.inventory:[];
       if(inv.includes(id))throw new Error("มีไอเทมแล้ว");
-      if(balance<item.cost)throw new Error("แต้มไม่พอ");
+      if(inv.length>=INVENTORY_CAPACITY)throw new Error(`กระเป๋าเต็ม ${INVENTORY_CAPACITY}/${INVENTORY_CAPACITY}`);
+      if(balance<item.cost)throw new Error("Token ไม่พอ");
       tx.update(ref,{tokenBalance:balance-item.cost,inventory:[...inv,id],updatedAt:serverTimestamp()});
     });
     await ensureProfileDefaults();
@@ -5132,7 +5430,7 @@ function renderUserRank(){
   const rating=Number(rank.rating||0);
   $("userRank").innerHTML=`${rankShieldHTML(rank,"small")} <span>${tierName} ${rating}</span>`;
   const range=seasonRange(new Date());
-  $("rankSeasonLabel").textContent=`${seasonIdFromDate(new Date())} · ${range.end.toLocaleDateString("th-TH")}`;
+  $("rankSeasonLabel").textContent="รีแรงค์โดย Admin เท่านั้น";
 }
 
 function officialStageSource(item){
@@ -5903,12 +6201,15 @@ import {
   getFirestore, collection, doc, getDocs, setDoc, deleteDoc, updateDoc,
   writeBatch, serverTimestamp, onSnapshot, Timestamp, query, orderBy, limit
 } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
+import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-functions.js";
 import { firebaseConfig, ADMIN_USERNAME, ADMIN_EMAIL, ADMIN_UID } from "./firebase-config.js?v=4.9.3";
 import { DEFAULT_MODES, DEFAULT_LEVELS } from "./default-data.js?v=4.9.3";
 import { seasonIdFromDate, seasonRange, calculateRankMetrics, rankingClassKey } from "./ranking-system.js?v=4.9.3";
 import { DEFAULT_TEACHER_QUESTS, clampQuestReward, questDifficultyName, questObjectiveLabel, defaultMinRankForDifficulty, rewardRange } from "./quest-system.js?v=4.9.3";
 
-const app=initializeApp(firebaseConfig),auth=getAuth(app),db=getFirestore(app),$=id=>document.getElementById(id);
+const app=initializeApp(firebaseConfig),auth=getAuth(app),db=getFirestore(app),cloudFunctions=getFunctions(app,"asia-southeast1"),$=id=>document.getElementById(id);
+const adminResetStudentPassword=httpsCallable(cloudFunctions,"adminResetStudentPassword");
+const adminDeleteStudentAccount=httpsCallable(cloudFunctions,"adminDeleteStudentAccount");
 let cache={users:[],attempts:[],levels:[],modes:[],official:[],zonePositions:[],zoneModeration:[],zoneMessages:[],zoneArchive:[],rankingSettings:{},teacherQuests:[]},unsubs=[];
 let knownUserIds=null;
 let selectedAdminClass="";
@@ -5918,6 +6219,7 @@ let adminDepartmentSearchTerm="";
 let selectedAdminMajor="";
 let adminMajorSearchTerm="";
 let adminRankClock=null;
+let passwordResetTargetUid=null;
 
 const isAdmin=user=>!!user&&user.uid===ADMIN_UID;
 const dateValue=v=>{try{return v?.toDate?.()?.getTime?.()||0}catch{return 0}};
@@ -5989,11 +6291,130 @@ function compareStudentId(a,b){
   const av=String(a?.studentId??""),bv=String(b?.studentId??"");
   return av.localeCompare(bv,"th",{numeric:true,sensitivity:"base"});
 }
+const MAIN_MAJOR_VALUES=["เทคโนโลยีสารสนเทศ","ธุรกิจดิจิทัล"];
+function normalizeLegacyMajorValue(raw){
+  const value=String(raw||"").trim();
+  const compact=value.replace(/\s+/g,"");
+  if(["ธุรกิจดิจิทัล","ธุรกิจดิทัล","ดิจิทัลธุรกิจ"].includes(compact))return {value:"ธุรกิจดิจิทัล",kind:"digital"};
+  if(["สารสนเทศ","เทคโนโลยีสารสนเทศ"].includes(compact)||value==="ไอที"||value==="IT")return {value:"เทคโนโลยีสารสนเทศ",kind:"information"};
+  // ค่าอื่น เช่นข้อความผสม จะคงค่าเดิมไว้เป็นสาขาแยก ไม่บังคับรวมเข้ากับ 2 กลุ่มหลัก
+  return {value:value||"ไม่ระบุสาขาวิชา",kind:"separate"};
+}
+function legacyAcademicLooksLikeMajor(raw){return /สารสนเทศ|ดิจิทัล|ธุรกิจดิทัล/i.test(String(raw||""))}
+function normalizedUserAcademicData(user={}){
+  const department=String(user.department||"").trim();
+  const major=String(user.major||"").trim();
+  if(legacyAcademicLooksLikeMajor(department)){
+    const source=major&&major!=="ไม่ระบุสาขาวิชา"?major:department;
+    const normalized=normalizeLegacyMajorValue(source);
+    return {department:"คอมพิวเตอร์",major:normalized.value,kind:normalized.kind,needsMigration:true};
+  }
+  const normalized=normalizeLegacyMajorValue(major);
+  return {department:department||"ไม่ระบุแผนก",major:normalized.value,kind:normalized.kind,needsMigration:major!==normalized.value};
+}
+function usersNeedingAcademicMigration(){
+  return cache.users.filter(u=>normalizedUserAcademicData(u).needsMigration);
+}
 function renderUsers(){
   const users=[...cache.users].sort(compareStudentId);
-  $("usersBody").innerHTML=users.map(x=>`<tr><td>${formatDate(x.createdAt)}</td><td>${esc(x.studentId)}</td><td><strong>${esc(x.fullName)}</strong></td><td>${esc(x.educationLevel||"")}${esc(x.classroom||"")}</td><td>${esc(x.department||"ไม่ระบุแผนก")}</td><td>${esc(x.major||"ไม่ระบุสาขาวิชา")}</td><td><strong>${Number(x.tokenBalance||0).toLocaleString()}</strong></td><td><span class="status status-active">${esc(x.status||"active")}</span></td><td><button class="mini-delete" data-delete-user="${x.id}">ลบข้อมูล</button></td></tr>`).join("")||`<tr><td colspan="9" class="empty">ยังไม่มีสมาชิก</td></tr>`;
-  document.querySelectorAll("[data-delete-user]").forEach(b=>b.onclick=async()=>{if(confirm("ลบข้อมูลสมาชิกจาก Firestore? หมายเหตุ: บัญชี Authentication ต้องลบใน Firebase Console แยกต่างหาก"))await deleteDoc(doc(db,"users",b.dataset.deleteUser))});
+  const need=usersNeedingAcademicMigration();
+  const note=$("userDataMigrationStatus");
+  if(note){
+    note.classList.toggle("needs-fix",need.length>0);
+    note.innerHTML=need.length
+      ?`<strong>พบ User เดิม ${need.length} คนที่ต้องจัดแผนก/สาขาวิชาใหม่</strong><span>กดปุ่มจัดกลุ่มเพื่อแก้ Firestore จริง · ธุรกิจดิจิทัลและสารสนเทศจะไม่ถูกรวมกัน</span>`
+      :`<strong>ข้อมูล User ถูกโครงสร้างแล้ว</strong><span>แผนก = คอมพิวเตอร์ · สาขาวิชาแยกเป็น เทคโนโลยีสารสนเทศ / ธุรกิจดิจิทัล / ค่าอื่นแยกตามเดิม</span>`;
+  }
+  $("usersBody").innerHTML=users.map(x=>{
+    const academic=normalizedUserAcademicData(x);
+    return `<tr>
+      <td>${formatDate(x.createdAt)}</td>
+      <td>${esc(x.studentId)}</td>
+      <td><strong>${esc(x.fullName)}</strong></td>
+      <td>${esc(x.educationLevel||"")}${esc(x.classroom||"")}</td>
+      <td><strong>${esc(academic.department)}</strong>${academic.needsMigration?`<br><small class="data-fix-hint">รอย้ายข้อมูล</small>`:""}</td>
+      <td>${esc(academic.major)}</td>
+      <td><strong>${Number(x.tokenBalance||0).toLocaleString()}</strong></td>
+      <td><span class="status status-active">${esc(x.status||"active")}</span></td>
+      <td><button class="btn btn-small secondary" data-reset-password="${x.id}">ตั้งรหัสใหม่</button></td>
+      <td><button class="mini-delete" data-delete-user="${x.id}">ลบข้อมูล</button></td>
+    </tr>`;
+  }).join("")||`<tr><td colspan="10" class="empty">ยังไม่มีสมาชิก</td></tr>`;
+
+  document.querySelectorAll("[data-delete-user]").forEach(b=>b.onclick=async()=>{
+    const user=cache.users.find(x=>x.id===b.dataset.deleteUser);if(!user)return;
+    if(!confirm(`ลบบัญชี ${user.studentId||""} - ${user.fullName||""}?\n\nระบบจะลบทั้ง Firebase Authentication และข้อมูล Firestore ที่เกี่ยวข้อง\nหลังลบแล้วรหัสนักศึกษานี้สามารถสมัครใหม่ได้`))return;
+    b.disabled=true;const oldText=b.textContent;b.textContent="กำลังลบ...";
+    try{
+      const result=await adminDeleteStudentAccount({targetUid:user.id});
+      showAdminToast("ลบบัญชีสำเร็จ",`${user.studentId||""} สมัครใหม่ได้แล้ว`);
+    }catch(error){showAdminToast("ลบบัญชีไม่สำเร็จ",error.message||String(error),true);}
+    finally{b.disabled=false;b.textContent=oldText;}
+  });
+  document.querySelectorAll("[data-reset-password]").forEach(btn=>btn.onclick=()=>{
+    const user=cache.users.find(x=>x.id===btn.dataset.resetPassword);if(!user)return;
+    passwordResetTargetUid=user.id;
+    $("passwordResetStudent").textContent=user.studentId||"-";
+    $("passwordResetName").textContent=user.fullName||"-";
+    $("adminNewStudentPassword").value="";
+    $("passwordResetModal").classList.remove("hidden");
+  });
 }
+if($("migrateInformationUsers"))$("migrateInformationUsers").onclick=async()=>{
+  const targets=usersNeedingAcademicMigration();
+  if(!targets.length){
+    showAdminToast("ไม่พบข้อมูลที่ต้องย้าย","User ทุกคนแยกแผนก/สาขาวิชาถูกต้องแล้ว");
+    return;
+  }
+  if(!confirm(`พบ ${targets.length} User\n\nระบบจะเปลี่ยน:\nแผนก → คอมพิวเตอร์\nสารสนเทศ → เทคโนโลยีสารสนเทศ\nธุรกิจดิจิทัล → ธุรกิจดิจิทัล\nค่าอื่น → เก็บแยกตามค่าเดิม\n\nยืนยันแก้ข้อมูล Firestore?`))return;
+  const button=$("migrateInformationUsers"),oldText=button.textContent;
+  button.disabled=true;button.textContent="กำลังย้ายข้อมูล...";
+  try{
+    const chunks=[];
+    for(let i=0;i<targets.length;i+=400)chunks.push(targets.slice(i,i+400));
+    let changed=0;
+    for(const chunk of chunks){
+      const batch=writeBatch(db);
+      chunk.forEach(user=>{
+        const academic=normalizedUserAcademicData(user);
+        batch.update(doc(db,"users",user.id),{
+          department:"คอมพิวเตอร์",
+          major:academic.major,
+          academicDataMigratedAt:serverTimestamp(),
+          updatedAt:serverTimestamp()
+        });
+        batch.set(doc(db,"public_profiles",user.id),{
+          department:"คอมพิวเตอร์",
+          major:academic.major,
+          updatedAt:serverTimestamp()
+        },{merge:true});
+        changed++;
+      });
+      await batch.commit();
+    }
+    showAdminToast("ย้ายข้อมูลสำเร็จ",`แก้ไข ${changed} User แล้ว · แผนก = คอมพิวเตอร์`);
+  }catch(error){
+    console.error("academic migration:",error);
+    showAdminToast("ย้ายข้อมูลไม่สำเร็จ",error.message||String(error),true);
+  }finally{
+    button.disabled=false;button.textContent=oldText;
+  }
+};
+
+function randomTemporaryPassword(){
+  const chars="ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789";let out="";
+  crypto.getRandomValues(new Uint32Array(10)).forEach(n=>out+=chars[n%chars.length]);return out;
+}
+if($("generateStudentPassword"))$("generateStudentPassword").onclick=()=>{$("adminNewStudentPassword").value=randomTemporaryPassword()};
+if($("closePasswordResetModal"))$("closePasswordResetModal").onclick=()=>$("passwordResetModal").classList.add("hidden");
+if($("confirmStudentPasswordReset"))$("confirmStudentPasswordReset").onclick=async()=>{
+  const password=$("adminNewStudentPassword").value;if(!passwordResetTargetUid||password.length<6){alert("รหัสผ่านต้องอย่างน้อย 6 ตัวอักษร");return}
+  if(!confirm("ยืนยันตั้งรหัสผ่านใหม่ให้นักศึกษารายนี้?"))return;
+  try{
+    await adminResetStudentPassword({targetUid:passwordResetTargetUid,newPassword:password});
+    $("passwordResetModal").classList.add("hidden");showAdminToast("ตั้งรหัสผ่านใหม่สำเร็จ","แจ้งรหัสใหม่ให้นักศึกษาได้เลย");
+  }catch(error){showAdminToast("ตั้งรหัสผ่านไม่สำเร็จ",error.message||String(error),true)}
+};
 function renderLevels(){
   $("levelCards").innerHTML=cache.levels.map(x=>`<article class="level-admin-card"><div><span>LEVEL ${esc(x.levelNo)}</span><h3>${esc(x.title)}</h3><p>${esc(x.language)} · ${esc(x.difficulty)} · ${esc(x.basePoints)} pts</p></div><div class="button-row"><button class="btn ghost btn-small" data-edit-level="${x.id}">แก้ไข</button><button class="btn danger btn-small" data-delete-level="${x.id}">ลบ</button></div></article>`).join("");
   document.querySelectorAll("[data-edit-level]").forEach(b=>b.onclick=()=>{const x=cache.levels.find(l=>l.id===b.dataset.editLevel);if(!x)return;$("editLevelNo").value=x.levelNo;$("editTitle").value=x.title;$("editLanguage").value=x.language;$("editDifficulty").value=x.difficulty;$("editBasePoints").value=x.basePoints;$("editTimeLimit").value=x.timeLimit;$("editMultiplier").value=x.difficultyMultiplier;$("editDescription").value=x.description||"";$("editCode").value=x.code;window.scrollTo({top:$("levelForm").offsetTop-30,behavior:"smooth"})});
@@ -6049,8 +6470,8 @@ function userPlayedStages(uid){
 }
 function officialForUser(uid){return cache.official.find(x=>x.uid===uid||x.id===uid)||null}
 function classKeyForUser(u){return rankingClassKey(u.educationLevel,u.classroom)||"ไม่ระบุห้อง"}
-function departmentKeyForUser(u){return rankingDepartmentKey(u)}
-function majorKeyForUser(u){return rankingMajorKey(u)}
+function departmentKeyForUser(u){return normalizedUserAcademicData(u).department}
+function majorKeyForUser(u){return normalizedUserAcademicData(u).major}
 function assignScopedPosition(rows,keyName,positionName){
   const groups=new Map();
   rows.forEach(r=>{const key=r[keyName];if(!groups.has(key))groups.set(key,[]);groups.get(key).push(r)});
@@ -6322,7 +6743,7 @@ if($("saveRankResetSchedule"))$("saveRankResetSchedule").onclick=async()=>{
 };
 if($("clearRankResetSchedule"))$("clearRankResetSchedule").onclick=async()=>{await setDoc(doc(db,"system_settings","ranking"),{nextResetAt:null,notice:"",updatedAt:serverTimestamp()},{merge:true});showAdminToast("ยกเลิกกำหนดการแล้ว")};
 if($("resetRankingNow"))$("resetRankingNow").onclick=executeRankingResetNow;
-if($("recalculateRanking"))$("recalculateRanking").onclick=async()=>{await persistRanking();showAdminToast("คำนวณ Ranking ใหม่แล้ว","อัปเดตทั้งแรงค์รวมและแรงค์รายห้อง")};
+if($("recalculateRanking"))$("recalculateRanking").onclick=async()=>{await persistRanking();showAdminToast("คำนวณ Ranking ใหม่แล้ว","อัปเดตแรงค์รวม / แผนก / สาขาวิชา / ห้อง")};
 
 if($("exportOfficialCsv"))$("exportOfficialCsv").onclick=()=>{
   const h=["submitted_at","student_id","name","class","department","completed","score","max_score","accuracy","wpm"];
@@ -6658,7 +7079,19 @@ $("levelForm").addEventListener("submit",async e=>{e.preventDefault();const n=Nu
 $("seedDefaults").onclick=async()=>{if(!confirm("คืนค่า 4 โหมดและ 12 Level เริ่มต้น?"))return;const batch=writeBatch(db);DEFAULT_MODES.forEach(x=>{const {id,...data}=x;batch.set(doc(db,"game_modes",id),{...data,id,isActive:true},{merge:true})});DEFAULT_LEVELS.forEach(x=>batch.set(doc(db,"levels",`level_${String(x.levelNo).padStart(2,"0")}`),{...x,isActive:true},{merge:true}));await batch.commit()};
 async function deleteCollectionDocs(name){const rows=await getDocs(collection(db,name));let batch=writeBatch(db),count=0;for(const item of rows.docs){batch.delete(item.ref);if(++count>=450){await batch.commit();batch=writeBatch(db);count=0}}if(count)await batch.commit()}
 $("deleteResults").onclick=async()=>{if(confirm("ยืนยันลบผลทั้งหมด?"))await deleteCollectionDocs("attempts")};
-$("deleteUsers").onclick=async()=>{if(confirm("ยืนยันลบข้อมูลสมาชิกทั้งหมดจาก Firestore? บัญชี Authentication จะไม่ถูกลบ"))await deleteCollectionDocs("users")};
+$("deleteUsers").onclick=async()=>{
+  const users=cache.users.filter(u=>u.id!==ADMIN_UID);
+  if(!users.length)return;
+  if(!confirm(`ยืนยันลบ User ทั้งหมด ${users.length} คน?\n\nจะลบทั้ง Authentication + Firestore และทุกคนสามารถสมัครใหม่ได้`))return;
+  const typed=prompt('พิมพ์ DELETE ALL เพื่อยืนยัน');if(typed!=="DELETE ALL")return;
+  const btn=$("deleteUsers"),old=btn.textContent;btn.disabled=true;
+  let ok=0,failed=0;
+  for(const user of users){
+    btn.textContent=`กำลังลบ ${ok+failed+1}/${users.length}`;
+    try{await adminDeleteStudentAccount({targetUid:user.id});ok++;}catch(error){failed++;console.warn("delete user",user.id,error)}
+  }
+  btn.disabled=false;btn.textContent=old;showAdminToast("ลบ User ทั้งหมดเสร็จ",`สำเร็จ ${ok} · ไม่สำเร็จ ${failed}`,failed>0);
+};
 function downloadFile(name,text,type){const blob=new Blob([text],{type}),url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download=name;a.click();URL.revokeObjectURL(url)}
 $("exportCsv").onclick=()=>{const h=["date","student_id","name","level","classroom","department","mode","game_level","status","score","wpm","accuracy","mistakes","time_seconds"],q=v=>`"${String(v??"").replaceAll('"','""')}"`,rows=cache.attempts.map(x=>[formatDate(x.createdAt),x.studentId,x.fullName,x.educationLevel,x.classroom,x.department,x.modeName,(x.stage??x.levelNo),x.status,x.score,x.wpm,x.accuracy,x.mistakes,x.elapsedSeconds].map(q).join(","));downloadFile("code_typing_results.csv","\ufeff"+h.join(",")+"\n"+rows.join("\n"),"text/csv;charset=utf-8")};
 $("exportJson").onclick=()=>downloadFile("code_typing_backup.json",JSON.stringify({
@@ -6683,8 +7116,9 @@ import {
   getFirestore, doc, getDoc, setDoc, updateDoc, collection, onSnapshot,
   serverTimestamp, query, orderBy, limit, Timestamp, runTransaction
 } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
+import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-functions.js";
 import { firebaseConfig, ADMIN_UID } from "./firebase-config.js?v=4.9.3";
-import { REWARD_ITEMS, RARITY_META } from "./reward-data.js?v=4.9.3";
+import { REWARD_ITEMS, RARITY_META, INVENTORY_CAPACITY, SHOP_BUYBACK_RATE } from "./reward-data.js?v=4.9.3";
 import { DEFAULT_CHARACTER } from "./character-system.js?v=4.9.3";
 import {
   QUEST_CONFIG, DEFAULT_TEACHER_QUESTS, localDayKey, activeQuestLimit,
@@ -6694,6 +7128,8 @@ import {
 const firebaseApp=initializeApp(firebaseConfig);
 const auth=getAuth(firebaseApp);
 const db=getFirestore(firebaseApp);
+const cloudFunctions=getFunctions(firebaseApp,"asia-southeast1");
+const recordDailyCheckinHeartbeat=httpsCallable(cloudFunctions,"recordDailyCheckinHeartbeat");
 const $=id=>document.getElementById(id);
 
 const ZONE_ID="thai_social_zone_v4_1";
@@ -6720,7 +7156,7 @@ let uid=null,profile=null,blocked=true;
 let players=new Map(),messages=[],messagesByUid=new Map();
 let teacherQuests=[...DEFAULT_TEACHER_QUESTS],questProgress={};
 let positionsUnsub=null,messagesUnsub=null,moderationUnsub=null,rankingUnsub=null,questUnsub=null;
-let heartbeat=null,clockTimer=null,expiryTimer=null;
+let heartbeat=null,clockTimer=null,expiryTimer=null,dailyCheckinTimer=null;
 let lastFrame=performance.now(),lastPositionSend=0,lastChatAt=0;
 let cameraX=0,velocityX=0;
 const me={x:450,y:WALK_Y,direction:"right",moving:false};
@@ -6732,6 +7168,22 @@ const GM_RANK={tierId:"master",tierName:"GAME MASTER",rating:999999};
 const GM_ITEMS=[{icon:"👑",name:"GM Crown"},{icon:"🪄",name:"GM Staff"},{icon:"🛡️",name:"Guardian Aura"}];
 
 const esc=v=>String(v??"").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;");
+function zoneLooksFullscreen(){
+  if(document.fullscreenElement)return true;
+  if(window.matchMedia?.("(display-mode: fullscreen)")?.matches)return true;
+  const h=window.visualViewport?.height||window.innerHeight,sh=window.screen?.height||h;
+  return h/sh>=0.90;
+}
+async function zoneCheckinPulse(){
+  if(!uid||isGM()||document.visibilityState!=="visible"||!zoneLooksFullscreen())return;
+  try{
+    const result=await recordDailyCheckinHeartbeat({visible:true,fullscreen:true});
+    const d=result.data||{},seconds=Number(d.qualifiedSeconds||0);
+    $("zoneCheckinMini").textContent=d.rewarded?"Check-in ✓ +10":"Check-in "+Math.floor(seconds/60)+"/60m";
+    if(d.justRewarded){await refreshProfile();alert("เช็กอินประจำวันสำเร็จ! +10 Token")}
+  }catch(error){console.warn("zone daily checkin",error)}
+}
+function startZoneDailyCheckin(){clearInterval(dailyCheckinTimer);zoneCheckinPulse();dailyCheckinTimer=setInterval(zoneCheckinPulse,60000)}
 function isGM(){return uid===ADMIN_UID}
 function isGMPlayer(p){return p?.uid===ADMIN_UID||p?.isAdmin===true}
 function isTouchOnly(){return window.matchMedia("(pointer: coarse)").matches&&window.innerWidth<=1180}
@@ -6957,6 +7409,7 @@ $("closeWizardQuests").onclick=()=>$("zoneQuestModal").classList.add("hidden");
 function renderShop(){
   if(!profile||isGM())return;
   const owned=new Set(profile.inventory||[]),eq=equipped(profile.character),wearing=new Set(Object.values(eq).filter(Boolean)),balance=Number(profile.tokenBalance||0);
+  $("zoneBagCount")&&($("zoneBagCount").textContent=`${owned.size}/${INVENTORY_CAPACITY}`);
   $("zoneTokenBalance").textContent=balance.toLocaleString();$("zoneShopBalance").textContent=balance.toLocaleString();
   const items=[...REWARD_ITEMS].sort((a,b)=>(RARITY_META[a.rarity]?.order||0)-(RARITY_META[b.rarity]?.order||0)||a.cost-b.cost);
   $("zoneShopGrid").innerHTML=items.map(item=>{
@@ -6973,7 +7426,7 @@ function renderShop(){
 async function refreshProfile(){
   if(isGM())return;
   const snap=await getDoc(doc(db,"users",uid));if(snap.exists())profile={uid,...snap.data()};
-  renderShop();await syncPublicProfile();await publishPosition(true);
+  renderShop();if(!$("zoneBagModal")?.classList.contains("hidden"))renderZoneBag();await syncPublicProfile();await publishPosition(true);
 }
 async function handleShopItem(id){
   if(isGM())return;
@@ -6984,7 +7437,7 @@ async function handleShopItem(id){
       await runTransaction(db,async tx=>{
         const snap=await tx.get(userRef);if(!snap.exists())throw new Error("ไม่พบ User");
         const d=snap.data(),balance=Number(d.tokenBalance||0),inv=Array.isArray(d.inventory)?d.inventory:[];
-        if(inv.includes(id))return;if(balance<item.cost)throw new Error("Token ไม่พอ");
+        if(inv.includes(id))return;if(inv.length>=INVENTORY_CAPACITY)throw new Error(`กระเป๋าเต็ม ${INVENTORY_CAPACITY}/${INVENTORY_CAPACITY}`);if(balance<item.cost)throw new Error("Token ไม่พอ");
         tx.update(userRef,{tokenBalance:balance-item.cost,inventory:[...inv,id],updatedAt:serverTimestamp()});
       });await refreshProfile();
     }catch(error){alert(error.message)}return;
@@ -6993,6 +7446,36 @@ async function handleShopItem(id){
   await updateDoc(userRef,{character:{...DEFAULT_CHARACTER,...profile.character,equipped:current},updatedAt:serverTimestamp()});
   await refreshProfile();
 }
+function renderZoneBag(){
+  if(!profile||isGM())return;
+  const inventory=Array.isArray(profile.inventory)?profile.inventory:[],eq=equipped(profile.character),wearing=new Set(Object.values(eq).filter(Boolean));
+  $("zoneBagCapacity").textContent=`${inventory.length} / ${INVENTORY_CAPACITY}`;
+  $("zoneBagCount").textContent=`${inventory.length}/${INVENTORY_CAPACITY}`;
+  $("zoneBagGrid").innerHTML=inventory.length?inventory.map(id=>{
+    const item=itemById(id);if(!item)return "";const on=wearing.has(id),buyback=Math.floor(Number(item.cost||0)*SHOP_BUYBACK_RATE);
+    return `<article class="zone47-shop-item ${on?"wearing":""}"><div class="zone47-shop-rarity">${esc(RARITY_META[item.rarity]?.name||item.rarity)}</div><div class="zone47-shop-icon">${item.icon}</div><strong>${esc(item.name)}</strong><small>${esc(item.description)}</small><em>ขายคืน ${buyback.toLocaleString()} Token</em><div class="zone-bag-actions"><button class="btn secondary" data-bag-equip="${esc(id)}">${on?"ถอด":"สวม"}</button><button class="btn danger" data-bag-sell="${esc(id)}">ขายคืน</button></div></article>`;
+  }).join(""):`<div class="empty-card">กระเป๋ายังว่าง</div>`;
+  document.querySelectorAll("[data-bag-equip]").forEach(btn=>btn.onclick=()=>handleShopItem(btn.dataset.bagEquip));
+  document.querySelectorAll("[data-bag-sell]").forEach(btn=>btn.onclick=()=>sellInventoryItem(btn.dataset.bagSell));
+}
+async function sellInventoryItem(id){
+  if(isGM())return;const item=itemById(id);if(!item)return;
+  const buyback=Math.floor(Number(item.cost||0)*SHOP_BUYBACK_RATE);
+  if(!confirm(`ขาย ${item.name} คืนร้าน รับ ${buyback} Token ?`))return;
+  try{
+    await runTransaction(db,async tx=>{
+      const ref=doc(db,"users",uid),snap=await tx.get(ref);if(!snap.exists())throw new Error("ไม่พบ User");
+      const d=snap.data(),inv=Array.isArray(d.inventory)?d.inventory:[];if(!inv.includes(id))throw new Error("ไม่มีไอเท็มนี้ในกระเป๋า");
+      const character={...DEFAULT_CHARACTER,...(d.character||{}),equipped:{...DEFAULT_CHARACTER.equipped,...(d.character?.equipped||{})}};
+      for(const slot of Object.keys(character.equipped))if(character.equipped[slot]===id)character.equipped[slot]=null;
+      tx.update(ref,{inventory:inv.filter(x=>x!==id),tokenBalance:Number(d.tokenBalance||0)+buyback,character,updatedAt:serverTimestamp()});
+    });
+    await refreshProfile();renderZoneBag();
+  }catch(error){alert(error.message||String(error))}
+}
+$("openZoneBag").onclick=()=>{if(isGM()){alert("GM ใช้ไอเท็มพิเศษ ไม่ใช้กระเป๋า User");return}renderZoneBag();$("zoneBagModal").classList.remove("hidden")};
+$("closeZoneBag").onclick=()=>$("zoneBagModal").classList.add("hidden");
+
 $("openZoneShop").onclick=()=>{if(isGM()){alert("GM ใช้ไอเท็มพิเศษเฉพาะ ไม่ซื้อจากร้าน");return}renderShop();$("zoneShopModal").classList.remove("hidden")};
 $("closeZoneShop").onclick=()=>$("zoneShopModal").classList.add("hidden");
 
@@ -7177,7 +7660,7 @@ function listenRankingNotice(){
 }
 
 async function leaveZone(){
-  clearInterval(heartbeat);clearInterval(clockTimer);clearInterval(expiryTimer);positionsUnsub?.();messagesUnsub?.();moderationUnsub?.();rankingUnsub?.();questUnsub?.();
+  clearInterval(heartbeat);clearInterval(clockTimer);clearInterval(expiryTimer);clearInterval(dailyCheckinTimer);positionsUnsub?.();messagesUnsub?.();moderationUnsub?.();rankingUnsub?.();questUnsub?.();
   try{await updateDoc(doc(db,"zone_positions",uid),{online:false,updatedAt:serverTimestamp()})}catch{}
   try{await setDoc(doc(db,"presence",uid),{online:false,lastSeenAt:serverTimestamp()},{merge:true})}catch{}
   if(!isGM())try{await updateDoc(doc(db,"users",uid),{zone:{zoneId:ZONE_ID,x:Math.round(me.x),y:WALK_Y,direction:me.direction,lastSeenAt:new Date().toISOString()}})}catch{}
@@ -7191,11 +7674,147 @@ onAuthStateChanged(auth,async user=>{
   hideGate();$("zoneMyStudentId").textContent=isGM()?"GM":profile.studentId;$("zoneChatIdentity").textContent=isGM()?"GM":profile.studentId;
   $("zoneMyShield").innerHTML=rankShieldHTML(isGM()?GM_RANK:profile.rank);$("zoneTokenBalance").textContent=isGM()?"∞":Number(profile.tokenBalance||0).toLocaleString();
   if(isGM()){$("openAdminPanel").classList.remove("hidden");$("leaveZoneButton").href="./admin.html";$("zoneChatInput").placeholder="GM พิมพ์ข้อความหรือประกาศ..."}
-  resizeCanvas();updateClock();clockTimer=setInterval(updateClock,1000);await loadQuestProgress();
+  resizeCanvas();updateClock();clockTimer=setInterval(updateClock,1000);startZoneDailyCheckin();await loadQuestProgress();
   listenModeration();listenPositions();listenMessages();listenTeacherQuests();listenRankingNotice();expiryTimer=setInterval(refreshMessages,60000);
   await syncPublicProfile();await publishPresence();await publishPosition(true);heartbeat=setInterval(async()=>{await publishPresence();await publishPosition(true)},PRESENCE_HEARTBEAT_MS);
   requestAnimationFrame(loop);
 });
+
+```
+
+
+## ranking-system.js
+
+```js
+export const RANKING_CONFIG = {
+  seasonDays: null,
+  automaticReset: false,
+
+  weights: {
+    diligence: 0.35,
+    accuracy: 0.30,
+    speed: 0.20,
+    consistency: 0.15
+  },
+
+  // WPM เทียบกับช่วงคะแนนความเร็ว 0-100
+  speedReferenceWpm: 80,
+
+  tiers: [
+    {id:"bronze", name:"Bronze", icon:"🥉", min:0},
+    {id:"silver", name:"Silver", icon:"🥈", min:35},
+    {id:"gold", name:"Gold", icon:"🥇", min:55},
+    {id:"platinum", name:"Platinum", icon:"💠", min:70},
+    {id:"diamond", name:"Diamond", icon:"💎", min:82},
+    {id:"master", name:"Master", icon:"👑", min:92}
+  ]
+};
+
+export function seasonIdFromDate(date = new Date()) {
+  return "MANUAL";
+}
+
+export function seasonRange(date = new Date()) {
+  return {
+    start: new Date(Date.UTC(2026,0,1)),
+    end: new Date(Date.UTC(2099,11,31,23,59,59,999))
+  };
+}
+
+export function calculateRankMetrics(attempts, activeDayCount = 0) {
+  const completed = attempts.filter(a => a.status === "completed");
+  const total = completed.length;
+
+  const avgAccuracy = total
+    ? completed.reduce((s,a)=>s + Number(a.accuracy || 0), 0) / total
+    : 0;
+
+  const avgWpm = total
+    ? completed.reduce((s,a)=>s + Number(a.wpm || 0), 0) / total
+    : 0;
+
+  // ความขยัน: จำนวนด่าน + จำนวนวันที่กลับมาใช้งาน
+  const attemptFactor = Math.min(100, total * 2.5);
+  const dayFactor = Math.min(100, activeDayCount * 4);
+  const diligence = attemptFactor * 0.65 + dayFactor * 0.35;
+
+  // ความเร็ว: ไม่ให้ความเร็วสูงอย่างเดียวชนะ Accuracy
+  const speed = Math.min(100, (avgWpm / RANKING_CONFIG.speedReferenceWpm) * 100);
+
+  // ความสม่ำเสมอ: Accuracy กระจายน้อย + มีหลายรอบ
+  let consistency = 0;
+  if (total) {
+    const mean = avgAccuracy;
+    const variance = completed.reduce((s,a)=>{
+      const d = Number(a.accuracy || 0) - mean;
+      return s + d*d;
+    },0) / total;
+    const std = Math.sqrt(variance);
+    const stability = Math.max(0, 100 - std * 2);
+    const volume = Math.min(100, total * 4);
+    consistency = stability * 0.7 + volume * 0.3;
+  }
+
+  const accuracy = Math.max(0, Math.min(100, avgAccuracy));
+
+  const rating = Math.round(
+    diligence * RANKING_CONFIG.weights.diligence +
+    accuracy * RANKING_CONFIG.weights.accuracy +
+    speed * RANKING_CONFIG.weights.speed +
+    consistency * RANKING_CONFIG.weights.consistency
+  );
+
+  const tiers = [...RANKING_CONFIG.tiers].sort((a,b)=>b.min-a.min);
+  const tier = tiers.find(t => rating >= t.min) || RANKING_CONFIG.tiers[0];
+
+  return {
+    rating,
+    tierId: tier.id,
+    tierName: tier.name,
+    tierIcon: tier.icon,
+    diligence: Math.round(diligence),
+    accuracy: Math.round(accuracy),
+    speed: Math.round(speed),
+    consistency: Math.round(consistency),
+    avgWpm: Math.round(avgWpm * 10) / 10,
+    avgAccuracy: Math.round(avgAccuracy * 10) / 10,
+    completedAttempts: total,
+    activeDayCount
+  };
+}
+
+
+export function rankingClassKey(educationLevel,classroom){
+  return `${String(educationLevel||"").trim()}${String(classroom||"").trim()}`;
+}
+
+export function rankProfiles(profiles,limit=10){
+  return [...profiles].sort((a,b)=>Number(b?.rank?.rating||0)-Number(a?.rank?.rating||0)).slice(0,limit);
+}
+
+
+function normalizeLegacyAcademicMajor(raw){
+  const value=String(raw||"").trim();
+  const compact=value.replace(/\s+/g,"");
+  if(["ธุรกิจดิจิทัล","ธุรกิจดิทัล","ดิจิทัลธุรกิจ"].includes(compact))return "ธุรกิจดิจิทัล";
+  if(["สารสนเทศ","เทคโนโลยีสารสนเทศ"].includes(compact)||value==="ไอที"||value==="IT")return "เทคโนโลยีสารสนเทศ";
+  return value||"ไม่ระบุสาขาวิชา";
+}
+function legacyAcademicLooksLikeMajor(raw){
+  return /สารสนเทศ|ดิจิทัล|ธุรกิจดิทัล/i.test(String(raw||""));
+}
+export function rankingDepartmentKey(user){
+  const department=String(user?.department||"").trim();
+  if(legacyAcademicLooksLikeMajor(department)) return "คอมพิวเตอร์";
+  return department||"ไม่ระบุแผนก";
+}
+export function rankingMajorKey(user){
+  const department=String(user?.department||"").trim();
+  const major=String(user?.major||"").trim();
+  if(major&&major!=="ไม่ระบุสาขาวิชา")return normalizeLegacyAcademicMajor(major);
+  if(legacyAcademicLooksLikeMajor(department))return normalizeLegacyAcademicMajor(department);
+  return "ไม่ระบุสาขาวิชา";
+}
 
 ```
 
@@ -7305,6 +7924,13 @@ export const DEFAULT_TEACHER_QUESTS = [
     minRank:"platinum",
     active:true
   }
+  ,{id:"q_easy_html_08",title:"HTML Warm Up",description:"ผ่าน HTML Stage 8 ให้สำเร็จ",languageId:"html",stage:8,difficulty:"easy",objectiveType:"pass",targetValue:0,rewardToken:5,minRank:"bronze",active:true}
+  ,{id:"q_easy_python_10",title:"Python Warm Up",description:"ผ่าน Python Stage 10 ให้สำเร็จ",languageId:"python",stage:10,difficulty:"easy",objectiveType:"pass",targetValue:0,rewardToken:5,minRank:"bronze",active:true}
+  ,{id:"q_medium_html_28",title:"HTML Accuracy Run",description:"ผ่าน HTML Stage 28 ด้วย Accuracy 97%",languageId:"html",stage:28,difficulty:"medium",objectiveType:"accuracy",targetValue:97,rewardToken:15,minRank:"silver",active:true}
+  ,{id:"q_medium_python_30",title:"Python Speed Run",description:"ผ่าน Python Stage 30 ภายใน 130 วินาที",languageId:"python",stage:30,difficulty:"medium",objectiveType:"time",targetValue:130,rewardToken:15,minRank:"silver",active:true}
+  ,{id:"q_hard_html_48",title:"HTML Final Master",description:"ผ่าน HTML Stage 48 ด้วย Accuracy 99%",languageId:"html",stage:48,difficulty:"hard",objectiveType:"accuracy",targetValue:99,rewardToken:20,minRank:"platinum",active:true}
+  ,{id:"q_hard_python_50",title:"Python Final Master",description:"ผ่าน Python Stage 50 ภายใน 180 วินาที",languageId:"python",stage:50,difficulty:"hard",objectiveType:"time",targetValue:180,rewardToken:20,minRank:"platinum",active:true}
+
 ];
 
 export function localDayKey(date=new Date()){
@@ -7369,23 +7995,147 @@ export function defaultMinRankForDifficulty(difficulty){
 ```
 
 
-## firebase-config.js
+## economy-system.js
 
 ```js
-export const firebaseConfig = {
-  apiKey: "AIzaSyAScKt0szL6-KpA0KqQlROq2v59vBbBrxc",
-  authDomain: "thc-nr.firebaseapp.com",
-  projectId: "thc-nr",
-  storageBucket: "thc-nr.firebasestorage.app",
-  messagingSenderId: "839632570247",
-  appId: "1:839632570247:web:4c2d2413270df99dd7f522",
-  measurementId: "G-LWCNWGSZTS"
+export const TOKEN_REWARD_CONFIG = {
+  maxPerStage: 70,
+  weights: { accuracy: 0.70, speed: 0.30 },
+  speedTargets: { easy: 28, medium: 42, hard: 58 },
+  minimumPerformanceFactor: 0.35,
+  wagerOptions: [0,5,10,20,30,40,50]
 };
 
-export const ADMIN_USERNAME = "Pisit_2000";
-export const ADMIN_EMAIL = "pisit_2000@thc-nr.local";
+export function clamp(value,min,max){ return Math.max(min,Math.min(max,value)); }
 
-export const ADMIN_UID = "TWUrLjOh3BTa1cBNwDXKk4X2IAg1";
+export function maxTokenForLesson(lesson){
+  return Math.min(TOKEN_REWARD_CONFIG.maxPerStage, Math.max(1, Number(lesson?.rewardPoints||0)));
+}
+
+export function calculateStageTokenReward(lesson,wpm,accuracy){
+  const maxToken=maxTokenForLesson(lesson);
+  const difficulty=lesson?.difficulty||"easy";
+  const target=TOKEN_REWARD_CONFIG.speedTargets[difficulty]||40;
+  const accuracyFactor=clamp(Number(accuracy||0)/100,0,1);
+  const speedFactor=clamp(Number(wpm||0)/target,0,1);
+  const weighted=accuracyFactor*TOKEN_REWARD_CONFIG.weights.accuracy + speedFactor*TOKEN_REWARD_CONFIG.weights.speed;
+  const factor=Math.max(TOKEN_REWARD_CONFIG.minimumPerformanceFactor,weighted);
+  const earned=Math.min(maxToken,Math.max(1,Math.round(maxToken*factor)));
+  return {earned,maxToken,accuracyFactor,speedFactor,targetWpm:target,performanceFactor:factor};
+}
+
+export function classKey(educationLevel,classroom){
+  return `${String(educationLevel||"").trim()}${String(classroom||"").trim()}`;
+}
+
+export function set2Price(baseCost){ return Math.round(Number(baseCost||0)*1.30); }
+
+```
+
+
+## reward-data.js
+
+```js
+export const REWARD_ITEMS = [
+  {id:"cap_blue",name:"หมวก Coder ฟ้า",icon:"🧢",cost:200,type:"wearable",slot:"head",rarity:"common",visual:"cap",description:"หมวกเรียบง่ายสำหรับผู้เริ่มต้น"},
+  {id:"shirt_blue",name:"เสื้อ Code ฟ้า",icon:"👕",cost:280,type:"wearable",slot:"top",rarity:"common",visual:"shirt_blue",description:"เสื้อสีฟ้าสไตล์ Coder"},
+  {id:"sneaker_white",name:"รองเท้าขาว",icon:"👟",cost:360,type:"wearable",slot:"shoes",rarity:"common",visual:"shoe_white",description:"รองเท้าพื้นฐานดูสะอาด"},
+
+  {id:"thai_sash",name:"ผ้าคาดไทย",icon:"🎗️",cost:560,type:"wearable",slot:"top",rarity:"rare",visual:"thai_sash",description:"ผ้าคาดลายไทยเพิ่มความโดดเด่น"},
+  {id:"student_bag",name:"กระเป๋านักเรียน",icon:"🎒",cost:680,type:"wearable",slot:"back",rarity:"rare",visual:"backpack",description:"กระเป๋าสะพายสำหรับตัวละคร"},
+  {id:"round_glasses",name:"แว่นทรงกลม",icon:"👓",cost:800,type:"wearable",slot:"face",rarity:"rare",visual:"glasses",description:"แว่นสำหรับสายวิชาการ"},
+
+  {id:"coder_jacket",name:"แจ็กเก็ต Cyber Coder",icon:"🧥",cost:1280,type:"wearable",slot:"top",rarity:"epic",visual:"cyber_jacket",description:"แจ็กเก็ตไซเบอร์มีขอบเรืองแสง"},
+  {id:"neon_headset",name:"หูฟัง Neon",icon:"🎧",cost:1520,type:"wearable",slot:"head",rarity:"epic",visual:"neon_headset",description:"หูฟัง Neon สำหรับสายเกม"},
+  {id:"code_tablet",name:"แท็บเล็ต Code",icon:"📱",cost:1760,type:"wearable",slot:"hand",rarity:"epic",visual:"tablet",description:"แท็บเล็ตเรืองแสงถือในมือ"},
+
+  {id:"gold_crown",name:"มงกุฎทอง Coder",icon:"👑",cost:2800,type:"wearable",slot:"head",rarity:"legendary",visual:"gold_crown",description:"มงกุฎทองสำหรับผู้เล่นระดับสูง"},
+  {id:"royal_cape",name:"ผ้าคลุม Royal Code",icon:"🦸",cost:3360,type:"wearable",slot:"back",rarity:"legendary",visual:"royal_cape",description:"ผ้าคลุมใหญ่พร้อมขอบทอง"},
+  {id:"gold_aura",name:"ออร่าสีทอง",icon:"✨",cost:4000,type:"wearable",slot:"aura",rarity:"legendary",visual:"gold_aura",description:"ออร่าทองล้อมรอบตัวละคร"},
+
+  {id:"dragon_wings",name:"ปีกมังกร Cyber",icon:"🐉",cost:6000,type:"wearable",slot:"back",rarity:"mythic",visual:"dragon_wings",description:"ปีกมังกรเรืองแสงขนาดใหญ่"},
+  {id:"master_halo",name:"วงแหวน Master",icon:"🌟",cost:7200,type:"wearable",slot:"aura",rarity:"mythic",visual:"master_halo",description:"วงแหวนพลังระดับ Master"},
+  {id:"phoenix_pet",name:"สัตว์เลี้ยง Phoenix",icon:"🔥",cost:9600,type:"wearable",slot:"pet",rarity:"mythic",visual:"phoenix_pet",description:"Phoenix ไฟลอยข้างตัวละคร"},
+  {id:"throne_effect",name:"บัลลังก์ Code Emperor",icon:"🏆",cost:14400,type:"wearable",slot:"aura",rarity:"mythic",visual:"throne",description:"เอฟเฟกต์สูงสุดของร้าน Token"},
+
+  // ===== ITEM SET 2 · PREMIUM +30% =====
+  // cost = baseCost × 1.30 ตามกติกาชุดที่ 2
+  {id:"set2_mystic_staff",name:"คฑา Mystic Code",icon:"🪄",baseCost:2400,cost:2496,type:"wearable",slot:"hand",rarity:"epic",set:"set2",visual:"mystic_staff",description:"คฑาพลังโค้ด มีประกายเวท ชุด 2 ราคา +30%"},
+  {id:"set2_katana",name:"ดาบ Katana Coder",icon:"🗡️",baseCost:3000,cost:3120,type:"wearable",slot:"hand",rarity:"epic",set:"set2",visual:"katana",description:"ดาบคาตานะแสงสำหรับนักพิมพ์สายเร็ว ชุด 2 ราคา +30%"},
+  {id:"set2_cyber_spear",name:"หอก Cyber Spear",icon:"🔱",baseCost:3800,cost:3952,type:"wearable",slot:"hand",rarity:"legendary",set:"set2",visual:"cyber_spear",description:"หอกพลังงานยาวพร้อมแสง Neon ชุด 2 ราคา +30%"},
+
+  {id:"set2_samurai_armor",name:"ชุด Samurai Coder",icon:"🥋",baseCost:5000,cost:5200,type:"wearable",slot:"top",rarity:"legendary",set:"set2",visual:"samurai_armor",description:"เกราะซามูไรแดงดำขอบทอง ชุด 2 ราคา +30%"},
+  {id:"set2_mage_robe",name:"ชุด Arcane Programmer",icon:"🧙",baseCost:6000,cost:6240,type:"wearable",slot:"top",rarity:"legendary",set:"set2",visual:"mage_robe",description:"เสื้อคลุมจอมเวทสายโปรแกรม ชุด 2 ราคา +30%"},
+  {id:"set2_dragon_armor",name:"ชุด Dragon Core",icon:"🛡️",baseCost:8000,cost:8320,type:"wearable",slot:"top",rarity:"mythic",set:"set2",visual:"dragon_armor",description:"เกราะมังกรพร้อมแกนพลังงาน ชุด 2 ราคา +30%"},
+
+  {id:"set2_cat_pet",name:"สัตว์เลี้ยง Code Cat",icon:"🐈",baseCost:2500,cost:2600,type:"wearable",slot:"pet",rarity:"epic",set:"set2",visual:"cat_pet",description:"แมวคู่หูนักเขียนโค้ด ชุด 2 ราคา +30%"},
+  {id:"set2_wolf_pet",name:"สัตว์เลี้ยง Neon Wolf",icon:"🐺",baseCost:4500,cost:4680,type:"wearable",slot:"pet",rarity:"legendary",set:"set2",visual:"wolf_pet",description:"หมาป่า Neon วิ่งตามตัวละคร ชุด 2 ราคา +30%"},
+  {id:"set2_tiger_pet",name:"สัตว์เลี้ยง Siam Tiger",icon:"🐯",baseCost:7000,cost:7280,type:"wearable",slot:"pet",rarity:"legendary",set:"set2",visual:"tiger_pet",description:"เสือคู่ใจที่ดูโดดเด่นใน Zone ชุด 2 ราคา +30%"},
+  {id:"set2_mini_dragon",name:"สัตว์เลี้ยง Mini Dragon",icon:"🐲",baseCost:11000,cost:11440,type:"wearable",slot:"pet",rarity:"mythic",set:"set2",visual:"mini_dragon",description:"มังกรจิ๋วบินข้างตัวละคร ชุด 2 ราคา +30%"},
+
+  {id:"set2_spirit_wings",name:"ปีก Spirit Guardian",icon:"🪽",baseCost:9500,cost:9880,type:"wearable",slot:"back",rarity:"mythic",set:"set2",visual:"spirit_wings",description:"ปีกวิญญาณสีฟ้าขนาดใหญ่ ชุด 2 ราคา +30%"},
+  {id:"set2_storm_aura",name:"Storm Code Aura",icon:"⚡",baseCost:12500,cost:13000,type:"wearable",slot:"aura",rarity:"mythic",set:"set2",visual:"storm_aura",description:"สายฟ้าหมุนรอบตัวละคร ชุด 2 ราคา +30%"}
+  // ===== V4.9.3 NEW COLLECTION =====
+  {id:"armor_silver_guard",name:"เกราะ Silver Guard",icon:"🛡️",cost:2800,type:"wearable",slot:"top",rarity:"epic",visual:"silver_armor",description:"เกราะเงินสำหรับนักรบสายโค้ด"},
+  {id:"armor_gold_guard",name:"เกราะ Golden Guardian",icon:"🛡️",cost:5200,type:"wearable",slot:"top",rarity:"legendary",visual:"gold_armor",description:"เกราะทองพร้อมขอบเรืองแสง"},
+  {id:"crown_violet",name:"มงกุฎม่วง Arcane",icon:"👑",cost:4200,type:"wearable",slot:"head",rarity:"legendary",visual:"violet_crown",description:"มงกุฎพลังเวทสีม่วง"},
+  {id:"crown_dragon_king",name:"มงกุฎราชามังกร",icon:"👑",cost:7600,type:"wearable",slot:"head",rarity:"mythic",visual:"dragon_crown",description:"มงกุฎระดับสูงลายมังกรทอง"},
+  {id:"spell_fire_orb",name:"คาถา Fire Orb",icon:"🔮",cost:2600,type:"wearable",slot:"hand",rarity:"epic",visual:"fire_orb",description:"ลูกแก้วเวทไฟลอยในมือ"},
+  {id:"spell_arcane_book",name:"คัมภีร์ Arcane Code",icon:"📖",cost:3600,type:"wearable",slot:"hand",rarity:"legendary",visual:"arcane_book",description:"คัมภีร์เวทสำหรับจอมเวทโค้ด"},
+  {id:"sword_gold",name:"ดาบทอง Golden Blade",icon:"⚔️",cost:4800,type:"wearable",slot:"hand",rarity:"legendary",visual:"gold_sword",description:"ดาบทองประกายสำหรับตัวละคร"},
+  {id:"sword_purple",name:"ดาบม่วง Void Blade",icon:"🗡️",cost:5600,type:"wearable",slot:"hand",rarity:"legendary",visual:"purple_sword",description:"ดาบพลัง Void สีม่วง"},
+  {id:"pet_golden_dragon",name:"มังกรทอง",icon:"🐉",cost:11800,type:"wearable",slot:"pet",rarity:"mythic",visual:"golden_dragon",description:"มังกรทองบินตามตัวละคร"},
+  {id:"pet_white_cat",name:"แมวขาว Coder",icon:"🐈",cost:2200,type:"wearable",slot:"pet",rarity:"epic",visual:"white_cat",description:"แมวขาวคู่หูสายโค้ด"},
+  {id:"pet_royal_tiger",name:"เสือ Royal Tiger",icon:"🐯",cost:6800,type:"wearable",slot:"pet",rarity:"legendary",visual:"royal_tiger",description:"เสือคู่หูสีทองดำ"},
+  {id:"pet_cyber_monkey",name:"ลิง Cyber Monkey",icon:"🐒",cost:3400,type:"wearable",slot:"pet",rarity:"epic",visual:"cyber_monkey",description:"ลิงจอมซนถือชิปโค้ด"},
+  {id:"pet_owl_teacher",name:"นกฮูกนักปราชญ์",icon:"🦉",cost:4100,type:"wearable",slot:"pet",rarity:"legendary",visual:"wise_owl",description:"นกฮูกนักปราชญ์บินข้างตัว"},
+  {id:"cape_night_coder",name:"ผ้าคลุม Night Coder",icon:"🦸",cost:3300,type:"wearable",slot:"back",rarity:"epic",visual:"night_cape",description:"ผ้าคลุมสีเข้มสำหรับโหมดกลางคืน"},
+  {id:"aura_dragon_flame",name:"Dragon Flame Aura",icon:"🔥",cost:8200,type:"wearable",slot:"aura",rarity:"mythic",visual:"dragon_flame_aura",description:"เปลวไฟมังกรวนรอบตัวละคร"},
+
+
+];
+
+export const RARITY_META = {
+  common:{name:"COMMON",order:1},
+  rare:{name:"RARE",order:2},
+  epic:{name:"EPIC",order:3},
+  legendary:{name:"LEGENDARY",order:4},
+  mythic:{name:"MYTHIC",order:5}
+};
+
+export const INVENTORY_CAPACITY = 25;
+export const SHOP_BUYBACK_RATE = 0.30;
+
+```
+
+
+## character-system.js
+
+```js
+export const DEFAULT_CHARACTER = {
+  avatarId: "base_student",
+  gender: null,
+  displayName: "",
+  equipped: {
+    head: null,
+    face: null,
+    top: null,
+    bottom: null,
+    shoes: null,
+    back: null,
+    hand: null,
+    aura: null,
+    pet: null
+  }
+};
+
+export const DEFAULT_ZONE_STATE = {
+  zoneId: "thai_social_zone_v4_1",
+  x: 520,
+  y: 700,
+  direction: "right",
+  lastSeenAt: null
+};
 
 ```
 
@@ -7469,6 +8219,12 @@ service cloud.firestore {
       allow create: if signedIn() && request.resource.data.uid == request.auth.uid;
       allow read, update: if signedIn() && resource.data.uid == request.auth.uid;
       allow read, write: if isAdmin();
+    }
+
+
+    match /users/{uid}/daily_checkins/{dayId} {
+      allow read: if signedIn() && (request.auth.uid == uid || isAdmin());
+      allow write: if false;
     }
 
     match /public_profiles/{uid} {
@@ -7592,2380 +8348,141 @@ service cloud.firestore {
 ```
 
 
-## ranking-system.js
+## functions/index.js
 
 ```js
-export const RANKING_CONFIG = {
-  seasonDays: 60,
+const {onCall,HttpsError}=require("firebase-functions/v2/https");
+const {setGlobalOptions}=require("firebase-functions/v2");
+const {initializeApp}=require("firebase-admin/app");
+const {getAuth}=require("firebase-admin/auth");
+const {getFirestore,FieldValue,Timestamp}=require("firebase-admin/firestore");
 
-  weights: {
-    diligence: 0.35,
-    accuracy: 0.30,
-    speed: 0.20,
-    consistency: 0.15
-  },
+initializeApp();
+setGlobalOptions({region:"asia-southeast1",maxInstances:10});
+const db=getFirestore();
+const ADMIN_UID="TWUrLjOh3BTa1cBNwDXKk4X2IAg1";
 
-  // WPM เทียบกับช่วงคะแนนความเร็ว 0-100
-  speedReferenceWpm: 80,
-
-  tiers: [
-    {id:"bronze", name:"Bronze", icon:"🥉", min:0},
-    {id:"silver", name:"Silver", icon:"🥈", min:35},
-    {id:"gold", name:"Gold", icon:"🥇", min:55},
-    {id:"platinum", name:"Platinum", icon:"💠", min:70},
-    {id:"diamond", name:"Diamond", icon:"💎", min:82},
-    {id:"master", name:"Master", icon:"👑", min:92}
-  ]
-};
-
-export function seasonIdFromDate(date = new Date()) {
-  const epoch = Date.UTC(2026, 0, 1);
-  const days = Math.floor((date.getTime() - epoch) / 86400000);
-  const season = Math.floor(Math.max(0, days) / RANKING_CONFIG.seasonDays) + 1;
-  return `S${String(season).padStart(3, "0")}`;
+function requireAuth(request){
+  if(!request.auth)throw new HttpsError("unauthenticated","กรุณา Login ก่อน");
+  return request.auth.uid;
+}
+function bangkokDayKey(date=new Date()){
+  return new Intl.DateTimeFormat("en-CA",{timeZone:"Asia/Bangkok",year:"numeric",month:"2-digit",day:"2-digit"}).format(date);
 }
 
-export function seasonRange(date = new Date()) {
-  const epoch = Date.UTC(2026, 0, 1);
-  const days = Math.floor((date.getTime() - epoch) / 86400000);
-  const seasonIndex = Math.floor(Math.max(0, days) / RANKING_CONFIG.seasonDays);
-  const start = new Date(epoch + seasonIndex * RANKING_CONFIG.seasonDays * 86400000);
-  const end = new Date(start.getTime() + RANKING_CONFIG.seasonDays * 86400000 - 1);
-  return { start, end };
-}
+exports.adminResetStudentPassword=onCall(async request=>{
+  const caller=requireAuth(request);
+  if(caller!==ADMIN_UID)throw new HttpsError("permission-denied","Admin only");
+  const targetUid=String(request.data?.targetUid||"").trim();
+  const newPassword=String(request.data?.newPassword||"");
+  if(!targetUid)throw new HttpsError("invalid-argument","ไม่พบ UID");
+  if(newPassword.length<6||newPassword.length>64)throw new HttpsError("invalid-argument","รหัสผ่านต้อง 6–64 ตัวอักษร");
+  await getAuth().updateUser(targetUid,{password:newPassword});
+  return {ok:true,targetUid};
+});
 
-export function calculateRankMetrics(attempts, activeDayCount = 0) {
-  const completed = attempts.filter(a => a.status === "completed");
-  const total = completed.length;
-
-  const avgAccuracy = total
-    ? completed.reduce((s,a)=>s + Number(a.accuracy || 0), 0) / total
-    : 0;
-
-  const avgWpm = total
-    ? completed.reduce((s,a)=>s + Number(a.wpm || 0), 0) / total
-    : 0;
-
-  // ความขยัน: จำนวนด่าน + จำนวนวันที่กลับมาใช้งาน
-  const attemptFactor = Math.min(100, total * 2.5);
-  const dayFactor = Math.min(100, activeDayCount * 4);
-  const diligence = attemptFactor * 0.65 + dayFactor * 0.35;
-
-  // ความเร็ว: ไม่ให้ความเร็วสูงอย่างเดียวชนะ Accuracy
-  const speed = Math.min(100, (avgWpm / RANKING_CONFIG.speedReferenceWpm) * 100);
-
-  // ความสม่ำเสมอ: Accuracy กระจายน้อย + มีหลายรอบ
-  let consistency = 0;
-  if (total) {
-    const mean = avgAccuracy;
-    const variance = completed.reduce((s,a)=>{
-      const d = Number(a.accuracy || 0) - mean;
-      return s + d*d;
-    },0) / total;
-    const std = Math.sqrt(variance);
-    const stability = Math.max(0, 100 - std * 2);
-    const volume = Math.min(100, total * 4);
-    consistency = stability * 0.7 + volume * 0.3;
+async function deleteQueryByUid(collectionName,uid){
+  const snap=await db.collection(collectionName).where("uid","==",uid).get();
+  if(snap.empty)return 0;
+  let batch=db.batch(),count=0,total=0;
+  for(const item of snap.docs){
+    batch.delete(item.ref);count++;total++;
+    if(count>=400){await batch.commit();batch=db.batch();count=0;}
   }
-
-  const accuracy = Math.max(0, Math.min(100, avgAccuracy));
-
-  const rating = Math.round(
-    diligence * RANKING_CONFIG.weights.diligence +
-    accuracy * RANKING_CONFIG.weights.accuracy +
-    speed * RANKING_CONFIG.weights.speed +
-    consistency * RANKING_CONFIG.weights.consistency
-  );
-
-  const tiers = [...RANKING_CONFIG.tiers].sort((a,b)=>b.min-a.min);
-  const tier = tiers.find(t => rating >= t.min) || RANKING_CONFIG.tiers[0];
-
-  return {
-    rating,
-    tierId: tier.id,
-    tierName: tier.name,
-    tierIcon: tier.icon,
-    diligence: Math.round(diligence),
-    accuracy: Math.round(accuracy),
-    speed: Math.round(speed),
-    consistency: Math.round(consistency),
-    avgWpm: Math.round(avgWpm * 10) / 10,
-    avgAccuracy: Math.round(avgAccuracy * 10) / 10,
-    completedAttempts: total,
-    activeDayCount
-  };
+  if(count)await batch.commit();
+  return total;
 }
-
-
-export function rankingClassKey(educationLevel,classroom){
-  return `${String(educationLevel||"").trim()}${String(classroom||"").trim()}`;
-}
-
-export function rankProfiles(profiles,limit=10){
-  return [...profiles].sort((a,b)=>Number(b?.rank?.rating||0)-Number(a?.rank?.rating||0)).slice(0,limit);
-}
-
-
-export function rankingDepartmentKey(user){
-  const value=String(user?.department||"").trim();
-  return value||"ไม่ระบุแผนก";
-}
-
-export function rankingMajorKey(user){
-  const value=String(user?.major||"").trim();
-  return value||"ไม่ระบุสาขาวิชา";
-}
-
-```
-
-
-## economy-system.js
-
-```js
-export const TOKEN_REWARD_CONFIG = {
-  maxPerStage: 70,
-  weights: { accuracy: 0.70, speed: 0.30 },
-  speedTargets: { easy: 28, medium: 42, hard: 58 },
-  minimumPerformanceFactor: 0.35,
-  wagerOptions: [0,5,10,20,30,40,50]
-};
-
-export function clamp(value,min,max){ return Math.max(min,Math.min(max,value)); }
-
-export function maxTokenForLesson(lesson){
-  return Math.min(TOKEN_REWARD_CONFIG.maxPerStage, Math.max(1, Number(lesson?.rewardPoints||0)));
-}
-
-export function calculateStageTokenReward(lesson,wpm,accuracy){
-  const maxToken=maxTokenForLesson(lesson);
-  const difficulty=lesson?.difficulty||"easy";
-  const target=TOKEN_REWARD_CONFIG.speedTargets[difficulty]||40;
-  const accuracyFactor=clamp(Number(accuracy||0)/100,0,1);
-  const speedFactor=clamp(Number(wpm||0)/target,0,1);
-  const weighted=accuracyFactor*TOKEN_REWARD_CONFIG.weights.accuracy + speedFactor*TOKEN_REWARD_CONFIG.weights.speed;
-  const factor=Math.max(TOKEN_REWARD_CONFIG.minimumPerformanceFactor,weighted);
-  const earned=Math.min(maxToken,Math.max(1,Math.round(maxToken*factor)));
-  return {earned,maxToken,accuracyFactor,speedFactor,targetWpm:target,performanceFactor:factor};
-}
-
-export function classKey(educationLevel,classroom){
-  return `${String(educationLevel||"").trim()}${String(classroom||"").trim()}`;
-}
-
-export function set2Price(baseCost){ return Math.round(Number(baseCost||0)*1.30); }
-
-```
-
-
-## reward-data.js
-
-```js
-export const REWARD_ITEMS = [
-  {id:"cap_blue",name:"หมวก Coder ฟ้า",icon:"🧢",cost:250,type:"wearable",slot:"head",rarity:"common",visual:"cap",description:"หมวกเรียบง่ายสำหรับผู้เริ่มต้น"},
-  {id:"shirt_blue",name:"เสื้อ Code ฟ้า",icon:"👕",cost:350,type:"wearable",slot:"top",rarity:"common",visual:"shirt_blue",description:"เสื้อสีฟ้าสไตล์ Coder"},
-  {id:"sneaker_white",name:"รองเท้าขาว",icon:"👟",cost:450,type:"wearable",slot:"shoes",rarity:"common",visual:"shoe_white",description:"รองเท้าพื้นฐานดูสะอาด"},
-
-  {id:"thai_sash",name:"ผ้าคาดไทย",icon:"🎗️",cost:700,type:"wearable",slot:"top",rarity:"rare",visual:"thai_sash",description:"ผ้าคาดลายไทยเพิ่มความโดดเด่น"},
-  {id:"student_bag",name:"กระเป๋านักเรียน",icon:"🎒",cost:850,type:"wearable",slot:"back",rarity:"rare",visual:"backpack",description:"กระเป๋าสะพายสำหรับตัวละคร"},
-  {id:"round_glasses",name:"แว่นทรงกลม",icon:"👓",cost:1000,type:"wearable",slot:"face",rarity:"rare",visual:"glasses",description:"แว่นสำหรับสายวิชาการ"},
-
-  {id:"coder_jacket",name:"แจ็กเก็ต Cyber Coder",icon:"🧥",cost:1600,type:"wearable",slot:"top",rarity:"epic",visual:"cyber_jacket",description:"แจ็กเก็ตไซเบอร์มีขอบเรืองแสง"},
-  {id:"neon_headset",name:"หูฟัง Neon",icon:"🎧",cost:1900,type:"wearable",slot:"head",rarity:"epic",visual:"neon_headset",description:"หูฟัง Neon สำหรับสายเกม"},
-  {id:"code_tablet",name:"แท็บเล็ต Code",icon:"📱",cost:2200,type:"wearable",slot:"hand",rarity:"epic",visual:"tablet",description:"แท็บเล็ตเรืองแสงถือในมือ"},
-
-  {id:"gold_crown",name:"มงกุฎทอง Coder",icon:"👑",cost:3500,type:"wearable",slot:"head",rarity:"legendary",visual:"gold_crown",description:"มงกุฎทองสำหรับผู้เล่นระดับสูง"},
-  {id:"royal_cape",name:"ผ้าคลุม Royal Code",icon:"🦸",cost:4200,type:"wearable",slot:"back",rarity:"legendary",visual:"royal_cape",description:"ผ้าคลุมใหญ่พร้อมขอบทอง"},
-  {id:"gold_aura",name:"ออร่าสีทอง",icon:"✨",cost:5000,type:"wearable",slot:"aura",rarity:"legendary",visual:"gold_aura",description:"ออร่าทองล้อมรอบตัวละคร"},
-
-  {id:"dragon_wings",name:"ปีกมังกร Cyber",icon:"🐉",cost:7500,type:"wearable",slot:"back",rarity:"mythic",visual:"dragon_wings",description:"ปีกมังกรเรืองแสงขนาดใหญ่"},
-  {id:"master_halo",name:"วงแหวน Master",icon:"🌟",cost:9000,type:"wearable",slot:"aura",rarity:"mythic",visual:"master_halo",description:"วงแหวนพลังระดับ Master"},
-  {id:"phoenix_pet",name:"สัตว์เลี้ยง Phoenix",icon:"🔥",cost:12000,type:"wearable",slot:"pet",rarity:"mythic",visual:"phoenix_pet",description:"Phoenix ไฟลอยข้างตัวละคร"},
-  {id:"throne_effect",name:"บัลลังก์ Code Emperor",icon:"🏆",cost:18000,type:"wearable",slot:"aura",rarity:"mythic",visual:"throne",description:"เอฟเฟกต์สูงสุดของร้าน Token"},
-
-  // ===== ITEM SET 2 · PREMIUM +30% =====
-  // cost = baseCost × 1.30 ตามกติกาชุดที่ 2
-  {id:"set2_mystic_staff",name:"คฑา Mystic Code",icon:"🪄",baseCost:2400,cost:3120,type:"wearable",slot:"hand",rarity:"epic",set:"set2",visual:"mystic_staff",description:"คฑาพลังโค้ด มีประกายเวท ชุด 2 ราคา +30%"},
-  {id:"set2_katana",name:"ดาบ Katana Coder",icon:"🗡️",baseCost:3000,cost:3900,type:"wearable",slot:"hand",rarity:"epic",set:"set2",visual:"katana",description:"ดาบคาตานะแสงสำหรับนักพิมพ์สายเร็ว ชุด 2 ราคา +30%"},
-  {id:"set2_cyber_spear",name:"หอก Cyber Spear",icon:"🔱",baseCost:3800,cost:4940,type:"wearable",slot:"hand",rarity:"legendary",set:"set2",visual:"cyber_spear",description:"หอกพลังงานยาวพร้อมแสง Neon ชุด 2 ราคา +30%"},
-
-  {id:"set2_samurai_armor",name:"ชุด Samurai Coder",icon:"🥋",baseCost:5000,cost:6500,type:"wearable",slot:"top",rarity:"legendary",set:"set2",visual:"samurai_armor",description:"เกราะซามูไรแดงดำขอบทอง ชุด 2 ราคา +30%"},
-  {id:"set2_mage_robe",name:"ชุด Arcane Programmer",icon:"🧙",baseCost:6000,cost:7800,type:"wearable",slot:"top",rarity:"legendary",set:"set2",visual:"mage_robe",description:"เสื้อคลุมจอมเวทสายโปรแกรม ชุด 2 ราคา +30%"},
-  {id:"set2_dragon_armor",name:"ชุด Dragon Core",icon:"🛡️",baseCost:8000,cost:10400,type:"wearable",slot:"top",rarity:"mythic",set:"set2",visual:"dragon_armor",description:"เกราะมังกรพร้อมแกนพลังงาน ชุด 2 ราคา +30%"},
-
-  {id:"set2_cat_pet",name:"สัตว์เลี้ยง Code Cat",icon:"🐈",baseCost:2500,cost:3250,type:"wearable",slot:"pet",rarity:"epic",set:"set2",visual:"cat_pet",description:"แมวคู่หูนักเขียนโค้ด ชุด 2 ราคา +30%"},
-  {id:"set2_wolf_pet",name:"สัตว์เลี้ยง Neon Wolf",icon:"🐺",baseCost:4500,cost:5850,type:"wearable",slot:"pet",rarity:"legendary",set:"set2",visual:"wolf_pet",description:"หมาป่า Neon วิ่งตามตัวละคร ชุด 2 ราคา +30%"},
-  {id:"set2_tiger_pet",name:"สัตว์เลี้ยง Siam Tiger",icon:"🐯",baseCost:7000,cost:9100,type:"wearable",slot:"pet",rarity:"legendary",set:"set2",visual:"tiger_pet",description:"เสือคู่ใจที่ดูโดดเด่นใน Zone ชุด 2 ราคา +30%"},
-  {id:"set2_mini_dragon",name:"สัตว์เลี้ยง Mini Dragon",icon:"🐲",baseCost:11000,cost:14300,type:"wearable",slot:"pet",rarity:"mythic",set:"set2",visual:"mini_dragon",description:"มังกรจิ๋วบินข้างตัวละคร ชุด 2 ราคา +30%"},
-
-  {id:"set2_spirit_wings",name:"ปีก Spirit Guardian",icon:"🪽",baseCost:9500,cost:12350,type:"wearable",slot:"back",rarity:"mythic",set:"set2",visual:"spirit_wings",description:"ปีกวิญญาณสีฟ้าขนาดใหญ่ ชุด 2 ราคา +30%"},
-  {id:"set2_storm_aura",name:"Storm Code Aura",icon:"⚡",baseCost:12500,cost:16250,type:"wearable",slot:"aura",rarity:"mythic",set:"set2",visual:"storm_aura",description:"สายฟ้าหมุนรอบตัวละคร ชุด 2 ราคา +30%"}
-
-];
-
-export const RARITY_META = {
-  common:{name:"COMMON",order:1},
-  rare:{name:"RARE",order:2},
-  epic:{name:"EPIC",order:3},
-  legendary:{name:"LEGENDARY",order:4},
-  mythic:{name:"MYTHIC",order:5}
-};
-
-```
-
-
-## character-system.js
-
-```js
-export const DEFAULT_CHARACTER = {
-  avatarId: "base_student",
-  gender: null,
-  displayName: "",
-  equipped: {
-    head: null,
-    face: null,
-    top: null,
-    bottom: null,
-    shoes: null,
-    back: null,
-    hand: null,
-    aura: null,
-    pet: null
+async function deleteDocumentTree(ref){
+  const subcollections=await ref.listCollections();
+  for(const col of subcollections){
+    const snap=await col.get();
+    for(const child of snap.docs)await deleteDocumentTree(child.ref);
   }
-};
-
-export const DEFAULT_ZONE_STATE = {
-  zoneId: "thai_social_zone_v4_1",
-  x: 520,
-  y: 700,
-  direction: "right",
-  lastSeenAt: null
-};
-
-```
-
-
-## levels-html.js
-
-```js
-export const HTML_LEVELS = [
-  {
-    "id": "html_01",
-    "language": "html",
-    "stage": 1,
-    "difficulty": "easy",
-    "title": "หัวข้อและย่อหน้า",
-    "description": "ด่าน HTML 1: หัวข้อและย่อหน้า",
-    "usage": "ใช้ h1 เป็นหัวข้อหลักและ p เป็นย่อหน้า",
-    "benefit": "ฝึกอ่านและพิมพ์โครงสร้าง HTML ให้แม่นยำ พร้อมเข้าใจหน้าที่ของแท็ก",
-    "code": "<h1>Hello HTML</h1>\n<p>เริ่มต้นเรียนรู้ HTML</p>",
-    "outputExplain": "ใช้ h1 เป็นหัวข้อหลักและ p เป็นย่อหน้า",
-    "basePoints": 110,
-    "rewardPoints": 12,
-    "timeLimit": 66
-  },
-  {
-    "id": "html_02",
-    "language": "html",
-    "stage": 2,
-    "difficulty": "easy",
-    "title": "ตัวหนาและตัวเอียง",
-    "description": "ด่าน HTML 2: ตัวหนาและตัวเอียง",
-    "usage": "strong เน้นความสำคัญ ส่วน em เน้นข้อความ",
-    "benefit": "ฝึกอ่านและพิมพ์โครงสร้าง HTML ให้แม่นยำ พร้อมเข้าใจหน้าที่ของแท็ก",
-    "code": "<p>เรียน <strong>HTML</strong> แบบ <em>เข้าใจง่าย</em></p>",
-    "outputExplain": "strong เน้นความสำคัญ ส่วน em เน้นข้อความ",
-    "basePoints": 120,
-    "rewardPoints": 13,
-    "timeLimit": 73
-  },
-  {
-    "id": "html_03",
-    "language": "html",
-    "stage": 3,
-    "difficulty": "easy",
-    "title": "ลิงก์",
-    "description": "ด่าน HTML 3: ลิงก์",
-    "usage": "แท็ก a ใช้สร้างลิงก์",
-    "benefit": "ฝึกอ่านและพิมพ์โครงสร้าง HTML ให้แม่นยำ พร้อมเข้าใจหน้าที่ของแท็ก",
-    "code": "<a href=\"https://example.com\">เปิดเว็บไซต์ตัวอย่าง</a>",
-    "outputExplain": "แท็ก a ใช้สร้างลิงก์",
-    "basePoints": 130,
-    "rewardPoints": 15,
-    "timeLimit": 70
-  },
-  {
-    "id": "html_04",
-    "language": "html",
-    "stage": 4,
-    "difficulty": "easy",
-    "title": "รูปภาพ",
-    "description": "ด่าน HTML 4: รูปภาพ",
-    "usage": "img ใช้แสดงรูปและ alt อธิบายรูป",
-    "benefit": "ฝึกอ่านและพิมพ์โครงสร้าง HTML ให้แม่นยำ พร้อมเข้าใจหน้าที่ของแท็ก",
-    "code": "<img src=\"https://picsum.photos/240/120\" alt=\"ภาพตัวอย่าง\">",
-    "outputExplain": "img ใช้แสดงรูปและ alt อธิบายรูป",
-    "basePoints": 140,
-    "rewardPoints": 16,
-    "timeLimit": 74
-  },
-  {
-    "id": "html_05",
-    "language": "html",
-    "stage": 5,
-    "difficulty": "easy",
-    "title": "รายการไม่เรียงลำดับ",
-    "description": "ด่าน HTML 5: รายการไม่เรียงลำดับ",
-    "usage": "ul และ li ใช้สร้างรายการแบบจุด",
-    "benefit": "ฝึกอ่านและพิมพ์โครงสร้าง HTML ให้แม่นยำ พร้อมเข้าใจหน้าที่ของแท็ก",
-    "code": "<ul>\n  <li>HTML</li>\n  <li>CSS</li>\n  <li>JavaScript</li>\n</ul>",
-    "outputExplain": "ul และ li ใช้สร้างรายการแบบจุด",
-    "basePoints": 150,
-    "rewardPoints": 17,
-    "timeLimit": 77
-  },
-  {
-    "id": "html_06",
-    "language": "html",
-    "stage": 6,
-    "difficulty": "easy",
-    "title": "รายการเรียงลำดับ",
-    "description": "ด่าน HTML 6: รายการเรียงลำดับ",
-    "usage": "ol ใช้สร้างรายการมีลำดับ",
-    "benefit": "ฝึกอ่านและพิมพ์โครงสร้าง HTML ให้แม่นยำ พร้อมเข้าใจหน้าที่ของแท็ก",
-    "code": "<ol>\n  <li>วางแผน</li>\n  <li>เขียนโค้ด</li>\n  <li>ทดสอบ</li>\n</ol>",
-    "outputExplain": "ol ใช้สร้างรายการมีลำดับ",
-    "basePoints": 160,
-    "rewardPoints": 18,
-    "timeLimit": 79
-  },
-  {
-    "id": "html_07",
-    "language": "html",
-    "stage": 7,
-    "difficulty": "easy",
-    "title": "เส้นคั่นและขึ้นบรรทัด",
-    "description": "ด่าน HTML 7: เส้นคั่นและขึ้นบรรทัด",
-    "usage": "br ขึ้นบรรทัดใหม่และ hr สร้างเส้นแบ่ง",
-    "benefit": "ฝึกอ่านและพิมพ์โครงสร้าง HTML ให้แม่นยำ พร้อมเข้าใจหน้าที่ของแท็ก",
-    "code": "<p>บรรทัดแรก<br>บรรทัดที่สอง</p>\n<hr>",
-    "outputExplain": "br ขึ้นบรรทัดใหม่และ hr สร้างเส้นแบ่ง",
-    "basePoints": 170,
-    "rewardPoints": 20,
-    "timeLimit": 57
-  },
-  {
-    "id": "html_08",
-    "language": "html",
-    "stage": 8,
-    "difficulty": "easy",
-    "title": "กล่อง div",
-    "description": "ด่าน HTML 8: กล่อง div",
-    "usage": "div ใช้จัดกลุ่มองค์ประกอบ",
-    "benefit": "ฝึกอ่านและพิมพ์โครงสร้าง HTML ให้แม่นยำ พร้อมเข้าใจหน้าที่ของแท็ก",
-    "code": "<div class=\"card\">\n  <h2>Card</h2>\n  <p>เนื้อหาภายในการ์ด</p>\n</div>",
-    "outputExplain": "div ใช้จัดกลุ่มองค์ประกอบ",
-    "basePoints": 180,
-    "rewardPoints": 21,
-    "timeLimit": 81
-  },
-  {
-    "id": "html_09",
-    "language": "html",
-    "stage": 9,
-    "difficulty": "easy",
-    "title": "span ในข้อความ",
-    "description": "ด่าน HTML 9: span ในข้อความ",
-    "usage": "span ใช้ครอบข้อความเฉพาะส่วน",
-    "benefit": "ฝึกอ่านและพิมพ์โครงสร้าง HTML ให้แม่นยำ พร้อมเข้าใจหน้าที่ของแท็ก",
-    "code": "<p>คะแนน: <span class=\"score\">100</span> แต้ม</p>",
-    "outputExplain": "span ใช้ครอบข้อความเฉพาะส่วน",
-    "basePoints": 190,
-    "rewardPoints": 22,
-    "timeLimit": 66
-  },
-  {
-    "id": "html_10",
-    "language": "html",
-    "stage": 10,
-    "difficulty": "easy",
-    "title": "ตารางพื้นฐาน",
-    "description": "ด่าน HTML 10: ตารางพื้นฐาน",
-    "usage": "table, tr, th, td ใช้สร้างตาราง",
-    "benefit": "ฝึกอ่านและพิมพ์โครงสร้าง HTML ให้แม่นยำ พร้อมเข้าใจหน้าที่ของแท็ก",
-    "code": "<table>\n  <tr><th>ชื่อ</th><th>คะแนน</th></tr>\n  <tr><td>Ann</td><td>90</td></tr>\n</table>",
-    "outputExplain": "table, tr, th, td ใช้สร้างตาราง",
-    "basePoints": 200,
-    "rewardPoints": 24,
-    "timeLimit": 97
-  },
-  {
-    "id": "html_11",
-    "language": "html",
-    "stage": 11,
-    "difficulty": "easy",
-    "title": "หัวตารางและตัวตาราง",
-    "description": "ด่าน HTML 11: หัวตารางและตัวตาราง",
-    "usage": "thead และ tbody แยกส่วนหัวและข้อมูล",
-    "benefit": "ฝึกอ่านและพิมพ์โครงสร้าง HTML ให้แม่นยำ พร้อมเข้าใจหน้าที่ของแท็ก",
-    "code": "<table>\n  <thead><tr><th>วิชา</th><th>เกรด</th></tr></thead>\n  <tbody><tr><td>Programming</td><td>A</td></tr></tbody>\n</table>",
-    "outputExplain": "thead และ tbody แยกส่วนหัวและข้อมูล",
-    "basePoints": 210,
-    "rewardPoints": 25,
-    "timeLimit": 124
-  },
-  {
-    "id": "html_12",
-    "language": "html",
-    "stage": 12,
-    "difficulty": "easy",
-    "title": "ปุ่ม",
-    "description": "ด่าน HTML 12: ปุ่ม",
-    "usage": "button ใช้สร้างปุ่ม",
-    "benefit": "ฝึกอ่านและพิมพ์โครงสร้าง HTML ให้แม่นยำ พร้อมเข้าใจหน้าที่ของแท็ก",
-    "code": "<button type=\"button\">เริ่มเกม</button>",
-    "outputExplain": "button ใช้สร้างปุ่ม",
-    "basePoints": 220,
-    "rewardPoints": 26,
-    "timeLimit": 59
-  },
-  {
-    "id": "html_13",
-    "language": "html",
-    "stage": 13,
-    "difficulty": "easy",
-    "title": "ช่องข้อความ",
-    "description": "ด่าน HTML 13: ช่องข้อความ",
-    "usage": "label เชื่อมกับ input เพื่อรับข้อมูล",
-    "benefit": "ฝึกอ่านและพิมพ์โครงสร้าง HTML ให้แม่นยำ พร้อมเข้าใจหน้าที่ของแท็ก",
-    "code": "<label for=\"name\">ชื่อ</label>\n<input id=\"name\" type=\"text\">",
-    "outputExplain": "label เชื่อมกับ input เพื่อรับข้อมูล",
-    "basePoints": 230,
-    "rewardPoints": 27,
-    "timeLimit": 75
-  },
-  {
-    "id": "html_14",
-    "language": "html",
-    "stage": 14,
-    "difficulty": "easy",
-    "title": "ช่องอีเมล",
-    "description": "ด่าน HTML 14: ช่องอีเมล",
-    "usage": "input email ช่วยตรวจรูปแบบอีเมล",
-    "benefit": "ฝึกอ่านและพิมพ์โครงสร้าง HTML ให้แม่นยำ พร้อมเข้าใจหน้าที่ของแท็ก",
-    "code": "<label for=\"email\">อีเมล</label>\n<input id=\"email\" type=\"email\" required>",
-    "outputExplain": "input email ช่วยตรวจรูปแบบอีเมล",
-    "basePoints": 240,
-    "rewardPoints": 29,
-    "timeLimit": 84
-  },
-  {
-    "id": "html_15",
-    "language": "html",
-    "stage": 15,
-    "difficulty": "easy",
-    "title": "รหัสผ่าน",
-    "description": "ด่าน HTML 15: รหัสผ่าน",
-    "usage": "password ซ่อนตัวอักษรขณะพิมพ์",
-    "benefit": "ฝึกอ่านและพิมพ์โครงสร้าง HTML ให้แม่นยำ พร้อมเข้าใจหน้าที่ของแท็ก",
-    "code": "<label for=\"password\">รหัสผ่าน</label>\n<input id=\"password\" type=\"password\" minlength=\"6\">",
-    "outputExplain": "password ซ่อนตัวอักษรขณะพิมพ์",
-    "basePoints": 250,
-    "rewardPoints": 30,
-    "timeLimit": 97
-  },
-  {
-    "id": "html_16",
-    "language": "html",
-    "stage": 16,
-    "difficulty": "medium",
-    "title": "ตัวเลือก select",
-    "description": "ด่าน HTML 16: ตัวเลือก select",
-    "usage": "select และ option สร้างรายการเลือก",
-    "benefit": "ฝึกอ่านและพิมพ์โครงสร้าง HTML ให้แม่นยำ พร้อมเข้าใจหน้าที่ของแท็ก",
-    "code": "<label for=\"level\">ระดับ</label>\n<select id=\"level\">\n  <option>ง่าย</option>\n  <option>ปานกลาง</option>\n  <option>ยาก</option>\n</select>",
-    "outputExplain": "select และ option สร้างรายการเลือก",
-    "basePoints": 260,
-    "rewardPoints": 30,
-    "timeLimit": 132
-  },
-  {
-    "id": "html_17",
-    "language": "html",
-    "stage": 17,
-    "difficulty": "medium",
-    "title": "checkbox",
-    "description": "ด่าน HTML 17: checkbox",
-    "usage": "checkbox ใช้เลือกค่าแบบเปิด/ปิด",
-    "benefit": "ฝึกอ่านและพิมพ์โครงสร้าง HTML ให้แม่นยำ พร้อมเข้าใจหน้าที่ของแท็ก",
-    "code": "<label>\n  <input type=\"checkbox\">\n  ยอมรับเงื่อนไข\n</label>",
-    "outputExplain": "checkbox ใช้เลือกค่าแบบเปิด/ปิด",
-    "basePoints": 270,
-    "rewardPoints": 31,
-    "timeLimit": 74
-  },
-  {
-    "id": "html_18",
-    "language": "html",
-    "stage": 18,
-    "difficulty": "medium",
-    "title": "radio",
-    "description": "ด่าน HTML 18: radio",
-    "usage": "radio ใช้เลือกหนึ่งค่าจากกลุ่ม",
-    "benefit": "ฝึกอ่านและพิมพ์โครงสร้าง HTML ให้แม่นยำ พร้อมเข้าใจหน้าที่ของแท็ก",
-    "code": "<label><input type=\"radio\" name=\"mode\"> Classic</label>\n<label><input type=\"radio\" name=\"mode\"> PVP</label>",
-    "outputExplain": "radio ใช้เลือกหนึ่งค่าจากกลุ่ม",
-    "basePoints": 280,
-    "rewardPoints": 32,
-    "timeLimit": 110
-  },
-  {
-    "id": "html_19",
-    "language": "html",
-    "stage": 19,
-    "difficulty": "medium",
-    "title": "textarea",
-    "description": "ด่าน HTML 19: textarea",
-    "usage": "textarea ใช้รับข้อความหลายบรรทัด",
-    "benefit": "ฝึกอ่านและพิมพ์โครงสร้าง HTML ให้แม่นยำ พร้อมเข้าใจหน้าที่ของแท็ก",
-    "code": "<label for=\"note\">หมายเหตุ</label>\n<textarea id=\"note\" rows=\"4\"></textarea>",
-    "outputExplain": "textarea ใช้รับข้อความหลายบรรทัด",
-    "basePoints": 290,
-    "rewardPoints": 33,
-    "timeLimit": 86
-  },
-  {
-    "id": "html_20",
-    "language": "html",
-    "stage": 20,
-    "difficulty": "medium",
-    "title": "ฟอร์มสมัคร",
-    "description": "ด่าน HTML 20: ฟอร์มสมัคร",
-    "usage": "form รวมช่องข้อมูลและปุ่มส่ง",
-    "benefit": "ฝึกอ่านและพิมพ์โครงสร้าง HTML ให้แม่นยำ พร้อมเข้าใจหน้าที่ของแท็ก",
-    "code": "<form>\n  <label for=\"student\">รหัสนักศึกษา</label>\n  <input id=\"student\" required>\n  <button type=\"submit\">สมัคร</button>\n</form>",
-    "outputExplain": "form รวมช่องข้อมูลและปุ่มส่ง",
-    "basePoints": 300,
-    "rewardPoints": 34,
-    "timeLimit": 126
-  },
-  {
-    "id": "html_21",
-    "language": "html",
-    "stage": 21,
-    "difficulty": "medium",
-    "title": "header",
-    "description": "ด่าน HTML 21: header",
-    "usage": "header คือส่วนหัวของหน้า/ส่วน",
-    "benefit": "ฝึกอ่านและพิมพ์โครงสร้าง HTML ให้แม่นยำ พร้อมเข้าใจหน้าที่ของแท็ก",
-    "code": "<header>\n  <h1>Code Typing</h1>\n  <p>ฝึกพิมพ์โค้ดให้แม่นยำ</p>\n</header>",
-    "outputExplain": "header คือส่วนหัวของหน้า/ส่วน",
-    "basePoints": 310,
-    "rewardPoints": 35,
-    "timeLimit": 84
-  },
-  {
-    "id": "html_22",
-    "language": "html",
-    "stage": 22,
-    "difficulty": "medium",
-    "title": "nav",
-    "description": "ด่าน HTML 22: nav",
-    "usage": "nav ใช้กับชุดลิงก์นำทาง",
-    "benefit": "ฝึกอ่านและพิมพ์โครงสร้าง HTML ให้แม่นยำ พร้อมเข้าใจหน้าที่ของแท็ก",
-    "code": "<nav>\n  <a href=\"#home\">หน้าแรก</a>\n  <a href=\"#lesson\">บทเรียน</a>\n  <a href=\"#game\">เกม</a>\n</nav>",
-    "outputExplain": "nav ใช้กับชุดลิงก์นำทาง",
-    "basePoints": 320,
-    "rewardPoints": 36,
-    "timeLimit": 105
-  },
-  {
-    "id": "html_23",
-    "language": "html",
-    "stage": 23,
-    "difficulty": "medium",
-    "title": "main",
-    "description": "ด่าน HTML 23: main",
-    "usage": "main ครอบเนื้อหาหลัก",
-    "benefit": "ฝึกอ่านและพิมพ์โครงสร้าง HTML ให้แม่นยำ พร้อมเข้าใจหน้าที่ของแท็ก",
-    "code": "<main>\n  <h1>บทเรียน HTML</h1>\n  <p>เนื้อหาหลักของหน้า</p>\n</main>",
-    "outputExplain": "main ครอบเนื้อหาหลัก",
-    "basePoints": 330,
-    "rewardPoints": 37,
-    "timeLimit": 79
-  },
-  {
-    "id": "html_24",
-    "language": "html",
-    "stage": 24,
-    "difficulty": "medium",
-    "title": "section",
-    "description": "ด่าน HTML 24: section",
-    "usage": "section แบ่งเนื้อหาเป็นหมวด",
-    "benefit": "ฝึกอ่านและพิมพ์โครงสร้าง HTML ให้แม่นยำ พร้อมเข้าใจหน้าที่ของแท็ก",
-    "code": "<section>\n  <h2>บทที่ 1</h2>\n  <p>พื้นฐาน HTML</p>\n</section>",
-    "outputExplain": "section แบ่งเนื้อหาเป็นหมวด",
-    "basePoints": 340,
-    "rewardPoints": 38,
-    "timeLimit": 75
-  },
-  {
-    "id": "html_25",
-    "language": "html",
-    "stage": 25,
-    "difficulty": "medium",
-    "title": "article",
-    "description": "ด่าน HTML 25: article",
-    "usage": "article เหมาะกับเนื้อหาอิสระ",
-    "benefit": "ฝึกอ่านและพิมพ์โครงสร้าง HTML ให้แม่นยำ พร้อมเข้าใจหน้าที่ของแท็ก",
-    "code": "<article>\n  <h2>ข่าวการเขียนโปรแกรม</h2>\n  <p>เนื้อหาที่อยู่ได้ด้วยตัวเอง</p>\n</article>",
-    "outputExplain": "article เหมาะกับเนื้อหาอิสระ",
-    "basePoints": 350,
-    "rewardPoints": 39,
-    "timeLimit": 96
-  },
-  {
-    "id": "html_26",
-    "language": "html",
-    "stage": 26,
-    "difficulty": "medium",
-    "title": "aside",
-    "description": "ด่าน HTML 26: aside",
-    "usage": "aside คือข้อมูลเสริมจากเนื้อหาหลัก",
-    "benefit": "ฝึกอ่านและพิมพ์โครงสร้าง HTML ให้แม่นยำ พร้อมเข้าใจหน้าที่ของแท็ก",
-    "code": "<main>\n  <article>เนื้อหาหลัก</article>\n  <aside>คำแนะนำเพิ่มเติม</aside>\n</main>",
-    "outputExplain": "aside คือข้อมูลเสริมจากเนื้อหาหลัก",
-    "basePoints": 360,
-    "rewardPoints": 41,
-    "timeLimit": 90
-  },
-  {
-    "id": "html_27",
-    "language": "html",
-    "stage": 27,
-    "difficulty": "medium",
-    "title": "footer",
-    "description": "ด่าน HTML 27: footer",
-    "usage": "footer คือส่วนท้าย",
-    "benefit": "ฝึกอ่านและพิมพ์โครงสร้าง HTML ให้แม่นยำ พร้อมเข้าใจหน้าที่ของแท็ก",
-    "code": "<footer>\n  <p>© 2026 Code Academy</p>\n</footer>",
-    "outputExplain": "footer คือส่วนท้าย",
-    "basePoints": 370,
-    "rewardPoints": 42,
-    "timeLimit": 65
-  },
-  {
-    "id": "html_28",
-    "language": "html",
-    "stage": 28,
-    "difficulty": "medium",
-    "title": "figure",
-    "description": "ด่าน HTML 28: figure",
-    "usage": "figure จัดกลุ่มสื่อกับคำอธิบาย",
-    "benefit": "ฝึกอ่านและพิมพ์โครงสร้าง HTML ให้แม่นยำ พร้อมเข้าใจหน้าที่ของแท็ก",
-    "code": "<figure>\n  <img src=\"https://picsum.photos/220/100\" alt=\"ตัวอย่าง\">\n  <figcaption>ภาพประกอบบทเรียน</figcaption>\n</figure>",
-    "outputExplain": "figure จัดกลุ่มสื่อกับคำอธิบาย",
-    "basePoints": 380,
-    "rewardPoints": 43,
-    "timeLimit": 120
-  },
-  {
-    "id": "html_29",
-    "language": "html",
-    "stage": 29,
-    "difficulty": "medium",
-    "title": "details",
-    "description": "ด่าน HTML 29: details",
-    "usage": "details สร้างส่วนเปิด/ปิด",
-    "benefit": "ฝึกอ่านและพิมพ์โครงสร้าง HTML ให้แม่นยำ พร้อมเข้าใจหน้าที่ของแท็ก",
-    "code": "<details>\n  <summary>ดูคำอธิบาย</summary>\n  <p>HTML คือภาษาสำหรับโครงสร้างเว็บ</p>\n</details>",
-    "outputExplain": "details สร้างส่วนเปิด/ปิด",
-    "basePoints": 390,
-    "rewardPoints": 44,
-    "timeLimit": 99
-  },
-  {
-    "id": "html_30",
-    "language": "html",
-    "stage": 30,
-    "difficulty": "medium",
-    "title": "progress",
-    "description": "ด่าน HTML 30: progress",
-    "usage": "progress แสดงความคืบหน้า",
-    "benefit": "ฝึกอ่านและพิมพ์โครงสร้าง HTML ให้แม่นยำ พร้อมเข้าใจหน้าที่ของแท็ก",
-    "code": "<label for=\"progress\">ความคืบหน้า</label>\n<progress id=\"progress\" value=\"65\" max=\"100\">65%</progress>",
-    "outputExplain": "progress แสดงความคืบหน้า",
-    "basePoints": 400,
-    "rewardPoints": 45,
-    "timeLimit": 105
-  },
-  {
-    "id": "html_31",
-    "language": "html",
-    "stage": 31,
-    "difficulty": "medium",
-    "title": "meter",
-    "description": "ด่าน HTML 31: meter",
-    "usage": "meter แสดงค่าภายในช่วง",
-    "benefit": "ฝึกอ่านและพิมพ์โครงสร้าง HTML ให้แม่นยำ พร้อมเข้าใจหน้าที่ของแท็ก",
-    "code": "<label for=\"accuracy\">Accuracy</label>\n<meter id=\"accuracy\" min=\"0\" max=\"100\" value=\"92\">92%</meter>",
-    "outputExplain": "meter แสดงค่าภายในช่วง",
-    "basePoints": 410,
-    "rewardPoints": 46,
-    "timeLimit": 105
-  },
-  {
-    "id": "html_32",
-    "language": "html",
-    "stage": 32,
-    "difficulty": "medium",
-    "title": "time",
-    "description": "ด่าน HTML 32: time",
-    "usage": "time ระบุวันเวลาอย่างมีความหมาย",
-    "benefit": "ฝึกอ่านและพิมพ์โครงสร้าง HTML ให้แม่นยำ พร้อมเข้าใจหน้าที่ของแท็ก",
-    "code": "<p>เริ่มเรียนวันที่ <time datetime=\"2026-08-12\">12 สิงหาคม 2569</time></p>",
-    "outputExplain": "time ระบุวันเวลาอย่างมีความหมาย",
-    "basePoints": 420,
-    "rewardPoints": 47,
-    "timeLimit": 85
-  },
-  {
-    "id": "html_33",
-    "language": "html",
-    "stage": 33,
-    "difficulty": "medium",
-    "title": "mark",
-    "description": "ด่าน HTML 33: mark",
-    "usage": "mark ไฮไลต์ข้อความ",
-    "benefit": "ฝึกอ่านและพิมพ์โครงสร้าง HTML ให้แม่นยำ พร้อมเข้าใจหน้าที่ของแท็ก",
-    "code": "<p>คำสำคัญคือ <mark>semantic HTML</mark></p>",
-    "outputExplain": "mark ไฮไลต์ข้อความ",
-    "basePoints": 430,
-    "rewardPoints": 48,
-    "timeLimit": 63
-  },
-  {
-    "id": "html_34",
-    "language": "html",
-    "stage": 34,
-    "difficulty": "medium",
-    "title": "code",
-    "description": "ด่าน HTML 34: code",
-    "usage": "code ใช้แสดงข้อความโค้ด",
-    "benefit": "ฝึกอ่านและพิมพ์โครงสร้าง HTML ให้แม่นยำ พร้อมเข้าใจหน้าที่ของแท็ก",
-    "code": "<p>ใช้คำสั่ง <code>&lt;h1&gt;</code> เพื่อสร้างหัวข้อ</p>",
-    "outputExplain": "code ใช้แสดงข้อความโค้ด",
-    "basePoints": 440,
-    "rewardPoints": 49,
-    "timeLimit": 72
-  },
-  {
-    "id": "html_35",
-    "language": "html",
-    "stage": 35,
-    "difficulty": "medium",
-    "title": "pre",
-    "description": "ด่าน HTML 35: pre",
-    "usage": "pre รักษาช่องว่างและบรรทัด",
-    "benefit": "ฝึกอ่านและพิมพ์โครงสร้าง HTML ให้แม่นยำ พร้อมเข้าใจหน้าที่ของแท็ก",
-    "code": "<pre><code>&lt;h1&gt;Hello&lt;/h1&gt;\n&lt;p&gt;World&lt;/p&gt;</code></pre>",
-    "outputExplain": "pre รักษาช่องว่างและบรรทัด",
-    "basePoints": 450,
-    "rewardPoints": 50,
-    "timeLimit": 86
-  },
-  {
-    "id": "html_36",
-    "language": "html",
-    "stage": 36,
-    "difficulty": "hard",
-    "title": "iframe",
-    "description": "ด่าน HTML 36: iframe",
-    "usage": "iframe ฝังเอกสารอื่น",
-    "benefit": "ฝึกอ่านและพิมพ์โครงสร้าง HTML ให้แม่นยำ พร้อมเข้าใจหน้าที่ของแท็ก",
-    "code": "<iframe src=\"https://example.com\" title=\"เว็บไซต์ตัวอย่าง\"></iframe>",
-    "outputExplain": "iframe ฝังเอกสารอื่น",
-    "basePoints": 460,
-    "rewardPoints": 52,
-    "timeLimit": 81
-  },
-  {
-    "id": "html_37",
-    "language": "html",
-    "stage": 37,
-    "difficulty": "hard",
-    "title": "audio",
-    "description": "ด่าน HTML 37: audio",
-    "usage": "audio ฝังเสียงพร้อม controls",
-    "benefit": "ฝึกอ่านและพิมพ์โครงสร้าง HTML ให้แม่นยำ พร้อมเข้าใจหน้าที่ของแท็ก",
-    "code": "<audio controls>\n  <source src=\"audio.mp3\" type=\"audio/mpeg\">\n  Browser ไม่รองรับเสียง\n</audio>",
-    "outputExplain": "audio ฝังเสียงพร้อม controls",
-    "basePoints": 470,
-    "rewardPoints": 53,
-    "timeLimit": 101
-  },
-  {
-    "id": "html_38",
-    "language": "html",
-    "stage": 38,
-    "difficulty": "hard",
-    "title": "video",
-    "description": "ด่าน HTML 38: video",
-    "usage": "video ฝังวิดีโอ",
-    "benefit": "ฝึกอ่านและพิมพ์โครงสร้าง HTML ให้แม่นยำ พร้อมเข้าใจหน้าที่ของแท็ก",
-    "code": "<video controls width=\"320\">\n  <source src=\"video.mp4\" type=\"video/mp4\">\n  Browser ไม่รองรับวิดีโอ\n</video>",
-    "outputExplain": "video ฝังวิดีโอ",
-    "basePoints": 480,
-    "rewardPoints": 55,
-    "timeLimit": 110
-  },
-  {
-    "id": "html_39",
-    "language": "html",
-    "stage": 39,
-    "difficulty": "hard",
-    "title": "picture",
-    "description": "ด่าน HTML 39: picture",
-    "usage": "picture เลือกรูปตามเงื่อนไข",
-    "benefit": "ฝึกอ่านและพิมพ์โครงสร้าง HTML ให้แม่นยำ พร้อมเข้าใจหน้าที่ของแท็ก",
-    "code": "<picture>\n  <source media=\"(min-width: 800px)\" srcset=\"large.jpg\">\n  <img src=\"small.jpg\" alt=\"Responsive image\">\n</picture>",
-    "outputExplain": "picture เลือกรูปตามเงื่อนไข",
-    "basePoints": 490,
-    "rewardPoints": 56,
-    "timeLimit": 123
-  },
-  {
-    "id": "html_40",
-    "language": "html",
-    "stage": 40,
-    "difficulty": "hard",
-    "title": "data attributes",
-    "description": "ด่าน HTML 40: data attributes",
-    "usage": "data-* เก็บข้อมูลเพิ่มเติมบน element",
-    "benefit": "ฝึกอ่านและพิมพ์โครงสร้าง HTML ให้แม่นยำ พร้อมเข้าใจหน้าที่ของแท็ก",
-    "code": "<button data-level=\"10\" data-mode=\"classic\">เล่น Level 10</button>",
-    "outputExplain": "data-* เก็บข้อมูลเพิ่มเติมบน element",
-    "basePoints": 500,
-    "rewardPoints": 57,
-    "timeLimit": 79
-  },
-  {
-    "id": "html_41",
-    "language": "html",
-    "stage": 41,
-    "difficulty": "hard",
-    "title": "ARIA label",
-    "description": "ด่าน HTML 41: ARIA label",
-    "usage": "aria-label ช่วย Screen Reader",
-    "benefit": "ฝึกอ่านและพิมพ์โครงสร้าง HTML ให้แม่นยำ พร้อมเข้าใจหน้าที่ของแท็ก",
-    "code": "<button aria-label=\"ปิดหน้าต่าง\">×</button>",
-    "outputExplain": "aria-label ช่วย Screen Reader",
-    "basePoints": 510,
-    "rewardPoints": 58,
-    "timeLimit": 62
-  },
-  {
-    "id": "html_42",
-    "language": "html",
-    "stage": 42,
-    "difficulty": "hard",
-    "title": "fieldset",
-    "description": "ด่าน HTML 42: fieldset",
-    "usage": "fieldset จัดกลุ่มช่องฟอร์ม",
-    "benefit": "ฝึกอ่านและพิมพ์โครงสร้าง HTML ให้แม่นยำ พร้อมเข้าใจหน้าที่ของแท็ก",
-    "code": "<form>\n  <fieldset>\n    <legend>ข้อมูลผู้เล่น</legend>\n    <label>ชื่อ <input type=\"text\"></label>\n  </fieldset>\n</form>",
-    "outputExplain": "fieldset จัดกลุ่มช่องฟอร์ม",
-    "basePoints": 520,
-    "rewardPoints": 60,
-    "timeLimit": 120
-  },
-  {
-    "id": "html_43",
-    "language": "html",
-    "stage": 43,
-    "difficulty": "hard",
-    "title": "datalist",
-    "description": "ด่าน HTML 43: datalist",
-    "usage": "datalist ให้คำแนะนำใน input",
-    "benefit": "ฝึกอ่านและพิมพ์โครงสร้าง HTML ให้แม่นยำ พร้อมเข้าใจหน้าที่ของแท็ก",
-    "code": "<label for=\"lang\">ภาษา</label>\n<input id=\"lang\" list=\"languages\">\n<datalist id=\"languages\">\n  <option value=\"HTML\">\n  <option value=\"Python\">\n</datalist>",
-    "outputExplain": "datalist ให้คำแนะนำใน input",
-    "basePoints": 530,
-    "rewardPoints": 61,
-    "timeLimit": 144
-  },
-  {
-    "id": "html_44",
-    "language": "html",
-    "stage": 44,
-    "difficulty": "hard",
-    "title": "output",
-    "description": "ด่าน HTML 44: output",
-    "usage": "output แสดงผลการคำนวณ",
-    "benefit": "ฝึกอ่านและพิมพ์โครงสร้าง HTML ให้แม่นยำ พร้อมเข้าใจหน้าที่ของแท็ก",
-    "code": "<form oninput=\"result.value=Number(a.value)+Number(b.value)\">\n  <input id=\"a\" type=\"number\" value=\"2\"> +\n  <input id=\"b\" type=\"number\" value=\"3\"> =\n  <output name=\"result\">5</output>\n</form>",
-    "outputExplain": "output แสดงผลการคำนวณ",
-    "basePoints": 540,
-    "rewardPoints": 62,
-    "timeLimit": 172
-  },
-  {
-    "id": "html_45",
-    "language": "html",
-    "stage": 45,
-    "difficulty": "hard",
-    "title": "template",
-    "description": "ด่าน HTML 45: template",
-    "usage": "template เก็บ markup ที่ยังไม่ render",
-    "benefit": "ฝึกอ่านและพิมพ์โครงสร้าง HTML ให้แม่นยำ พร้อมเข้าใจหน้าที่ของแท็ก",
-    "code": "<template id=\"cardTemplate\">\n  <article class=\"card\">\n    <h2>Template Card</h2>\n  </article>\n</template>",
-    "outputExplain": "template เก็บ markup ที่ยังไม่ render",
-    "basePoints": 550,
-    "rewardPoints": 64,
-    "timeLimit": 108
-  },
-  {
-    "id": "html_46",
-    "language": "html",
-    "stage": 46,
-    "difficulty": "hard",
-    "title": "dialog",
-    "description": "ด่าน HTML 46: dialog",
-    "usage": "dialog ใช้สร้างกล่องโต้ตอบ",
-    "benefit": "ฝึกอ่านและพิมพ์โครงสร้าง HTML ให้แม่นยำ พร้อมเข้าใจหน้าที่ของแท็ก",
-    "code": "<dialog open>\n  <h2>Level Complete</h2>\n  <p>คุณผ่านด่านแล้ว</p>\n  <button>ตกลง</button>\n</dialog>",
-    "outputExplain": "dialog ใช้สร้างกล่องโต้ตอบ",
-    "basePoints": 560,
-    "rewardPoints": 65,
-    "timeLimit": 103
-  },
-  {
-    "id": "html_47",
-    "language": "html",
-    "stage": 47,
-    "difficulty": "hard",
-    "title": "meta viewport",
-    "description": "ด่าน HTML 47: meta viewport",
-    "usage": "meta viewport ทำให้หน้าเว็บรองรับมือถือ",
-    "benefit": "ฝึกอ่านและพิมพ์โครงสร้าง HTML ให้แม่นยำ พร้อมเข้าใจหน้าที่ของแท็ก",
-    "code": "<!DOCTYPE html>\n<html>\n<head>\n  <meta charset=\"UTF-8\">\n  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n  <title>Responsive Page</title>\n</head>\n<body>\n  <h1>Responsive HTML</h1>\n</body>\n</html>",
-    "outputExplain": "meta viewport ทำให้หน้าเว็บรองรับมือถือ",
-    "basePoints": 570,
-    "rewardPoints": 66,
-    "timeLimit": 193
-  },
-  {
-    "id": "html_48",
-    "language": "html",
-    "stage": 48,
-    "difficulty": "hard",
-    "title": "หน้า Profile",
-    "description": "ด่าน HTML 48: หน้า Profile",
-    "usage": "รวม semantic elements เป็นหน้าโปรไฟล์",
-    "benefit": "ฝึกอ่านและพิมพ์โครงสร้าง HTML ให้แม่นยำ พร้อมเข้าใจหน้าที่ของแท็ก",
-    "code": "<main>\n  <article class=\"profile\">\n    <img src=\"avatar.png\" alt=\"รูปผู้เล่น\">\n    <h1>Pisit</h1>\n    <p>Level 25 · 2,450 Points</p>\n    <button>แก้ไขตัวละคร</button>\n  </article>\n</main>",
-    "outputExplain": "รวม semantic elements เป็นหน้าโปรไฟล์",
-    "basePoints": 580,
-    "rewardPoints": 67,
-    "timeLimit": 170
-  },
-  {
-    "id": "html_49",
-    "language": "html",
-    "stage": 49,
-    "difficulty": "hard",
-    "title": "หน้า Dashboard",
-    "description": "ด่าน HTML 49: หน้า Dashboard",
-    "usage": "รวมองค์ประกอบเป็น Dashboard",
-    "benefit": "ฝึกอ่านและพิมพ์โครงสร้าง HTML ให้แม่นยำ พร้อมเข้าใจหน้าที่ของแท็ก",
-    "code": "<header><h1>Student Dashboard</h1></header>\n<main>\n  <section>\n    <h2>สถิติ</h2>\n    <ul>\n      <li>WPM: 52</li>\n      <li>Accuracy: 98%</li>\n      <li>Points: 3200</li>\n    </ul>\n  </section>\n</main>",
-    "outputExplain": "รวมองค์ประกอบเป็น Dashboard",
-    "basePoints": 590,
-    "rewardPoints": 69,
-    "timeLimit": 180
-  },
-  {
-    "id": "html_50",
-    "language": "html",
-    "stage": 50,
-    "difficulty": "hard",
-    "title": "หน้าเกม Semantic",
-    "description": "ด่าน HTML 50: หน้าเกม Semantic",
-    "usage": "ด่านสุดท้ายรวมโครงสร้าง HTML5 หลายส่วน",
-    "benefit": "ฝึกอ่านและพิมพ์โครงสร้าง HTML ให้แม่นยำ พร้อมเข้าใจหน้าที่ของแท็ก",
-    "code": "<!DOCTYPE html>\n<html lang=\"th\">\n<head>\n  <meta charset=\"UTF-8\">\n  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n  <title>Code Typing Arena</title>\n</head>\n<body>\n  <header>\n    <h1>Code Typing Arena</h1>\n    <nav><a href=\"#classic\">Classic</a> <a href=\"#pvp\">PVP</a></nav>\n  </header>\n  <main>\n    <section id=\"classic\">\n      <h2>Classic Mode</h2>\n      <p>พิมพ์โค้ดให้ถูกต้องและเร็วที่สุด</p>\n      <button type=\"button\">เริ่มเกม</button>\n    </section>\n  </main>\n  <footer>© 2026 Nangrong Technical College</footer>\n</body>\n</html>",
-    "outputExplain": "ด่านสุดท้ายรวมโครงสร้าง HTML5 หลายส่วน",
-    "basePoints": 600,
-    "rewardPoints": 70,
-    "timeLimit": 300
-  }
-];
-
-```
-
-
-## levels-python.js
-
-```js
-export const PYTHON_LEVELS = [
-  {
-    "id": "python_01",
-    "language": "python",
-    "stage": 1,
-    "difficulty": "easy",
-    "title": "print พื้นฐาน",
-    "description": "ด่าน Python 1: print พื้นฐาน",
-    "usage": "แสดงข้อความ Hello Python",
-    "benefit": "ฝึกไวยากรณ์ Python และการอ่านโค้ดแบบไต่ระดับ",
-    "code": "print(\"Hello Python\")",
-    "outputExplain": "แสดงข้อความ Hello Python",
-    "output": "แสดงข้อความ Hello Python",
-    "basePoints": 112,
-    "rewardPoints": 12,
-    "timeLimit": 45
-  },
-  {
-    "id": "python_02",
-    "language": "python",
-    "stage": 2,
-    "difficulty": "easy",
-    "title": "ตัวแปรข้อความ",
-    "description": "ด่าน Python 2: ตัวแปรข้อความ",
-    "usage": "เก็บข้อความในตัวแปรแล้วแสดงผล",
-    "benefit": "ฝึกไวยากรณ์ Python และการอ่านโค้ดแบบไต่ระดับ",
-    "code": "name = \"Pisit\"\nprint(name)",
-    "outputExplain": "เก็บข้อความในตัวแปรแล้วแสดงผล",
-    "output": "เก็บข้อความในตัวแปรแล้วแสดงผล",
-    "basePoints": 124,
-    "rewardPoints": 13,
-    "timeLimit": 49
-  },
-  {
-    "id": "python_03",
-    "language": "python",
-    "stage": 3,
-    "difficulty": "easy",
-    "title": "ตัวแปรตัวเลข",
-    "description": "ด่าน Python 3: ตัวแปรตัวเลข",
-    "usage": "เก็บจำนวนเต็มและแสดงผล",
-    "benefit": "ฝึกไวยากรณ์ Python และการอ่านโค้ดแบบไต่ระดับ",
-    "code": "score = 95\nprint(score)",
-    "outputExplain": "เก็บจำนวนเต็มและแสดงผล",
-    "output": "เก็บจำนวนเต็มและแสดงผล",
-    "basePoints": 136,
-    "rewardPoints": 15,
-    "timeLimit": 47
-  },
-  {
-    "id": "python_04",
-    "language": "python",
-    "stage": 4,
-    "difficulty": "easy",
-    "title": "บวกเลข",
-    "description": "ด่าน Python 4: บวกเลข",
-    "usage": "คำนวณผลบวก",
-    "benefit": "ฝึกไวยากรณ์ Python และการอ่านโค้ดแบบไต่ระดับ",
-    "code": "a = 12\nb = 8\nprint(a + b)",
-    "outputExplain": "คำนวณผลบวก",
-    "output": "คำนวณผลบวก",
-    "basePoints": 148,
-    "rewardPoints": 16,
-    "timeLimit": 48
-  },
-  {
-    "id": "python_05",
-    "language": "python",
-    "stage": 5,
-    "difficulty": "easy",
-    "title": "คำนวณหลายตัวดำเนินการ",
-    "description": "ด่าน Python 5: คำนวณหลายตัวดำเนินการ",
-    "usage": "คำนวณราคารวม",
-    "benefit": "ฝึกไวยากรณ์ Python และการอ่านโค้ดแบบไต่ระดับ",
-    "code": "price = 120\nqty = 3\ntotal = price * qty\nprint(total)",
-    "outputExplain": "คำนวณราคารวม",
-    "output": "คำนวณราคารวม",
-    "basePoints": 160,
-    "rewardPoints": 17,
-    "timeLimit": 69
-  },
-  {
-    "id": "python_06",
-    "language": "python",
-    "stage": 6,
-    "difficulty": "easy",
-    "title": "รับข้อความแนวคิด",
-    "description": "ด่าน Python 6: รับข้อความแนวคิด",
-    "usage": "แสดงหลายค่าในบรรทัดเดียว",
-    "benefit": "ฝึกไวยากรณ์ Python และการอ่านโค้ดแบบไต่ระดับ",
-    "code": "student = \"Somchai\"\nlevel = \"ปวช.1\"\nprint(student, level)",
-    "outputExplain": "แสดงหลายค่าในบรรทัดเดียว",
-    "output": "แสดงหลายค่าในบรรทัดเดียว",
-    "basePoints": 172,
-    "rewardPoints": 18,
-    "timeLimit": 72
-  },
-  {
-    "id": "python_07",
-    "language": "python",
-    "stage": 7,
-    "difficulty": "easy",
-    "title": "f-string",
-    "description": "ด่าน Python 7: f-string",
-    "usage": "แทรกตัวแปรในข้อความด้วย f-string",
-    "benefit": "ฝึกไวยากรณ์ Python และการอ่านโค้ดแบบไต่ระดับ",
-    "code": "name = \"Ann\"\nscore = 88\nprint(f\"{name}: {score}\")",
-    "outputExplain": "แทรกตัวแปรในข้อความด้วย f-string",
-    "output": "แทรกตัวแปรในข้อความด้วย f-string",
-    "basePoints": 184,
-    "rewardPoints": 20,
-    "timeLimit": 66
-  },
-  {
-    "id": "python_08",
-    "language": "python",
-    "stage": 8,
-    "difficulty": "easy",
-    "title": "boolean",
-    "description": "ด่าน Python 8: boolean",
-    "usage": "เก็บค่า True/False",
-    "benefit": "ฝึกไวยากรณ์ Python และการอ่านโค้ดแบบไต่ระดับ",
-    "code": "is_ready = True\nprint(is_ready)",
-    "outputExplain": "เก็บค่า True/False",
-    "output": "เก็บค่า True/False",
-    "basePoints": 196,
-    "rewardPoints": 21,
-    "timeLimit": 53
-  },
-  {
-    "id": "python_09",
-    "language": "python",
-    "stage": 9,
-    "difficulty": "easy",
-    "title": "if พื้นฐาน",
-    "description": "ด่าน Python 9: if พื้นฐาน",
-    "usage": "ตรวจเงื่อนไข",
-    "benefit": "ฝึกไวยากรณ์ Python และการอ่านโค้ดแบบไต่ระดับ",
-    "code": "score = 70\nif score >= 50:\n    print(\"Pass\")",
-    "outputExplain": "ตรวจเงื่อนไข",
-    "output": "ตรวจเงื่อนไข",
-    "basePoints": 208,
-    "rewardPoints": 22,
-    "timeLimit": 63
-  },
-  {
-    "id": "python_10",
-    "language": "python",
-    "stage": 10,
-    "difficulty": "easy",
-    "title": "if else",
-    "description": "ด่าน Python 10: if else",
-    "usage": "เลือกผลลัพธ์สองทาง",
-    "benefit": "ฝึกไวยากรณ์ Python และการอ่านโค้ดแบบไต่ระดับ",
-    "code": "score = 45\nif score >= 50:\n    print(\"Pass\")\nelse:\n    print(\"Try again\")",
-    "outputExplain": "เลือกผลลัพธ์สองทาง",
-    "output": "เลือกผลลัพธ์สองทาง",
-    "basePoints": 220,
-    "rewardPoints": 24,
-    "timeLimit": 84
-  },
-  {
-    "id": "python_11",
-    "language": "python",
-    "stage": 11,
-    "difficulty": "easy",
-    "title": "if elif else",
-    "description": "ด่าน Python 11: if elif else",
-    "usage": "ตรวจหลายช่วงคะแนน",
-    "benefit": "ฝึกไวยากรณ์ Python และการอ่านโค้ดแบบไต่ระดับ",
-    "code": "score = 82\nif score >= 80:\n    print(\"A\")\nelif score >= 70:\n    print(\"B\")\nelse:\n    print(\"C\")",
-    "outputExplain": "ตรวจหลายช่วงคะแนน",
-    "output": "ตรวจหลายช่วงคะแนน",
-    "basePoints": 232,
-    "rewardPoints": 25,
-    "timeLimit": 101
-  },
-  {
-    "id": "python_12",
-    "language": "python",
-    "stage": 12,
-    "difficulty": "easy",
-    "title": "and operator",
-    "description": "ด่าน Python 12: and operator",
-    "usage": "รวมสองเงื่อนไขด้วย and",
-    "benefit": "ฝึกไวยากรณ์ Python และการอ่านโค้ดแบบไต่ระดับ",
-    "code": "age = 18\nhas_card = True\nif age >= 18 and has_card:\n    print(\"Allowed\")",
-    "outputExplain": "รวมสองเงื่อนไขด้วย and",
-    "output": "รวมสองเงื่อนไขด้วย and",
-    "basePoints": 244,
-    "rewardPoints": 26,
-    "timeLimit": 84
-  },
-  {
-    "id": "python_13",
-    "language": "python",
-    "stage": 13,
-    "difficulty": "easy",
-    "title": "or operator",
-    "description": "ด่าน Python 13: or operator",
-    "usage": "ใช้ or เมื่อผ่านได้อย่างใดอย่างหนึ่ง",
-    "benefit": "ฝึกไวยากรณ์ Python และการอ่านโค้ดแบบไต่ระดับ",
-    "code": "role = \"teacher\"\nif role == \"admin\" or role == \"teacher\":\n    print(\"Access\")",
-    "outputExplain": "ใช้ or เมื่อผ่านได้อย่างใดอย่างหนึ่ง",
-    "output": "ใช้ or เมื่อผ่านได้อย่างใดอย่างหนึ่ง",
-    "basePoints": 256,
-    "rewardPoints": 27,
-    "timeLimit": 87
-  },
-  {
-    "id": "python_14",
-    "language": "python",
-    "stage": 14,
-    "difficulty": "easy",
-    "title": "list",
-    "description": "ด่าน Python 14: list",
-    "usage": "สร้าง list",
-    "benefit": "ฝึกไวยากรณ์ Python และการอ่านโค้ดแบบไต่ระดับ",
-    "code": "languages = [\"HTML\", \"CSS\", \"Python\"]\nprint(languages)",
-    "outputExplain": "สร้าง list",
-    "output": "สร้าง list",
-    "basePoints": 268,
-    "rewardPoints": 29,
-    "timeLimit": 70
-  },
-  {
-    "id": "python_15",
-    "language": "python",
-    "stage": 15,
-    "difficulty": "easy",
-    "title": "index list",
-    "description": "ด่าน Python 15: index list",
-    "usage": "เข้าถึงสมาชิกด้วย index",
-    "benefit": "ฝึกไวยากรณ์ Python และการอ่านโค้ดแบบไต่ระดับ",
-    "code": "languages = [\"HTML\", \"CSS\", \"Python\"]\nprint(languages[0])",
-    "outputExplain": "เข้าถึงสมาชิกด้วย index",
-    "output": "เข้าถึงสมาชิกด้วย index",
-    "basePoints": 280,
-    "rewardPoints": 30,
-    "timeLimit": 72
-  },
-  {
-    "id": "python_16",
-    "language": "python",
-    "stage": 16,
-    "difficulty": "medium",
-    "title": "append list",
-    "description": "ด่าน Python 16: append list",
-    "usage": "เพิ่มสมาชิก list",
-    "benefit": "ฝึกไวยากรณ์ Python และการอ่านโค้ดแบบไต่ระดับ",
-    "code": "scores = [70, 80]\nscores.append(90)\nprint(scores)",
-    "outputExplain": "เพิ่มสมาชิก list",
-    "output": "เพิ่มสมาชิก list",
-    "basePoints": 292,
-    "rewardPoints": 30,
-    "timeLimit": 66
-  },
-  {
-    "id": "python_17",
-    "language": "python",
-    "stage": 17,
-    "difficulty": "medium",
-    "title": "for loop",
-    "description": "ด่าน Python 17: for loop",
-    "usage": "วนซ้ำสมาชิก",
-    "benefit": "ฝึกไวยากรณ์ Python และการอ่านโค้ดแบบไต่ระดับ",
-    "code": "for number in [1, 2, 3]:\n    print(number)",
-    "outputExplain": "วนซ้ำสมาชิก",
-    "output": "วนซ้ำสมาชิก",
-    "basePoints": 304,
-    "rewardPoints": 31,
-    "timeLimit": 61
-  },
-  {
-    "id": "python_18",
-    "language": "python",
-    "stage": 18,
-    "difficulty": "medium",
-    "title": "range",
-    "description": "ด่าน Python 18: range",
-    "usage": "วนซ้ำช่วงตัวเลข",
-    "benefit": "ฝึกไวยากรณ์ Python และการอ่านโค้ดแบบไต่ระดับ",
-    "code": "for i in range(5):\n    print(i)",
-    "outputExplain": "วนซ้ำช่วงตัวเลข",
-    "output": "วนซ้ำช่วงตัวเลข",
-    "basePoints": 316,
-    "rewardPoints": 32,
-    "timeLimit": 53
-  },
-  {
-    "id": "python_19",
-    "language": "python",
-    "stage": 19,
-    "difficulty": "medium",
-    "title": "while loop",
-    "description": "ด่าน Python 19: while loop",
-    "usage": "วนซ้ำด้วย while",
-    "benefit": "ฝึกไวยากรณ์ Python และการอ่านโค้ดแบบไต่ระดับ",
-    "code": "count = 1\nwhile count <= 3:\n    print(count)\n    count += 1",
-    "outputExplain": "วนซ้ำด้วย while",
-    "output": "วนซ้ำด้วย while",
-    "basePoints": 328,
-    "rewardPoints": 33,
-    "timeLimit": 74
-  },
-  {
-    "id": "python_20",
-    "language": "python",
-    "stage": 20,
-    "difficulty": "medium",
-    "title": "break",
-    "description": "ด่าน Python 20: break",
-    "usage": "หยุด loop ด้วย break",
-    "benefit": "ฝึกไวยากรณ์ Python และการอ่านโค้ดแบบไต่ระดับ",
-    "code": "for i in range(10):\n    if i == 5:\n        break\n    print(i)",
-    "outputExplain": "หยุด loop ด้วย break",
-    "output": "หยุด loop ด้วย break",
-    "basePoints": 340,
-    "rewardPoints": 34,
-    "timeLimit": 75
-  },
-  {
-    "id": "python_21",
-    "language": "python",
-    "stage": 21,
-    "difficulty": "medium",
-    "title": "continue",
-    "description": "ด่าน Python 21: continue",
-    "usage": "ข้ามรอบด้วย continue",
-    "benefit": "ฝึกไวยากรณ์ Python และการอ่านโค้ดแบบไต่ระดับ",
-    "code": "for i in range(6):\n    if i == 3:\n        continue\n    print(i)",
-    "outputExplain": "ข้ามรอบด้วย continue",
-    "output": "ข้ามรอบด้วย continue",
-    "basePoints": 352,
-    "rewardPoints": 35,
-    "timeLimit": 77
-  },
-  {
-    "id": "python_22",
-    "language": "python",
-    "stage": 22,
-    "difficulty": "medium",
-    "title": "function",
-    "description": "ด่าน Python 22: function",
-    "usage": "สร้างและเรียกฟังก์ชัน",
-    "benefit": "ฝึกไวยากรณ์ Python และการอ่านโค้ดแบบไต่ระดับ",
-    "code": "def greet():\n    print(\"Hello\")\n\ngreet()",
-    "outputExplain": "สร้างและเรียกฟังก์ชัน",
-    "output": "สร้างและเรียกฟังก์ชัน",
-    "basePoints": 364,
-    "rewardPoints": 36,
-    "timeLimit": 60
-  },
-  {
-    "id": "python_23",
-    "language": "python",
-    "stage": 23,
-    "difficulty": "medium",
-    "title": "function parameter",
-    "description": "ด่าน Python 23: function parameter",
-    "usage": "ส่ง parameter เข้าฟังก์ชัน",
-    "benefit": "ฝึกไวยากรณ์ Python และการอ่านโค้ดแบบไต่ระดับ",
-    "code": "def greet(name):\n    print(f\"Hello {name}\")\n\ngreet(\"Pisit\")",
-    "outputExplain": "ส่ง parameter เข้าฟังก์ชัน",
-    "output": "ส่ง parameter เข้าฟังก์ชัน",
-    "basePoints": 376,
-    "rewardPoints": 37,
-    "timeLimit": 74
-  },
-  {
-    "id": "python_24",
-    "language": "python",
-    "stage": 24,
-    "difficulty": "medium",
-    "title": "return",
-    "description": "ด่าน Python 24: return",
-    "usage": "คืนค่าจากฟังก์ชัน",
-    "benefit": "ฝึกไวยากรณ์ Python และการอ่านโค้ดแบบไต่ระดับ",
-    "code": "def add(a, b):\n    return a + b\n\nresult = add(4, 6)\nprint(result)",
-    "outputExplain": "คืนค่าจากฟังก์ชัน",
-    "output": "คืนค่าจากฟังก์ชัน",
-    "basePoints": 388,
-    "rewardPoints": 38,
-    "timeLimit": 78
-  },
-  {
-    "id": "python_25",
-    "language": "python",
-    "stage": 25,
-    "difficulty": "medium",
-    "title": "default parameter",
-    "description": "ด่าน Python 25: default parameter",
-    "usage": "กำหนดค่าเริ่มต้น parameter",
-    "benefit": "ฝึกไวยากรณ์ Python และการอ่านโค้ดแบบไต่ระดับ",
-    "code": "def greet(name=\"Student\"):\n    print(f\"Hello {name}\")\n\ngreet()\ngreet(\"Ann\")",
-    "outputExplain": "กำหนดค่าเริ่มต้น parameter",
-    "output": "กำหนดค่าเริ่มต้น parameter",
-    "basePoints": 400,
-    "rewardPoints": 39,
-    "timeLimit": 86
-  },
-  {
-    "id": "python_26",
-    "language": "python",
-    "stage": 26,
-    "difficulty": "medium",
-    "title": "tuple",
-    "description": "ด่าน Python 26: tuple",
-    "usage": "ใช้ tuple เก็บค่าคงรูป",
-    "benefit": "ฝึกไวยากรณ์ Python และการอ่านโค้ดแบบไต่ระดับ",
-    "code": "point = (10, 20)\nprint(point[0], point[1])",
-    "outputExplain": "ใช้ tuple เก็บค่าคงรูป",
-    "output": "ใช้ tuple เก็บค่าคงรูป",
-    "basePoints": 412,
-    "rewardPoints": 41,
-    "timeLimit": 61
-  },
-  {
-    "id": "python_27",
-    "language": "python",
-    "stage": 27,
-    "difficulty": "medium",
-    "title": "set",
-    "description": "ด่าน Python 27: set",
-    "usage": "set ตัดค่าซ้ำ",
-    "benefit": "ฝึกไวยากรณ์ Python และการอ่านโค้ดแบบไต่ระดับ",
-    "code": "skills = {\"HTML\", \"Python\", \"HTML\"}\nprint(skills)",
-    "outputExplain": "set ตัดค่าซ้ำ",
-    "output": "set ตัดค่าซ้ำ",
-    "basePoints": 424,
-    "rewardPoints": 42,
-    "timeLimit": 66
-  },
-  {
-    "id": "python_28",
-    "language": "python",
-    "stage": 28,
-    "difficulty": "medium",
-    "title": "dictionary",
-    "description": "ด่าน Python 28: dictionary",
-    "usage": "เก็บข้อมูลแบบ key-value",
-    "benefit": "ฝึกไวยากรณ์ Python และการอ่านโค้ดแบบไต่ระดับ",
-    "code": "student = {\"name\": \"Ann\", \"score\": 90}\nprint(student[\"name\"])",
-    "outputExplain": "เก็บข้อมูลแบบ key-value",
-    "output": "เก็บข้อมูลแบบ key-value",
-    "basePoints": 436,
-    "rewardPoints": 43,
-    "timeLimit": 75
-  },
-  {
-    "id": "python_29",
-    "language": "python",
-    "stage": 29,
-    "difficulty": "medium",
-    "title": "dictionary loop",
-    "description": "ด่าน Python 29: dictionary loop",
-    "usage": "วน dictionary",
-    "benefit": "ฝึกไวยากรณ์ Python และการอ่านโค้ดแบบไต่ระดับ",
-    "code": "scores = {\"Ann\": 80, \"Boy\": 70}\nfor name, score in scores.items():\n    print(name, score)",
-    "outputExplain": "วน dictionary",
-    "output": "วน dictionary",
-    "basePoints": 448,
-    "rewardPoints": 44,
-    "timeLimit": 96
-  },
-  {
-    "id": "python_30",
-    "language": "python",
-    "stage": 30,
-    "difficulty": "medium",
-    "title": "list comprehension",
-    "description": "ด่าน Python 30: list comprehension",
-    "usage": "สร้าง list แบบย่อ",
-    "benefit": "ฝึกไวยากรณ์ Python และการอ่านโค้ดแบบไต่ระดับ",
-    "code": "squares = [n * n for n in range(1, 6)]\nprint(squares)",
-    "outputExplain": "สร้าง list แบบย่อ",
-    "output": "สร้าง list แบบย่อ",
-    "basePoints": 460,
-    "rewardPoints": 45,
-    "timeLimit": 69
-  },
-  {
-    "id": "python_31",
-    "language": "python",
-    "stage": 31,
-    "difficulty": "medium",
-    "title": "filter comprehension",
-    "description": "ด่าน Python 31: filter comprehension",
-    "usage": "กรองข้อมูลด้วย comprehension",
-    "benefit": "ฝึกไวยากรณ์ Python และการอ่านโค้ดแบบไต่ระดับ",
-    "code": "scores = [40, 55, 72, 90]\npassed = [s for s in scores if s >= 50]\nprint(passed)",
-    "outputExplain": "กรองข้อมูลด้วย comprehension",
-    "output": "กรองข้อมูลด้วย comprehension",
-    "basePoints": 472,
-    "rewardPoints": 46,
-    "timeLimit": 89
-  },
-  {
-    "id": "python_32",
-    "language": "python",
-    "stage": 32,
-    "difficulty": "medium",
-    "title": "string methods",
-    "description": "ด่าน Python 32: string methods",
-    "usage": "ใช้ method ของ string",
-    "benefit": "ฝึกไวยากรณ์ Python และการอ่านโค้ดแบบไต่ระดับ",
-    "code": "text = \"  Python Game  \"\nprint(text.strip().upper())",
-    "outputExplain": "ใช้ method ของ string",
-    "output": "ใช้ method ของ string",
-    "basePoints": 484,
-    "rewardPoints": 47,
-    "timeLimit": 69
-  },
-  {
-    "id": "python_33",
-    "language": "python",
-    "stage": 33,
-    "difficulty": "medium",
-    "title": "split join",
-    "description": "ด่าน Python 33: split join",
-    "usage": "แยกและรวมข้อความ",
-    "benefit": "ฝึกไวยากรณ์ Python และการอ่านโค้ดแบบไต่ระดับ",
-    "code": "text = \"HTML,CSS,Python\"\nitems = text.split(\",\")\nprint(\" | \".join(items))",
-    "outputExplain": "แยกและรวมข้อความ",
-    "output": "แยกและรวมข้อความ",
-    "basePoints": 496,
-    "rewardPoints": 48,
-    "timeLimit": 84
-  },
-  {
-    "id": "python_34",
-    "language": "python",
-    "stage": 34,
-    "difficulty": "medium",
-    "title": "enumerate",
-    "description": "ด่าน Python 34: enumerate",
-    "usage": "วนพร้อมเลขลำดับ",
-    "benefit": "ฝึกไวยากรณ์ Python และการอ่านโค้ดแบบไต่ระดับ",
-    "code": "languages = [\"HTML\", \"CSS\", \"Python\"]\nfor index, lang in enumerate(languages, start=1):\n    print(index, lang)",
-    "outputExplain": "วนพร้อมเลขลำดับ",
-    "output": "วนพร้อมเลขลำดับ",
-    "basePoints": 508,
-    "rewardPoints": 49,
-    "timeLimit": 112
-  },
-  {
-    "id": "python_35",
-    "language": "python",
-    "stage": 35,
-    "difficulty": "medium",
-    "title": "zip",
-    "description": "ด่าน Python 35: zip",
-    "usage": "จับคู่หลาย list",
-    "benefit": "ฝึกไวยากรณ์ Python และการอ่านโค้ดแบบไต่ระดับ",
-    "code": "names = [\"Ann\", \"Boy\"]\nscores = [90, 75]\nfor name, score in zip(names, scores):\n    print(name, score)",
-    "outputExplain": "จับคู่หลาย list",
-    "output": "จับคู่หลาย list",
-    "basePoints": 520,
-    "rewardPoints": 50,
-    "timeLimit": 106
-  },
-  {
-    "id": "python_36",
-    "language": "python",
-    "stage": 36,
-    "difficulty": "hard",
-    "title": "try except",
-    "description": "ด่าน Python 36: try except",
-    "usage": "จัดการข้อผิดพลาด",
-    "benefit": "ฝึกไวยากรณ์ Python และการอ่านโค้ดแบบไต่ระดับ",
-    "code": "try:\n    number = int(\"abc\")\nexcept ValueError:\n    print(\"Invalid number\")",
-    "outputExplain": "จัดการข้อผิดพลาด",
-    "output": "จัดการข้อผิดพลาด",
-    "basePoints": 532,
-    "rewardPoints": 52,
-    "timeLimit": 86
-  },
-  {
-    "id": "python_37",
-    "language": "python",
-    "stage": 37,
-    "difficulty": "hard",
-    "title": "raise",
-    "description": "ด่าน Python 37: raise",
-    "usage": "สร้าง error เมื่อข้อมูลไม่ถูกต้อง",
-    "benefit": "ฝึกไวยากรณ์ Python และการอ่านโค้ดแบบไต่ระดับ",
-    "code": "def check_score(score):\n    if score < 0:\n        raise ValueError(\"Score must be positive\")\n    return score\n\nprint(check_score(80))",
-    "outputExplain": "สร้าง error เมื่อข้อมูลไม่ถูกต้อง",
-    "output": "สร้าง error เมื่อข้อมูลไม่ถูกต้อง",
-    "basePoints": 544,
-    "rewardPoints": 53,
-    "timeLimit": 129
-  },
-  {
-    "id": "python_38",
-    "language": "python",
-    "stage": 38,
-    "difficulty": "hard",
-    "title": "class พื้นฐาน",
-    "description": "ด่าน Python 38: class พื้นฐาน",
-    "usage": "สร้าง class และ object",
-    "benefit": "ฝึกไวยากรณ์ Python และการอ่านโค้ดแบบไต่ระดับ",
-    "code": "class Student:\n    pass\n\nstudent = Student()\nprint(type(student).__name__)",
-    "outputExplain": "สร้าง class และ object",
-    "output": "สร้าง class และ object",
-    "basePoints": 556,
-    "rewardPoints": 55,
-    "timeLimit": 85
-  },
-  {
-    "id": "python_39",
-    "language": "python",
-    "stage": 39,
-    "difficulty": "hard",
-    "title": "constructor",
-    "description": "ด่าน Python 39: constructor",
-    "usage": "ใช้ __init__ กำหนดค่า object",
-    "benefit": "ฝึกไวยากรณ์ Python และการอ่านโค้ดแบบไต่ระดับ",
-    "code": "class Student:\n    def __init__(self, name):\n        self.name = name\n\nstudent = Student(\"Ann\")\nprint(student.name)",
-    "outputExplain": "ใช้ __init__ กำหนดค่า object",
-    "output": "ใช้ __init__ กำหนดค่า object",
-    "basePoints": 568,
-    "rewardPoints": 56,
-    "timeLimit": 116
-  },
-  {
-    "id": "python_40",
-    "language": "python",
-    "stage": 40,
-    "difficulty": "hard",
-    "title": "method",
-    "description": "ด่าน Python 40: method",
-    "usage": "สร้าง method ภายใน class",
-    "benefit": "ฝึกไวยากรณ์ Python และการอ่านโค้ดแบบไต่ระดับ",
-    "code": "class Counter:\n    def __init__(self):\n        self.value = 0\n\n    def add(self):\n        self.value += 1\n\ncounter = Counter()\ncounter.add()\nprint(counter.value)",
-    "outputExplain": "สร้าง method ภายใน class",
-    "output": "สร้าง method ภายใน class",
-    "basePoints": 580,
-    "rewardPoints": 57,
-    "timeLimit": 150
-  },
-  {
-    "id": "python_41",
-    "language": "python",
-    "stage": 41,
-    "difficulty": "hard",
-    "title": "inheritance",
-    "description": "ด่าน Python 41: inheritance",
-    "usage": "สืบทอด class",
-    "benefit": "ฝึกไวยากรณ์ Python และการอ่านโค้ดแบบไต่ระดับ",
-    "code": "class Player:\n    def move(self):\n        print(\"Move\")\n\nclass Coder(Player):\n    def type_code(self):\n        print(\"Typing\")\n\ncoder = Coder()\ncoder.move()\ncoder.type_code()",
-    "outputExplain": "สืบทอด class",
-    "output": "สืบทอด class",
-    "basePoints": 592,
-    "rewardPoints": 58,
-    "timeLimit": 160
-  },
-  {
-    "id": "python_42",
-    "language": "python",
-    "stage": 42,
-    "difficulty": "hard",
-    "title": "property",
-    "description": "ด่าน Python 42: property",
-    "usage": "ใช้ property",
-    "benefit": "ฝึกไวยากรณ์ Python และการอ่านโค้ดแบบไต่ระดับ",
-    "code": "class Player:\n    def __init__(self, score):\n        self._score = score\n\n    @property\n    def score(self):\n        return self._score\n\nplayer = Player(100)\nprint(player.score)",
-    "outputExplain": "ใช้ property",
-    "output": "ใช้ property",
-    "basePoints": 604,
-    "rewardPoints": 60,
-    "timeLimit": 162
-  },
-  {
-    "id": "python_43",
-    "language": "python",
-    "stage": 43,
-    "difficulty": "hard",
-    "title": "lambda",
-    "description": "ด่าน Python 43: lambda",
-    "usage": "ใช้ lambda ฟังก์ชันสั้น",
-    "benefit": "ฝึกไวยากรณ์ Python และการอ่านโค้ดแบบไต่ระดับ",
-    "code": "numbers = [3, 1, 2]\nnumbers.sort(key=lambda n: n)\nprint(numbers)",
-    "outputExplain": "ใช้ lambda ฟังก์ชันสั้น",
-    "output": "ใช้ lambda ฟังก์ชันสั้น",
-    "basePoints": 616,
-    "rewardPoints": 61,
-    "timeLimit": 78
-  },
-  {
-    "id": "python_44",
-    "language": "python",
-    "stage": 44,
-    "difficulty": "hard",
-    "title": "map",
-    "description": "ด่าน Python 44: map",
-    "usage": "แปลงข้อมูลด้วย map",
-    "benefit": "ฝึกไวยากรณ์ Python และการอ่านโค้ดแบบไต่ระดับ",
-    "code": "numbers = [1, 2, 3]\ndoubled = list(map(lambda n: n * 2, numbers))\nprint(doubled)",
-    "outputExplain": "แปลงข้อมูลด้วย map",
-    "output": "แปลงข้อมูลด้วย map",
-    "basePoints": 628,
-    "rewardPoints": 62,
-    "timeLimit": 90
-  },
-  {
-    "id": "python_45",
-    "language": "python",
-    "stage": 45,
-    "difficulty": "hard",
-    "title": "generator",
-    "description": "ด่าน Python 45: generator",
-    "usage": "สร้าง generator ด้วย yield",
-    "benefit": "ฝึกไวยากรณ์ Python และการอ่านโค้ดแบบไต่ระดับ",
-    "code": "def countdown(n):\n    while n > 0:\n        yield n\n        n -= 1\n\nfor value in countdown(3):\n    print(value)",
-    "outputExplain": "สร้าง generator ด้วย yield",
-    "output": "สร้าง generator ด้วย yield",
-    "basePoints": 640,
-    "rewardPoints": 64,
-    "timeLimit": 112
-  },
-  {
-    "id": "python_46",
-    "language": "python",
-    "stage": 46,
-    "difficulty": "hard",
-    "title": "decorator",
-    "description": "ด่าน Python 46: decorator",
-    "usage": "ใช้ decorator ครอบฟังก์ชัน",
-    "benefit": "ฝึกไวยากรณ์ Python และการอ่านโค้ดแบบไต่ระดับ",
-    "code": "def logger(func):\n    def wrapper():\n        print(\"Start\")\n        func()\n        print(\"End\")\n    return wrapper\n\n@logger\ndef play():\n    print(\"Playing\")\n\nplay()",
-    "outputExplain": "ใช้ decorator ครอบฟังก์ชัน",
-    "output": "ใช้ decorator ครอบฟังก์ชัน",
-    "basePoints": 652,
-    "rewardPoints": 65,
-    "timeLimit": 153
-  },
-  {
-    "id": "python_47",
-    "language": "python",
-    "stage": 47,
-    "difficulty": "hard",
-    "title": "dataclass",
-    "description": "ด่าน Python 47: dataclass",
-    "usage": "ใช้ dataclass ลด boilerplate",
-    "benefit": "ฝึกไวยากรณ์ Python และการอ่านโค้ดแบบไต่ระดับ",
-    "code": "from dataclasses import dataclass\n\n@dataclass\nclass Player:\n    name: str\n    score: int\n\nplayer = Player(\"Ann\", 120)\nprint(player)",
-    "outputExplain": "ใช้ dataclass ลด boilerplate",
-    "output": "ใช้ dataclass ลด boilerplate",
-    "basePoints": 664,
-    "rewardPoints": 66,
-    "timeLimit": 128
-  },
-  {
-    "id": "python_48",
-    "language": "python",
-    "stage": 48,
-    "difficulty": "hard",
-    "title": "type hints",
-    "description": "ด่าน Python 48: type hints",
-    "usage": "ใช้ type hints",
-    "benefit": "ฝึกไวยากรณ์ Python และการอ่านโค้ดแบบไต่ระดับ",
-    "code": "def average(scores: list[int]) -> float:\n    return sum(scores) / len(scores)\n\nprint(average([80, 90, 100]))",
-    "outputExplain": "ใช้ type hints",
-    "output": "ใช้ type hints",
-    "basePoints": 676,
-    "rewardPoints": 67,
-    "timeLimit": 111
-  },
-  {
-    "id": "python_49",
-    "language": "python",
-    "stage": 49,
-    "difficulty": "hard",
-    "title": "async function",
-    "description": "ด่าน Python 49: async function",
-    "usage": "รู้จัก async/await",
-    "benefit": "ฝึกไวยากรณ์ Python และการอ่านโค้ดแบบไต่ระดับ",
-    "code": "import asyncio\n\nasync def load_data():\n    await asyncio.sleep(0.1)\n    return \"ready\"\n\nprint(asyncio.run(load_data()))",
-    "outputExplain": "รู้จัก async/await",
-    "output": "รู้จัก async/await",
-    "basePoints": 688,
-    "rewardPoints": 69,
-    "timeLimit": 119
-  },
-  {
-    "id": "python_50",
-    "language": "python",
-    "stage": 50,
-    "difficulty": "hard",
-    "title": "Mini Game Logic",
-    "description": "ด่าน Python 50: Mini Game Logic",
-    "usage": "ด่านสุดท้ายจำลอง logic เกมตรวจตัวอักษร",
-    "benefit": "ฝึกไวยากรณ์ Python และการอ่านโค้ดแบบไต่ระดับ",
-    "code": "class TypingGame:\n    def __init__(self, target):\n        self.target = target\n        self.position = 0\n        self.mistakes = 0\n\n    def type_char(self, char):\n        expected = self.target[self.position]\n        if char == expected:\n            self.position += 1\n            return True\n        self.mistakes += 1\n        return False\n\n    def completed(self):\n        return self.position == len(self.target)\n\ngame = TypingGame(\"code\")\nfor char in \"code\":\n    game.type_char(char)\n\nprint(game.completed(), game.mistakes)",
-    "outputExplain": "ด่านสุดท้ายจำลอง logic เกมตรวจตัวอักษร",
-    "output": "ด่านสุดท้ายจำลอง logic เกมตรวจตัวอักษร",
-    "basePoints": 700,
-    "rewardPoints": 70,
-    "timeLimit": 300
-  }
-];
-
-```
-
-
-## official-data.js
-
-```js
-export const OFFICIAL_STAGES = [
-  {
-    "officialStage": 1,
-    "language": "html",
-    "languageName": "HTML",
-    "sourceStage": 1,
-    "title": "โครงสร้าง HTML5",
-    "maxScore": 1,
-    "requiredForSubmission": true
-  },
-  {
-    "officialStage": 2,
-    "language": "html",
-    "languageName": "HTML",
-    "sourceStage": 3,
-    "title": "ลิงก์และ Navigation",
-    "maxScore": 1,
-    "requiredForSubmission": true
-  },
-  {
-    "officialStage": 3,
-    "language": "html",
-    "languageName": "HTML",
-    "sourceStage": 5,
-    "title": "รายการข้อมูล",
-    "maxScore": 1,
-    "requiredForSubmission": true
-  },
-  {
-    "officialStage": 4,
-    "language": "html",
-    "languageName": "HTML",
-    "sourceStage": 10,
-    "title": "ตารางพื้นฐาน",
-    "maxScore": 1,
-    "requiredForSubmission": true
-  },
-  {
-    "officialStage": 5,
-    "language": "html",
-    "languageName": "HTML",
-    "sourceStage": 13,
-    "title": "Input และ Label",
-    "maxScore": 1,
-    "requiredForSubmission": true
-  },
-  {
-    "officialStage": 6,
-    "language": "html",
-    "languageName": "HTML",
-    "sourceStage": 16,
-    "title": "Select และ Option",
-    "maxScore": 1,
-    "requiredForSubmission": true
-  },
-  {
-    "officialStage": 7,
-    "language": "html",
-    "languageName": "HTML",
-    "sourceStage": 20,
-    "title": "Form สมัครสมาชิก",
-    "maxScore": 1,
-    "requiredForSubmission": true
-  },
-  {
-    "officialStage": 8,
-    "language": "html",
-    "languageName": "HTML",
-    "sourceStage": 21,
-    "title": "Header",
-    "maxScore": 1,
-    "requiredForSubmission": true
-  },
-  {
-    "officialStage": 9,
-    "language": "html",
-    "languageName": "HTML",
-    "sourceStage": 22,
-    "title": "Nav",
-    "maxScore": 1,
-    "requiredForSubmission": true
-  },
-  {
-    "officialStage": 10,
-    "language": "html",
-    "languageName": "HTML",
-    "sourceStage": 23,
-    "title": "Main",
-    "maxScore": 1,
-    "requiredForSubmission": true
-  },
-  {
-    "officialStage": 11,
-    "language": "html",
-    "languageName": "HTML",
-    "sourceStage": 24,
-    "title": "Section",
-    "maxScore": 1,
-    "requiredForSubmission": true
-  },
-  {
-    "officialStage": 12,
-    "language": "html",
-    "languageName": "HTML",
-    "sourceStage": 25,
-    "title": "Article",
-    "maxScore": 1,
-    "requiredForSubmission": true
-  },
-  {
-    "officialStage": 13,
-    "language": "html",
-    "languageName": "HTML",
-    "sourceStage": 27,
-    "title": "Footer",
-    "maxScore": 1,
-    "requiredForSubmission": true
-  },
-  {
-    "officialStage": 14,
-    "language": "html",
-    "languageName": "HTML",
-    "sourceStage": 28,
-    "title": "Figure",
-    "maxScore": 1,
-    "requiredForSubmission": true
-  },
-  {
-    "officialStage": 15,
-    "language": "html",
-    "languageName": "HTML",
-    "sourceStage": 30,
-    "title": "Progress",
-    "maxScore": 1,
-    "requiredForSubmission": true
-  },
-  {
-    "officialStage": 16,
-    "language": "python",
-    "languageName": "Python",
-    "sourceStage": 1,
-    "title": "print พื้นฐาน",
-    "maxScore": 1,
-    "requiredForSubmission": true
-  },
-  {
-    "officialStage": 17,
-    "language": "python",
-    "languageName": "Python",
-    "sourceStage": 4,
-    "title": "การคำนวณ",
-    "maxScore": 1,
-    "requiredForSubmission": true
-  },
-  {
-    "officialStage": 18,
-    "language": "python",
-    "languageName": "Python",
-    "sourceStage": 9,
-    "title": "if พื้นฐาน",
-    "maxScore": 1,
-    "requiredForSubmission": true
-  },
-  {
-    "officialStage": 19,
-    "language": "python",
-    "languageName": "Python",
-    "sourceStage": 10,
-    "title": "if else",
-    "maxScore": 1,
-    "requiredForSubmission": true
-  },
-  {
-    "officialStage": 20,
-    "language": "python",
-    "languageName": "Python",
-    "sourceStage": 14,
-    "title": "List",
-    "maxScore": 1,
-    "requiredForSubmission": true
-  },
-  {
-    "officialStage": 21,
-    "language": "python",
-    "languageName": "Python",
-    "sourceStage": 17,
-    "title": "For Loop",
-    "maxScore": 2,
-    "requiredForSubmission": true
-  },
-  {
-    "officialStage": 22,
-    "language": "python",
-    "languageName": "Python",
-    "sourceStage": 19,
-    "title": "While Loop",
-    "maxScore": 2,
-    "requiredForSubmission": true
-  },
-  {
-    "officialStage": 23,
-    "language": "python",
-    "languageName": "Python",
-    "sourceStage": 22,
-    "title": "Function",
-    "maxScore": 2,
-    "requiredForSubmission": true
-  },
-  {
-    "officialStage": 24,
-    "language": "python",
-    "languageName": "Python",
-    "sourceStage": 23,
-    "title": "Function Parameter",
-    "maxScore": 2,
-    "requiredForSubmission": true
-  },
-  {
-    "officialStage": 25,
-    "language": "python",
-    "languageName": "Python",
-    "sourceStage": 24,
-    "title": "Return",
-    "maxScore": 2,
-    "requiredForSubmission": true
-  },
-  {
-    "officialStage": 26,
-    "language": "python",
-    "languageName": "Python",
-    "sourceStage": 28,
-    "title": "Dictionary",
-    "maxScore": 2,
-    "requiredForSubmission": true
-  },
-  {
-    "officialStage": 27,
-    "language": "python",
-    "languageName": "Python",
-    "sourceStage": 30,
-    "title": "List Comprehension",
-    "maxScore": 2,
-    "requiredForSubmission": true
-  },
-  {
-    "officialStage": 28,
-    "language": "python",
-    "languageName": "Python",
-    "sourceStage": 36,
-    "title": "Try / Except",
-    "maxScore": 2,
-    "requiredForSubmission": true
-  },
-  {
-    "officialStage": 29,
-    "language": "python",
-    "languageName": "Python",
-    "sourceStage": 39,
-    "title": "Constructor",
-    "maxScore": 2,
-    "requiredForSubmission": true
-  },
-  {
-    "officialStage": 30,
-    "language": "python",
-    "languageName": "Python",
-    "sourceStage": 50,
-    "title": "Mini Game Logic",
-    "maxScore": 2,
-    "requiredForSubmission": true
-  }
-];
-export const OFFICIAL_TOTAL_SCORE = 40;
-
-```
-
-
-## lessons.js
-
-```js
-import { HTML_LEVELS } from "./levels-html.js?v=4.9.3";
-import { PYTHON_LEVELS } from "./levels-python.js?v=4.9.3";
-
-export const LANGUAGES = [
-  {
-    id:"html", name:"HTML", icon:"🌐", stageCount:50,
-    tagline:"50 ด่าน · โครงสร้างหน้าเว็บ",
-    description:"ฝึก HTML จากแท็กพื้นฐานไปจนถึง Semantic Layout และหน้าเว็บที่ซับซ้อน",
-    benefit:"สร้างพื้นฐาน Front-End, DOM, Accessibility และโครงสร้างเว็บที่ถูกต้อง"
-  },
-  {
-    id:"python", name:"Python", icon:"🐍", stageCount:50,
-    tagline:"50 ด่าน · Logic และ Programming",
-    description:"ฝึก Python จากตัวแปรไปจนถึง Class, Generator, Decorator และ Async",
-    benefit:"ต่อยอด Algorithm, Automation, Data, AI และ Back-End"
-  },
-  {
-    id:"css", name:"CSS", icon:"🎨", stageCount:0, comingSoon:true,
-    tagline:"กำลังเตรียมด่าน", description:"ระบบรองรับการเพิ่ม 50 ด่าน CSS ในเวอร์ชันถัดไป",
-    benefit:"โครงสร้างระบบเตรียมพร้อมแล้ว"
-  },
-  {
-    id:"javascript", name:"JavaScript", icon:"⚡", stageCount:0, comingSoon:true,
-    tagline:"กำลังเตรียมด่าน", description:"ระบบรองรับการเพิ่ม 50 ด่าน JavaScript ในเวอร์ชันถัดไป",
-    benefit:"โครงสร้างระบบเตรียมพร้อมแล้ว"
-  }
-];
-
-export const DIFFICULTIES = [
-  {id:"easy",name:"ง่าย",icon:"🟢",multiplier:1.00,from:1,to:15,description:"ด่าน 1–15 · พื้นฐาน"},
-  {id:"medium",name:"ปานกลาง",icon:"🟡",multiplier:1.35,from:16,to:35,description:"ด่าน 16–35 · โครงสร้างมากขึ้น"},
-  {id:"hard",name:"ยาก",icon:"🔴",multiplier:1.75,from:36,to:50,description:"ด่าน 36–50 · โค้ดยาวและซับซ้อน"}
-];
-
-export const LESSONS = [...HTML_LEVELS, ...PYTHON_LEVELS];
-
-```
-
-
-## default-data.js
-
-```js
-export const DEFAULT_MODES = [
-  {
-    id: "classic",
-    name: "Classic",
-    icon: "⌨️",
-    description: "โหมดมาตรฐาน พิมพ์ Code ตามต้นฉบับ จับเวลา WPM และ Accuracy",
-    scoreMultiplier: 1.00,
-    timeMultiplier: 1.00,
-    mistakePenalty: 2,
-    enforceTimeLimit: false,
-    allowBackspace: true,
-    sortOrder: 1
-  },
-  {
-    id: "speed",
-    name: "Speed Rush",
-    icon: "⚡",
-    description: "เวลาน้อยลง ต้องพิมพ์ให้ทัน ได้ตัวคูณคะแนนสูงขึ้น",
-    scoreMultiplier: 1.35,
-    timeMultiplier: 0.65,
-    mistakePenalty: 2.5,
-    enforceTimeLimit: true,
-    allowBackspace: true,
-    sortOrder: 2
-  },
-  {
-    id: "accuracy",
-    name: "Accuracy Pro",
-    icon: "🎯",
-    description: "เน้นความแม่นยำ พิมพ์ผิดหักคะแนนมากกว่า Classic",
-    scoreMultiplier: 1.20,
-    timeMultiplier: 1.20,
-    mistakePenalty: 6,
-    enforceTimeLimit: false,
-    allowBackspace: true,
-    sortOrder: 3
-  },
-  {
-    id: "hardcore",
-    name: "Hardcore",
-    icon: "🔥",
-    description: "จำกัดเวลาและห้าม Backspace/Delete คะแนนสูงที่สุด",
-    scoreMultiplier: 1.70,
-    timeMultiplier: 0.80,
-    mistakePenalty: 7,
-    enforceTimeLimit: true,
-    allowBackspace: false,
-    sortOrder: 4
-  }
-];
-
-export const DEFAULT_LEVELS = [
-  {
-    levelNo: 1, title: "HTML: Hello World", language: "HTML",
-    difficulty: "ง่าย", difficultyMultiplier: 1.00, basePoints: 100,
-    timeLimit: 90, description: "โครงสร้าง HTML เบื้องต้น",
-    code: `<!DOCTYPE html>
-<html>
-<body>
-    <h1>Hello World</h1>
-</body>
-</html>`
-  },
-  {
-    levelNo: 2, title: "CSS: Button Style", language: "CSS",
-    difficulty: "ง่าย", difficultyMultiplier: 1.10, basePoints: 140,
-    timeLimit: 95, description: "Selector และ Property พื้นฐาน",
-    code: `.button {
-    padding: 12px 20px;
-    border: none;
-    border-radius: 8px;
-    cursor: pointer;
-}`
-  },
-  {
-    levelNo: 3, title: "JavaScript: Condition", language: "JavaScript",
-    difficulty: "ง่าย", difficultyMultiplier: 1.20, basePoints: 200,
-    timeLimit: 105, description: "ตัวแปรและ if / else",
-    code: `const score = 80;
-
-if (score >= 50) {
-    console.log("Pass");
-} else {
-    console.log("Try again");
-}`
-  },
-  {
-    levelNo: 4, title: "Python: For Loop", language: "Python",
-    difficulty: "ง่าย", difficultyMultiplier: 1.30, basePoints: 260,
-    timeLimit: 115, description: "List, for loop และ f-string",
-    code: `subjects = ["HTML", "CSS", "JavaScript", "Python"]
-
-for subject in subjects:
-    print(f"Learning: {subject}")`
-  },
-  {
-    levelNo: 5, title: "HTML: Login Form", language: "HTML",
-    difficulty: "ปานกลาง", difficultyMultiplier: 1.45, basePoints: 350,
-    timeLimit: 130, description: "Form, Label, Input และ Button",
-    code: `<form id="loginForm">
-    <label for="email">Email</label>
-    <input id="email" type="email" required>
-
-    <label for="password">Password</label>
-    <input id="password" type="password" required>
-
-    <button type="submit">Login</button>
-</form>`
-  },
-  {
-    levelNo: 6, title: "CSS: Responsive Grid", language: "CSS",
-    difficulty: "ปานกลาง", difficultyMultiplier: 1.60, basePoints: 450,
-    timeLimit: 145, description: "CSS Grid และ Media Query",
-    code: `.grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 16px;
+  try{await ref.delete();}catch{}
 }
+exports.adminDeleteStudentAccount=onCall(async request=>{
+  const caller=requireAuth(request);
+  if(caller!==ADMIN_UID)throw new HttpsError("permission-denied","Admin only");
+  const targetUid=String(request.data?.targetUid||"").trim();
+  if(!targetUid)throw new HttpsError("invalid-argument","ไม่พบ UID");
+  if(targetUid===ADMIN_UID)throw new HttpsError("failed-precondition","ห้ามลบบัญชี Admin");
 
-@media (max-width: 768px) {
-    .grid {
-        grid-template-columns: 1fr;
+  // เก็บ studentId ไว้ใน response ก่อนลบ เพื่อให้หน้า Admin แจ้งผลได้
+  let studentId="";
+  const userRef=db.doc(`users/${targetUid}`);
+  try{const profile=await userRef.get();studentId=profile.exists?String(profile.data()?.studentId||""):"";}catch{}
+
+  // ลบข้อมูลแบบ keyed documents และ subcollections ของ User
+  await deleteDocumentTree(userRef);
+  await deleteDocumentTree(db.doc(`quest_progress/${targetUid}`));
+  for(const path of [
+    `public_profiles/${targetUid}`,`presence/${targetUid}`,`zone_positions/${targetUid}`,
+    `zone_moderation/${targetUid}`,`official_submissions/${targetUid}`,`rankings/${targetUid}`
+  ]){try{await db.doc(path).delete();}catch{}}
+
+  // ลบข้อมูลที่เป็น collection records ตาม uid
+  for(const name of ["attempts","zone_messages","zone_chat_archive"]){
+    try{await deleteQueryByUid(name,targetUid);}catch(error){console.warn(`cleanup ${name}`,error);}
+  }
+  // ห้อง PVP ที่ยังผูกกับผู้ใช้นี้จะถูกลบ เพื่อไม่ทิ้งห้องค้าง
+  try{
+    const rooms=await db.collection("pvp_rooms").where("players","array-contains",targetUid).get();
+    let batch=db.batch();let count=0;
+    for(const room of rooms.docs){batch.delete(room.ref);count++;if(count>=400){await batch.commit();batch=db.batch();count=0;}}
+    if(count)await batch.commit();
+  }catch(error){console.warn("cleanup pvp",error);}
+
+  // ขั้นสุดท้าย: ลบ Firebase Authentication user เพื่อคืน synthetic email/studentId ให้สมัครใหม่
+  try{await getAuth().deleteUser(targetUid);}catch(error){
+    if(error?.code!=="auth/user-not-found")throw new HttpsError("internal","ลบ Firebase Authentication ไม่สำเร็จ");
+  }
+  return {ok:true,targetUid,studentId};
+});
+
+exports.recordDailyCheckinHeartbeat=onCall(async request=>{
+  const uid=requireAuth(request);
+  if(uid===ADMIN_UID)return {qualifiedSeconds:3600,rewarded:true,justRewarded:false,admin:true};
+  if(request.data?.visible!==true||request.data?.fullscreen!==true)
+    throw new HttpsError("failed-precondition","ต้องเปิดหน้าเว็บและโหมดเต็มหน้าจอ");
+  const now=new Date(),dayKey=bangkokDayKey(now);
+  const userRef=db.doc(`users/${uid}`),checkRef=db.doc(`users/${uid}/daily_checkins/${dayKey}`);
+  let response={qualifiedSeconds:0,rewarded:false,justRewarded:false};
+  await db.runTransaction(async tx=>{
+    const [userSnap,checkSnap]=await Promise.all([tx.get(userRef),tx.get(checkRef)]);
+    if(!userSnap.exists)throw new HttpsError("not-found","ไม่พบ User profile");
+    const old=checkSnap.exists?checkSnap.data():{};
+    const last=old.lastHeartbeatAt?.toDate?.();
+    let add=0;
+    if(last){
+      const gap=(now.getTime()-last.getTime())/1000;
+      // เพิ่มเวลาเฉพาะ heartbeat ต่อเนื่อง ไม่เปิดช่องให้กระโดดเวลาจากการปิดหน้าเว็บนาน ๆ
+      if(gap>=35&&gap<=90)add=Math.min(65,Math.floor(gap));
     }
-}`
-  },
-  {
-    levelNo: 7, title: "JavaScript: Array Methods", language: "JavaScript",
-    difficulty: "ปานกลาง", difficultyMultiplier: 1.75, basePoints: 560,
-    timeLimit: 160, description: "filter, map และ Arrow Function",
-    code: `function calculateBonus(scores) {
-    return scores
-        .filter(score => score >= 50)
-        .map(score => score + 10);
-}
+    const qualified=Math.min(3600,Number(old.qualifiedSeconds||0)+add);
+    let rewarded=old.rewarded===true,justRewarded=false;
+    const update={uid,dayKey,qualifiedSeconds:qualified,lastHeartbeatAt:Timestamp.fromDate(now),updatedAt:Timestamp.fromDate(now)};
+    if(!checkSnap.exists)update.createdAt=Timestamp.fromDate(now);
+    if(qualified>=3600&&!rewarded){
+      rewarded=true;justRewarded=true;update.rewarded=true;update.rewardedAt=Timestamp.fromDate(now);
+      const user=userSnap.data();
+      tx.update(userRef,{tokenBalance:Number(user.tokenBalance||0)+10,tokenLifetime:Number(user.tokenLifetime||0)+10,updatedAt:FieldValue.serverTimestamp()});
+    }else update.rewarded=rewarded;
+    tx.set(checkRef,update,{merge:true});
+    response={qualifiedSeconds:qualified,rewarded,justRewarded,dayKey};
+  });
+  return response;
+});
 
-console.log(calculateBonus([40, 55, 70]));`
-  },
-  {
-    levelNo: 8, title: "Python: Dictionary", language: "Python",
-    difficulty: "ปานกลาง", difficultyMultiplier: 1.90, basePoints: 680,
-    timeLimit: 175, description: "Dictionary Comprehension",
-    code: `scores = {"Ann": 72, "Boy": 48, "Cat": 91}
+```
 
-passed = {
-    name: score
-    for name, score in scores.items()
-    if score >= 50
-}
 
-print(passed)`
-  },
-  {
-    levelNo: 9, title: "JavaScript: DOM Event", language: "JavaScript",
-    difficulty: "ยาก", difficultyMultiplier: 2.10, basePoints: 820,
-    timeLimit: 190, description: "DOM และ Event Listener",
-    code: `const button = document.querySelector("#startButton");
-const statusText = document.querySelector("#status");
+## firebase.json
 
-button.addEventListener("click", () => {
-    statusText.textContent = "Game started!";
-    button.disabled = true;
-});`
-  },
-  {
-    levelNo: 10, title: "Python: Class", language: "Python",
-    difficulty: "ยาก", difficultyMultiplier: 2.30, basePoints: 980,
-    timeLimit: 210, description: "Class, Constructor และ Method",
-    code: `class Student:
-    def __init__(self, student_id, name):
-        self.student_id = student_id
-        self.name = name
-        self.score = 0
-
-    def add_score(self, points):
-        self.score += points
-        return self.score`
-  },
-  {
-    levelNo: 11, title: "JavaScript: Async Await", language: "JavaScript",
-    difficulty: "ยาก", difficultyMultiplier: 2.60, basePoints: 1200,
-    timeLimit: 230, description: "async / await, fetch และ error handling",
-    code: `async function loadStudents() {
-    try {
-        const response = await fetch("/api/students");
-
-        if (!response.ok) {
-            throw new Error("Request failed");
-        }
-
-        const students = await response.json();
-        return students;
-    } catch (error) {
-        console.error(error);
-        return [];
-    }
-}`
-  },
-  {
-    levelNo: 12, title: "Flask: JSON API Endpoint", language: "Python / Flask",
-    difficulty: "Expert", difficultyMultiplier: 3.00, basePoints: 1500,
-    timeLimit: 260, description: "Flask Route, JSON และ Validation",
-    code: `@app.post("/api/score")
-def save_score():
-    data = request.get_json()
-
-    if not data or "score" not in data:
-        return jsonify({"error": "score is required"}), 400
-
-    score = int(data["score"])
-
-    return jsonify({
-        "success": True,
-        "score": score
-    }), 201`
+```json
+{
+  "functions": {
+    "source": "functions",
+    "runtime": "nodejs20"
   }
-];
-
-```
-
-
-## 404.html
-
-```html
-<!DOCTYPE html><html lang="th"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>กำลังกู้คืนหน้า</title><style>body{font-family:system-ui;margin:0;min-height:100vh;display:grid;place-items:center;background:#f4f7fa;color:#173449}.box{max-width:520px;padding:30px;text-align:center;background:#fff;border:1px solid #dce3ea;border-radius:16px}.box a{display:inline-block;margin:6px;padding:10px 16px;border-radius:9px;background:#244b75;color:#fff;text-decoration:none}</style></head><body><div class="box"><h1>กำลังกู้คืนหน้า...</h1><p>กำลังกู้คืน URL ของ GitHub Pages</p><a href="./index.html?v=4.9.3">หน้า Login</a><a href="./zone.html?v=4.9.3">2D Zone</a></div><script>(function(){const ua=navigator.userAgent||"";const mobile=/Android|iPhone|iPad|iPod|Mobile|Tablet|Silk|Kindle/i.test(ua)||(navigator.platform==="MacIntel"&&navigator.maxTouchPoints>1);const parts=location.pathname.split("/").filter(Boolean);const base=parts.length?`/${parts[0]}/`:"/";const wanted=base+((location.pathname.toLowerCase().includes("zone")||mobile)?"zone.html?v=4.9.3":"index.html?v=4.9.3");if(!sessionStorage.getItem("v44_404_recovered")){sessionStorage.setItem("v44_404_recovered","1");setTimeout(()=>location.replace(wanted),700)}})();</script></body></html>
-```
-
-
-## chat.html
-
-```html
-<!DOCTYPE html><html lang="th"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="refresh" content="0;url=./zone.html?v=4.9.3"><title>ย้ายไป 2D Zone</title><script>location.replace("./zone.html?v=4.9.3");</script></head><body><p>ระบบแชตรวมย้ายเข้า 2D Zone แล้ว</p><a href="./zone.html?v=4.9.3">เข้า 2D Zone</a></body></html>
+}
 ```

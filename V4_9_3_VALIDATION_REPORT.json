@@ -1,0 +1,16 @@
+{
+  "syntax_app.js": true,
+  "syntax_admin.js": true,
+  "syntax_ranking-system.js": true,
+  "syntax_zone.js": true,
+  "syntax_quest-system.js": true,
+  "syntax_economy-system.js": true,
+  "edit_profile_modal": true,
+  "edit_profile_button": true,
+  "edit_profile_logic": true,
+  "registration_major_options": true,
+  "registration_auto_department": true,
+  "old_user_not_blocked": true,
+  "public_profile_sync": true,
+  "all_passed": true
+}
