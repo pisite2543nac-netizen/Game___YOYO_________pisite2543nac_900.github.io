@@ -1,4 +1,4 @@
-# V4.7.4 — THC-NR / Academic Register / Student ID 1–15 หลัก
+# V4.7.5 — THC-NR / Academic Register / Student ID 1–15 หลัก
 
 Firebase Project: `thc-nr`
 Admin UID: `TWUrLjOh3BTa1cBNwDXKk4X2IAg1`

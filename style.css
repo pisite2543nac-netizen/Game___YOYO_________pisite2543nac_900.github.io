@@ -3004,7 +3004,7 @@ html,body.social-zone-page{
 
 
 /* =====================================================================
-   V4.7.4 — DUAL RANKING / PVP MULTI ROOM / TOKEN ECONOMY / ITEM SET 2
+   V4.7.5 — DUAL RANKING / PVP MULTI ROOM / TOKEN ECONOMY / ITEM SET 2
    ===================================================================== */
 .ranking-mode-switch{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin:8px 0 10px}
 .ranking-mode-btn{min-height:38px;border:1px solid #d4dde6;border-radius:9px;background:#f6f8fa;color:#496174;font-weight:800;cursor:pointer}
@@ -3030,7 +3030,7 @@ html,body.social-zone-page{
 
 
 /* ==================================================================
-   V4.7.4 ADMIN CLASSROOM / RANK RESET / GM WORLD CHAT / PVP COUNTDOWN
+   V4.7.5 ADMIN CLASSROOM / RANK RESET / GM WORLD CHAT / PVP COUNTDOWN
    ================================================================== */
 .admin-metrics{grid-template-columns:repeat(5,minmax(0,1fr))}
 .admin-class-filter-wrap label,.admin-ranking-filter{display:flex;align-items:center;gap:8px;font-size:10px}.admin-class-filter-wrap select,.admin-ranking-filter select{min-width:150px;min-height:38px}
@@ -3045,7 +3045,7 @@ html,body.social-zone-page{
 .zone-rank-reset-notice{position:absolute;left:50%;top:10px;transform:translateX(-50%);z-index:30;max-width:min(720px,calc(100% - 220px));padding:8px 13px;border:1px solid rgba(255,215,91,.65);border-radius:999px;background:rgba(55,39,10,.9);color:#fff8dc;display:flex;align-items:center;gap:8px;backdrop-filter:blur(7px);box-shadow:0 8px 26px rgba(0,0,0,.18)}.zone-rank-reset-notice span{font-size:7px;font-weight:1000;color:#ffd75b;letter-spacing:.08em}.zone-rank-reset-notice strong{font-size:9px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}@media(max-width:760px){.zone-rank-reset-notice{max-width:calc(100% - 20px);top:7px}.zone-rank-reset-notice span{display:none}.zone-rank-reset-notice strong{font-size:8px}}
 
 
-/* ===== V4.7.4 SIMPLE CHAT-ONLY 2D ZONE ===== */
+/* ===== V4.7.5 SIMPLE CHAT-ONLY 2D ZONE ===== */
 .simple-zone-page{margin:0;width:100vw;height:100vh;height:100dvh;overflow:hidden;background:#102c3d;color:#19364a}
 .simple-zone-gate{position:fixed;inset:0;z-index:50000;display:grid;place-items:center;padding:18px;background:radial-gradient(circle at 50% 20%,#285a70,#0b2535 72%)}
 .simple-zone-gate-card{width:min(560px,100%);padding:34px;background:#fffaf0;border:2px solid #d8c4a3;border-radius:22px;text-align:center;box-shadow:0 28px 80px rgba(0,0,0,.32)}
@@ -3075,7 +3075,7 @@ html,body.social-zone-page{
 .simple-zone-chat-history{display:grid;gap:7px;margin-top:14px}.simple-zone-chat-message{display:grid;grid-template-columns:38px 1fr;gap:8px;padding:9px;border:1px solid #e0d7c8;border-radius:11px;background:#fff}.simple-zone-chat-message.gm{background:#fff7d9;border-color:#dec06b}.simple-zone-chat-avatar{width:38px;height:38px;border-radius:10px;display:grid;place-items:center;background:#e9f0f3;color:#284d61;font-weight:900;font-size:9px}.simple-zone-chat-message.gm .simple-zone-chat-avatar{background:#71334e;color:#ffe79a}.simple-zone-chat-meta{display:flex;gap:8px;align-items:center}.simple-zone-chat-meta strong{font-size:9px}.simple-zone-chat-meta time{margin-left:auto;font-size:7px;color:#8c8172}.simple-zone-chat-message p{margin:4px 0 0;font-size:10px;line-height:1.45}
 @media(max-width:900px){.simple-zone-app{grid-template-rows:54px minmax(0,1fr) 70px}.simple-zone-topbar{grid-template-columns:minmax(0,1fr) auto auto;padding:5px 7px;gap:5px}.simple-zone-worldtime{display:none}.simple-zone-user{display:none}.simple-zone-brand-icon{width:34px;height:34px}.simple-zone-brand strong{font-size:9px}.simple-zone-brand small{display:none}.simple-zone-help{display:none}.simple-zone-mobile-pad{display:grid}.simple-zone-top-actions .btn{padding:0 7px}.simple-zone-chatbar{grid-template-columns:74px minmax(0,1fr);gap:5px;padding:6px}.simple-zone-chat-identity{padding:6px}.simple-zone-chat-form{height:54px;grid-template-columns:minmax(0,1fr) 58px;padding:5px;border-width:1px}.simple-zone-chat-form input{font-size:16px;padding:0 8px}.simple-zone-chat-form button{font-size:10px}.simple-zone-system-notice{top:7px;font-size:7px}.simple-zone-player-card{left:7px;right:7px;top:auto;bottom:7px;width:auto}}
 
-/* ===== V4.7.4 ADMIN ROOM SEARCH ===== */
+/* ===== V4.7.5 ADMIN ROOM SEARCH ===== */
 .admin-room-search-card{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;align-items:center;margin-bottom:14px;padding:13px;border:1px solid #dde5eb;border-radius:14px;background:#f8fbfd}.admin-room-search-box{display:grid;grid-template-columns:28px minmax(0,1fr) auto;align-items:center;gap:7px}.admin-room-search-box>span{text-align:center;font-size:18px}.admin-room-search-box input{min-height:44px;border:1px solid #ccd8e1;border-radius:10px;padding:0 12px;background:#fff;font-size:15px}.admin-room-search-meta{text-align:right}.admin-room-search-meta strong,.admin-room-search-meta span{display:block}.admin-room-search-meta strong{font-size:10px;color:#244c67}.admin-room-search-meta span{font-size:8px;color:#7c8992;margin-top:3px}
 .admin-room-directory{display:grid;gap:12px}.admin-room-group{padding:12px;border:1px solid #e0e7ec;border-radius:14px;background:#fff}.admin-room-group-title{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}.admin-room-group-title strong{font-size:13px;color:#254b63}.admin-room-group-title span{font-size:8px;color:#7e8b94}.admin-room-buttons{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:7px}.admin-room-button{min-height:66px;padding:9px;border:1px solid #dbe3e8;border-radius:11px;background:#f9fbfc;color:#26475b;text-align:left;cursor:pointer;transition:.15s ease}.admin-room-button:hover{transform:translateY(-1px);border-color:#8ab3ca;background:#f2f8fb}.admin-room-button.active{border-color:#376f91;background:#eaf4f9;box-shadow:inset 0 0 0 1px #376f91}.admin-room-button span,.admin-room-button small{display:block}.admin-room-button span{font-size:12px;font-weight:900}.admin-room-button small{font-size:7px;color:#72808a;margin-top:4px}.admin-room-no-result{padding:28px;border:1px dashed #d5dde2;border-radius:13px;text-align:center;color:#7f8b93;background:#fafcfd}
 .admin-selected-room{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:14px 0 8px;padding:12px 14px;border-left:4px solid #487d9b;border-radius:10px;background:#f2f7fa}.admin-selected-room>div span,.admin-selected-room>div strong{display:block}.admin-selected-room>div span{font-size:8px;color:#7c8a93}.admin-selected-room>div strong{font-size:18px;color:#193f57;margin-top:2px}.admin-selected-room>span{font-size:9px;color:#657680}.admin-room-table-wrap table tbody tr:nth-child(even){background:#f9fbfc}.admin-room-table-wrap table tbody tr:hover{background:#eef6fa}
@@ -3083,7 +3083,7 @@ html,body.social-zone-page{
 
 
 /* ==================================================================
-   V4.7.4 HORIZONTAL SMOOTH ZONE + WIZARD + TOKEN SHOP
+   V4.7.5 HORIZONTAL SMOOTH ZONE + WIZARD + TOKEN SHOP
    ================================================================== */
 .zone47-page{margin:0;width:100vw;height:100vh;height:100dvh;overflow:hidden;background:#0c2637;color:#19364a}
 .zone47-gate{position:fixed;inset:0;z-index:50000;display:grid;place-items:center;padding:18px;background:radial-gradient(circle at 50% 18%,#295b71,#081e2c 72%)}
@@ -3102,10 +3102,10 @@ html,body.social-zone-page{
 @media(max-width:1100px){.zone47-topbar{grid-template-columns:minmax(0,1fr) auto auto}.zone47-time,.zone47-user{display:none}.zone47-shop-grid{grid-template-columns:repeat(3,minmax(0,1fr))}.admin-quest-form{grid-template-columns:repeat(2,minmax(0,1fr))}.admin-quest-description{grid-column:span 2}}
 @media(max-width:760px){.zone47-app{grid-template-rows:54px minmax(0,1fr) 72px}.zone47-topbar{grid-template-columns:minmax(0,1fr) auto;padding:5px 6px}.zone47-brand small,.zone47-token{display:none}.zone47-actions .btn:not(#openWizardQuests):not(#openZoneShop){display:none}.zone47-actions .btn{padding:0 5px}.zone47-help{display:none}.zone47-footer{grid-template-columns:54px minmax(0,1fr) 54px;gap:5px;padding:6px}.zone47-chat-id{display:none}.zone47-move-button{height:56px}.zone47-chat-form{height:56px;grid-template-columns:minmax(0,1fr) 55px;padding:5px;border-width:1px}.zone47-chat-form input{font-size:16px;padding:0 8px}.zone47-shop-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.zone47-quest-item{grid-template-columns:45px minmax(0,1fr);}.zone47-quest-reward{grid-column:1/-1;display:grid;grid-template-columns:50px 50px minmax(0,1fr);align-items:center;gap:5px}.zone47-quest-reward .btn{margin:0}.zone47-modal{padding:7px}.zone47-modal-card{width:100%;max-height:calc(100dvh - 14px);padding:14px;border-width:2px}.zone47-wizard-portrait{width:58px;height:58px;font-size:34px}.admin-quest-form{grid-template-columns:1fr}.admin-quest-description{grid-column:span 1}}
 
-/* ===== V4.7.4 ACADEMIC HIERARCHY ===== */
+/* ===== V4.7.5 ACADEMIC HIERARCHY ===== */
 .academic-code-preview{display:block;margin-top:5px;color:#52728a;font-size:8px;font-weight:800}
 .academic-filter-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:12px 0}.academic-filter-grid label{display:grid;gap:5px}.academic-filter-grid label>span{font-size:8px;font-weight:900;color:#4b6474}.academic-filter-grid select,.academic-filter-grid input{min-height:42px;border:1px solid #d0dde5;border-radius:10px;background:#fff;padding:0 10px}.academic-filter-search{grid-column:span 2}.academic-summary{margin:8px 0 10px;padding:9px 12px;border-radius:10px;background:#f0f6fa;color:#46667a;font-size:9px;font-weight:800}
 @media(max-width:900px){.academic-filter-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.academic-filter-search{grid-column:span 2}}@media(max-width:600px){.academic-filter-grid{grid-template-columns:1fr}.academic-filter-search{grid-column:auto}}
 
-/* V4.7.4 Student ID 1-15 digits */
+/* V4.7.5 Student ID 1-15 digits */
 #studentIdHint15{color:#607888}

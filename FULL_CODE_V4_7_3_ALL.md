@@ -1,4 +1,4 @@
-# FULL CODE V4.7.4 NR-GAME ACADEMIC HIERARCHY
+# FULL CODE V4.7.5 NR-GAME ACADEMIC HIERARCHY
 
 
 ## index.html
@@ -10,7 +10,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1">
   <title>ระบบเกมพิมพ์ Code | วิทยาลัยเทคนิคนางรอง</title>
-  <link rel="stylesheet" href="./style.css?v=4.7.4">
+  <link rel="stylesheet" href="./style.css?v=4.7.5">
 </head>
 <body>
 <header class="site-header">
@@ -530,7 +530,7 @@
 </main>
 
 <footer><div class="wrap">ระบบเกมพิมพ์ Code · วิทยาลัยเทคนิคนางรอง</div></footer>
-<script type="module" src="./app.js?v=4.7.4"></script>
+<script type="module" src="./app.js?v=4.7.5"></script>
 
   <div id="characterSetupModal" class="character-modal hidden">
     <div class="character-modal-card character-setup-card">
@@ -632,7 +632,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Admin | ระบบเกมพิมพ์ Code</title>
-  <link rel="stylesheet" href="./style.css?v=4.7.4">
+  <link rel="stylesheet" href="./style.css?v=4.7.5">
 </head>
 <body class="admin-page">
   <main class="wrap admin-wrap">
@@ -666,7 +666,7 @@
           <p>ผู้จัดทำ: นายพิสิษฐ์ หุนตระนี ครูพิเศษสอน</p>
         </div>
         <div>
-          <a class="btn gm-zone-entry" href="./zone.html?v=4.7.4">🌙 เข้า 2D Zone · GM</a>
+          <a class="btn gm-zone-entry" href="./zone.html?v=4.7.5">🌙 เข้า 2D Zone · GM</a>
           <a class="btn ghost" href="index.html">หน้าผู้เล่น</a>
           <button id="logoutAdmin" class="btn secondary">ออกจากระบบ</button>
         </div>
@@ -989,7 +989,7 @@
           <div class="admin-world-chat-input-row">
             <textarea id="gmWorldChatInput" maxlength="120" rows="2" placeholder="GM พิมพ์ข้อความถึงผู้เล่นทุกคน..."></textarea>
             <button id="sendGmWorldChat" class="btn primary" type="button">ส่งในแชตโลก</button>
-            <a class="btn gm-zone-entry" href="./zone.html?v=4.7.4#world-chat">เข้า World Chat</a>
+            <a class="btn gm-zone-entry" href="./zone.html?v=4.7.5#world-chat">เข้า World Chat</a>
           </div>
         </div>
 
@@ -1020,7 +1020,7 @@
   </main>
 
   <div id="adminToast" class="admin-toast hidden" aria-live="polite"></div>
-  <script type="module" src="./admin.js?v=4.7.4"></script>
+  <script type="module" src="./admin.js?v=4.7.5"></script>
 </body>
 </html>
 
@@ -1037,13 +1037,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#102c3d">
   <title>2D Zone | Code Typing Academy</title>
-  <link rel="stylesheet" href="./style.css?v=4.7.4">
+  <link rel="stylesheet" href="./style.css?v=4.7.5">
 </head>
 <body class="zone47-page">
   <div id="zoneGate" class="zone47-gate">
     <div class="zone47-gate-card">
       <div class="zone47-gate-icon">🌙</div>
-      <span class="section-kicker">2D SOCIAL ZONE · V4.7.4.0</span>
+      <span class="section-kicker">2D SOCIAL ZONE · V4.7.5.0</span>
       <h1 id="zoneGateTitle">กำลังเข้าสู่ 2D Zone</h1>
       <p id="zoneGateText">กำลังเชื่อมต่อผู้เล่น แชต ร้านค้า และภารกิจ...</p>
       <div id="zoneGateHelp" class="zone47-gate-help hidden"></div>
@@ -1150,7 +1150,7 @@
     </div>
   </div>
 
-  <script type="module" src="./zone.js?v=4.7.4"></script>
+  <script type="module" src="./zone.js?v=4.7.5"></script>
 </body>
 </html>
 
@@ -1160,14 +1160,14 @@
 ## chat.html
 
 ```html
-<!DOCTYPE html><html lang="th"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="refresh" content="0;url=./zone.html?v=4.7.4"><title>ย้ายไป 2D Zone</title><script>location.replace("./zone.html?v=4.7.4");</script></head><body><p>ระบบแชตรวมย้ายเข้า 2D Zone แล้ว</p><a href="./zone.html?v=4.7.4">เข้า 2D Zone</a></body></html>
+<!DOCTYPE html><html lang="th"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="refresh" content="0;url=./zone.html?v=4.7.5"><title>ย้ายไป 2D Zone</title><script>location.replace("./zone.html?v=4.7.5");</script></head><body><p>ระบบแชตรวมย้ายเข้า 2D Zone แล้ว</p><a href="./zone.html?v=4.7.5">เข้า 2D Zone</a></body></html>
 ```
 
 
 ## 404.html
 
 ```html
-<!DOCTYPE html><html lang="th"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>กำลังกู้คืนหน้า</title><style>body{font-family:system-ui;margin:0;min-height:100vh;display:grid;place-items:center;background:#f4f7fa;color:#173449}.box{max-width:520px;padding:30px;text-align:center;background:#fff;border:1px solid #dce3ea;border-radius:16px}.box a{display:inline-block;margin:6px;padding:10px 16px;border-radius:9px;background:#244b75;color:#fff;text-decoration:none}</style></head><body><div class="box"><h1>กำลังกู้คืนหน้า...</h1><p>กำลังกู้คืน URL ของ GitHub Pages</p><a href="./index.html?v=4.7.4">หน้า Login</a><a href="./zone.html?v=4.7.4">2D Zone</a></div><script>(function(){const ua=navigator.userAgent||"";const mobile=/Android|iPhone|iPad|iPod|Mobile|Tablet|Silk|Kindle/i.test(ua)||(navigator.platform==="MacIntel"&&navigator.maxTouchPoints>1);const parts=location.pathname.split("/").filter(Boolean);const base=parts.length?`/${parts[0]}/`:"/";const wanted=base+((location.pathname.toLowerCase().includes("zone")||mobile)?"zone.html?v=4.7.4":"index.html?v=4.7.4");if(!sessionStorage.getItem("v44_404_recovered")){sessionStorage.setItem("v44_404_recovered","1");setTimeout(()=>location.replace(wanted),700)}})();</script></body></html>
+<!DOCTYPE html><html lang="th"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>กำลังกู้คืนหน้า</title><style>body{font-family:system-ui;margin:0;min-height:100vh;display:grid;place-items:center;background:#f4f7fa;color:#173449}.box{max-width:520px;padding:30px;text-align:center;background:#fff;border:1px solid #dce3ea;border-radius:16px}.box a{display:inline-block;margin:6px;padding:10px 16px;border-radius:9px;background:#244b75;color:#fff;text-decoration:none}</style></head><body><div class="box"><h1>กำลังกู้คืนหน้า...</h1><p>กำลังกู้คืน URL ของ GitHub Pages</p><a href="./index.html?v=4.7.5">หน้า Login</a><a href="./zone.html?v=4.7.5">2D Zone</a></div><script>(function(){const ua=navigator.userAgent||"";const mobile=/Android|iPhone|iPad|iPod|Mobile|Tablet|Silk|Kindle/i.test(ua)||(navigator.platform==="MacIntel"&&navigator.maxTouchPoints>1);const parts=location.pathname.split("/").filter(Boolean);const base=parts.length?`/${parts[0]}/`:"/";const wanted=base+((location.pathname.toLowerCase().includes("zone")||mobile)?"zone.html?v=4.7.5":"index.html?v=4.7.5");if(!sessionStorage.getItem("v44_404_recovered")){sessionStorage.setItem("v44_404_recovered","1");setTimeout(()=>location.replace(wanted),700)}})();</script></body></html>
 ```
 
 
@@ -4180,7 +4180,7 @@ html,body.social-zone-page{
 
 
 /* =====================================================================
-   V4.7.4 — DUAL RANKING / PVP MULTI ROOM / TOKEN ECONOMY / ITEM SET 2
+   V4.7.5 — DUAL RANKING / PVP MULTI ROOM / TOKEN ECONOMY / ITEM SET 2
    ===================================================================== */
 .ranking-mode-switch{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin:8px 0 10px}
 .ranking-mode-btn{min-height:38px;border:1px solid #d4dde6;border-radius:9px;background:#f6f8fa;color:#496174;font-weight:800;cursor:pointer}
@@ -4206,7 +4206,7 @@ html,body.social-zone-page{
 
 
 /* ==================================================================
-   V4.7.4 ADMIN CLASSROOM / RANK RESET / GM WORLD CHAT / PVP COUNTDOWN
+   V4.7.5 ADMIN CLASSROOM / RANK RESET / GM WORLD CHAT / PVP COUNTDOWN
    ================================================================== */
 .admin-metrics{grid-template-columns:repeat(5,minmax(0,1fr))}
 .admin-class-filter-wrap label,.admin-ranking-filter{display:flex;align-items:center;gap:8px;font-size:10px}.admin-class-filter-wrap select,.admin-ranking-filter select{min-width:150px;min-height:38px}
@@ -4221,7 +4221,7 @@ html,body.social-zone-page{
 .zone-rank-reset-notice{position:absolute;left:50%;top:10px;transform:translateX(-50%);z-index:30;max-width:min(720px,calc(100% - 220px));padding:8px 13px;border:1px solid rgba(255,215,91,.65);border-radius:999px;background:rgba(55,39,10,.9);color:#fff8dc;display:flex;align-items:center;gap:8px;backdrop-filter:blur(7px);box-shadow:0 8px 26px rgba(0,0,0,.18)}.zone-rank-reset-notice span{font-size:7px;font-weight:1000;color:#ffd75b;letter-spacing:.08em}.zone-rank-reset-notice strong{font-size:9px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}@media(max-width:760px){.zone-rank-reset-notice{max-width:calc(100% - 20px);top:7px}.zone-rank-reset-notice span{display:none}.zone-rank-reset-notice strong{font-size:8px}}
 
 
-/* ===== V4.7.4 SIMPLE CHAT-ONLY 2D ZONE ===== */
+/* ===== V4.7.5 SIMPLE CHAT-ONLY 2D ZONE ===== */
 .simple-zone-page{margin:0;width:100vw;height:100vh;height:100dvh;overflow:hidden;background:#102c3d;color:#19364a}
 .simple-zone-gate{position:fixed;inset:0;z-index:50000;display:grid;place-items:center;padding:18px;background:radial-gradient(circle at 50% 20%,#285a70,#0b2535 72%)}
 .simple-zone-gate-card{width:min(560px,100%);padding:34px;background:#fffaf0;border:2px solid #d8c4a3;border-radius:22px;text-align:center;box-shadow:0 28px 80px rgba(0,0,0,.32)}
@@ -4251,7 +4251,7 @@ html,body.social-zone-page{
 .simple-zone-chat-history{display:grid;gap:7px;margin-top:14px}.simple-zone-chat-message{display:grid;grid-template-columns:38px 1fr;gap:8px;padding:9px;border:1px solid #e0d7c8;border-radius:11px;background:#fff}.simple-zone-chat-message.gm{background:#fff7d9;border-color:#dec06b}.simple-zone-chat-avatar{width:38px;height:38px;border-radius:10px;display:grid;place-items:center;background:#e9f0f3;color:#284d61;font-weight:900;font-size:9px}.simple-zone-chat-message.gm .simple-zone-chat-avatar{background:#71334e;color:#ffe79a}.simple-zone-chat-meta{display:flex;gap:8px;align-items:center}.simple-zone-chat-meta strong{font-size:9px}.simple-zone-chat-meta time{margin-left:auto;font-size:7px;color:#8c8172}.simple-zone-chat-message p{margin:4px 0 0;font-size:10px;line-height:1.45}
 @media(max-width:900px){.simple-zone-app{grid-template-rows:54px minmax(0,1fr) 70px}.simple-zone-topbar{grid-template-columns:minmax(0,1fr) auto auto;padding:5px 7px;gap:5px}.simple-zone-worldtime{display:none}.simple-zone-user{display:none}.simple-zone-brand-icon{width:34px;height:34px}.simple-zone-brand strong{font-size:9px}.simple-zone-brand small{display:none}.simple-zone-help{display:none}.simple-zone-mobile-pad{display:grid}.simple-zone-top-actions .btn{padding:0 7px}.simple-zone-chatbar{grid-template-columns:74px minmax(0,1fr);gap:5px;padding:6px}.simple-zone-chat-identity{padding:6px}.simple-zone-chat-form{height:54px;grid-template-columns:minmax(0,1fr) 58px;padding:5px;border-width:1px}.simple-zone-chat-form input{font-size:16px;padding:0 8px}.simple-zone-chat-form button{font-size:10px}.simple-zone-system-notice{top:7px;font-size:7px}.simple-zone-player-card{left:7px;right:7px;top:auto;bottom:7px;width:auto}}
 
-/* ===== V4.7.4 ADMIN ROOM SEARCH ===== */
+/* ===== V4.7.5 ADMIN ROOM SEARCH ===== */
 .admin-room-search-card{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;align-items:center;margin-bottom:14px;padding:13px;border:1px solid #dde5eb;border-radius:14px;background:#f8fbfd}.admin-room-search-box{display:grid;grid-template-columns:28px minmax(0,1fr) auto;align-items:center;gap:7px}.admin-room-search-box>span{text-align:center;font-size:18px}.admin-room-search-box input{min-height:44px;border:1px solid #ccd8e1;border-radius:10px;padding:0 12px;background:#fff;font-size:15px}.admin-room-search-meta{text-align:right}.admin-room-search-meta strong,.admin-room-search-meta span{display:block}.admin-room-search-meta strong{font-size:10px;color:#244c67}.admin-room-search-meta span{font-size:8px;color:#7c8992;margin-top:3px}
 .admin-room-directory{display:grid;gap:12px}.admin-room-group{padding:12px;border:1px solid #e0e7ec;border-radius:14px;background:#fff}.admin-room-group-title{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}.admin-room-group-title strong{font-size:13px;color:#254b63}.admin-room-group-title span{font-size:8px;color:#7e8b94}.admin-room-buttons{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:7px}.admin-room-button{min-height:66px;padding:9px;border:1px solid #dbe3e8;border-radius:11px;background:#f9fbfc;color:#26475b;text-align:left;cursor:pointer;transition:.15s ease}.admin-room-button:hover{transform:translateY(-1px);border-color:#8ab3ca;background:#f2f8fb}.admin-room-button.active{border-color:#376f91;background:#eaf4f9;box-shadow:inset 0 0 0 1px #376f91}.admin-room-button span,.admin-room-button small{display:block}.admin-room-button span{font-size:12px;font-weight:900}.admin-room-button small{font-size:7px;color:#72808a;margin-top:4px}.admin-room-no-result{padding:28px;border:1px dashed #d5dde2;border-radius:13px;text-align:center;color:#7f8b93;background:#fafcfd}
 .admin-selected-room{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:14px 0 8px;padding:12px 14px;border-left:4px solid #487d9b;border-radius:10px;background:#f2f7fa}.admin-selected-room>div span,.admin-selected-room>div strong{display:block}.admin-selected-room>div span{font-size:8px;color:#7c8a93}.admin-selected-room>div strong{font-size:18px;color:#193f57;margin-top:2px}.admin-selected-room>span{font-size:9px;color:#657680}.admin-room-table-wrap table tbody tr:nth-child(even){background:#f9fbfc}.admin-room-table-wrap table tbody tr:hover{background:#eef6fa}
@@ -4259,7 +4259,7 @@ html,body.social-zone-page{
 
 
 /* ==================================================================
-   V4.7.4 HORIZONTAL SMOOTH ZONE + WIZARD + TOKEN SHOP
+   V4.7.5 HORIZONTAL SMOOTH ZONE + WIZARD + TOKEN SHOP
    ================================================================== */
 .zone47-page{margin:0;width:100vw;height:100vh;height:100dvh;overflow:hidden;background:#0c2637;color:#19364a}
 .zone47-gate{position:fixed;inset:0;z-index:50000;display:grid;place-items:center;padding:18px;background:radial-gradient(circle at 50% 18%,#295b71,#081e2c 72%)}
@@ -4278,7 +4278,7 @@ html,body.social-zone-page{
 @media(max-width:1100px){.zone47-topbar{grid-template-columns:minmax(0,1fr) auto auto}.zone47-time,.zone47-user{display:none}.zone47-shop-grid{grid-template-columns:repeat(3,minmax(0,1fr))}.admin-quest-form{grid-template-columns:repeat(2,minmax(0,1fr))}.admin-quest-description{grid-column:span 2}}
 @media(max-width:760px){.zone47-app{grid-template-rows:54px minmax(0,1fr) 72px}.zone47-topbar{grid-template-columns:minmax(0,1fr) auto;padding:5px 6px}.zone47-brand small,.zone47-token{display:none}.zone47-actions .btn:not(#openWizardQuests):not(#openZoneShop){display:none}.zone47-actions .btn{padding:0 5px}.zone47-help{display:none}.zone47-footer{grid-template-columns:54px minmax(0,1fr) 54px;gap:5px;padding:6px}.zone47-chat-id{display:none}.zone47-move-button{height:56px}.zone47-chat-form{height:56px;grid-template-columns:minmax(0,1fr) 55px;padding:5px;border-width:1px}.zone47-chat-form input{font-size:16px;padding:0 8px}.zone47-shop-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.zone47-quest-item{grid-template-columns:45px minmax(0,1fr);}.zone47-quest-reward{grid-column:1/-1;display:grid;grid-template-columns:50px 50px minmax(0,1fr);align-items:center;gap:5px}.zone47-quest-reward .btn{margin:0}.zone47-modal{padding:7px}.zone47-modal-card{width:100%;max-height:calc(100dvh - 14px);padding:14px;border-width:2px}.zone47-wizard-portrait{width:58px;height:58px;font-size:34px}.admin-quest-form{grid-template-columns:1fr}.admin-quest-description{grid-column:span 1}}
 
-/* ===== V4.7.4 ACADEMIC HIERARCHY ===== */
+/* ===== V4.7.5 ACADEMIC HIERARCHY ===== */
 .academic-code-preview{display:block;margin-top:5px;color:#52728a;font-size:8px;font-weight:800}
 .academic-filter-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:12px 0}.academic-filter-grid label{display:grid;gap:5px}.academic-filter-grid label>span{font-size:8px;font-weight:900;color:#4b6474}.academic-filter-grid select,.academic-filter-grid input{min-height:42px;border:1px solid #d0dde5;border-radius:10px;background:#fff;padding:0 10px}.academic-filter-search{grid-column:span 2}.academic-summary{margin:8px 0 10px;padding:9px 12px;border-radius:10px;background:#f0f6fa;color:#46667a;font-size:9px;font-weight:800}
 @media(max-width:900px){.academic-filter-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.academic-filter-search{grid-column:span 2}}@media(max-width:600px){.academic-filter-grid{grid-template-columns:1fr}.academic-filter-search{grid-column:auto}}
@@ -4298,14 +4298,14 @@ import {
   getFirestore, collection, doc, getDoc, getDocs, setDoc, addDoc, updateDoc, deleteDoc,
   serverTimestamp, query, where, orderBy, limit, onSnapshot, runTransaction
 } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
-import { firebaseConfig } from "./firebase-config.js?v=4.7.4";
-import { LANGUAGES, LESSONS, DIFFICULTIES } from "./lessons.js?v=4.7.4";
-import { REWARD_ITEMS, RARITY_META } from "./reward-data.js?v=4.7.4";
-import { DEFAULT_CHARACTER, DEFAULT_ZONE_STATE } from "./character-system.js?v=4.7.4";
-import { OFFICIAL_STAGES, OFFICIAL_TOTAL_SCORE } from "./official-data.js?v=4.7.4";
-import { RANKING_CONFIG, seasonIdFromDate, seasonRange, calculateRankMetrics, rankingClassKey, rankProfiles } from "./ranking-system.js?v=4.7.4";
-import { TOKEN_REWARD_CONFIG, calculateStageTokenReward, maxTokenForLesson, classKey } from "./economy-system.js?v=4.7.4";
-import { DEFAULT_TEACHER_QUESTS, localDayKey, questObjectiveMet, questObjectiveLabel, clampQuestReward } from "./quest-system.js?v=4.7.4";
+import { firebaseConfig } from "./firebase-config.js?v=4.7.5";
+import { LANGUAGES, LESSONS, DIFFICULTIES } from "./lessons.js?v=4.7.5";
+import { REWARD_ITEMS, RARITY_META } from "./reward-data.js?v=4.7.5";
+import { DEFAULT_CHARACTER, DEFAULT_ZONE_STATE } from "./character-system.js?v=4.7.5";
+import { OFFICIAL_STAGES, OFFICIAL_TOTAL_SCORE } from "./official-data.js?v=4.7.5";
+import { RANKING_CONFIG, seasonIdFromDate, seasonRange, calculateRankMetrics, rankingClassKey, rankProfiles } from "./ranking-system.js?v=4.7.5";
+import { TOKEN_REWARD_CONFIG, calculateStageTokenReward, maxTokenForLesson, classKey } from "./economy-system.js?v=4.7.5";
+import { DEFAULT_TEACHER_QUESTS, localDayKey, questObjectiveMet, questObjectiveLabel, clampQuestReward } from "./quest-system.js?v=4.7.5";
 
 const firebaseApp = initializeApp(firebaseConfig);
 const auth = getAuth(firebaseApp);
@@ -4480,7 +4480,7 @@ async function routeAuthenticatedStudent(){
     }catch(error){
       console.warn("mobile route sync skipped:", error);
     }
-    location.replace("./zone.html?v=4.7.4");
+    location.replace("./zone.html?v=4.7.5");
     return;
   }
 
@@ -4718,7 +4718,7 @@ async function maybeLaunchQuestFromUrl(){
   if(!id||state.questLaunchHandled||!state.uid||!state.player)return false;
   state.questLaunchHandled=true;
   if(isMobileOrTabletDevice()){
-    location.replace("./zone.html?v=4.7.4");
+    location.replace("./zone.html?v=4.7.5");
     return true;
   }
   const quest=await resolveTeacherQuest(id);
@@ -5033,7 +5033,7 @@ $("nextLevelButton").onclick=async()=>{
   state.lesson=next;state.difficulty=DIFFICULTIES.find(x=>x.id===next.difficulty);
   prepareClassic();showScreen("gameScreen");await requestRealFullscreen();setTimeout(()=>$("typingInput").focus({preventScroll:true}),100);
 };
-$("questZoneButton").onclick=()=>{location.href="./zone.html?v=4.7.4"};
+$("questZoneButton").onclick=()=>{location.href="./zone.html?v=4.7.5"};
 $("portalButton").onclick=async()=>{state.activeQuest=null;history.replaceState(null,"",location.pathname);await ensureProfileDefaults();await enterPortal()};
 
 function renderRewardShop(){
@@ -5298,7 +5298,7 @@ async function saveCharacterGender(gender){
 
   // มือถือ/แท็บเล็ตใช้เฉพาะ 2D Zone หลังเลือกตัวละครเสร็จ
   if(isMobileOrTabletDevice()){
-    location.replace("./zone.html?v=4.7.4");
+    location.replace("./zone.html?v=4.7.5");
   }
 }
 
@@ -5530,7 +5530,7 @@ function startSocialHub(){
 window.addEventListener('pagehide',()=>markOffline());
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')writePresence(document.body.classList.contains('game-active')?'game':'portal')});
 
-/* ===== V4.7.4 PVP MULTI ROOM · 1/3/5 SHOT · 1V1/2V2 RELAY · TOKEN WAGER ===== */
+/* ===== V4.7.5 PVP MULTI ROOM · 1/3/5 SHOT · 1V1/2V2 RELAY · TOKEN WAGER ===== */
 const PVP_ROOM_STALE_MS=20*60*1000;
 const PVP_CREATE_FEE=6;
 const PVP_COUNTDOWN_MS=3000;
@@ -5860,7 +5860,7 @@ updateDeviceUX();
 
 onAuthStateChanged(auth,async user=>{
   if(!user){state.uid=null;state.player=null;showScreen("authScreen");return;}
-  if(user.email==="pisit_2000@nr-game-code.local"){location.replace("./admin.html?v=4.7.4");return;}
+  if(user.email==="pisit_2000@nr-game-code.local"){location.replace("./admin.html?v=4.7.5");return;}
   state.uid=user.uid;
   try{
     await routeAuthenticatedStudent();
@@ -5886,10 +5886,10 @@ import {
   getFirestore, collection, doc, getDocs, setDoc, deleteDoc, updateDoc,
   writeBatch, serverTimestamp, onSnapshot, Timestamp, query, orderBy, limit
 } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
-import { firebaseConfig, ADMIN_USERNAME, ADMIN_EMAIL, ADMIN_UID } from "./firebase-config.js?v=4.7.4";
-import { DEFAULT_MODES, DEFAULT_LEVELS } from "./default-data.js?v=4.7.4";
-import { seasonIdFromDate, seasonRange, calculateRankMetrics, rankingClassKey } from "./ranking-system.js?v=4.7.4";
-import { DEFAULT_TEACHER_QUESTS, clampQuestReward, questDifficultyName, questObjectiveLabel, defaultMinRankForDifficulty, rewardRange } from "./quest-system.js?v=4.7.4";
+import { firebaseConfig, ADMIN_USERNAME, ADMIN_EMAIL, ADMIN_UID } from "./firebase-config.js?v=4.7.5";
+import { DEFAULT_MODES, DEFAULT_LEVELS } from "./default-data.js?v=4.7.5";
+import { seasonIdFromDate, seasonRange, calculateRankMetrics, rankingClassKey } from "./ranking-system.js?v=4.7.5";
+import { DEFAULT_TEACHER_QUESTS, clampQuestReward, questDifficultyName, questObjectiveLabel, defaultMinRankForDifficulty, rewardRange } from "./quest-system.js?v=4.7.5";
 
 const app=initializeApp(firebaseConfig),auth=getAuth(app),db=getFirestore(app),$=id=>document.getElementById(id);
 let cache={users:[],attempts:[],levels:[],modes:[],official:[],zonePositions:[],zoneModeration:[],zoneMessages:[],zoneArchive:[],rankingSettings:{},teacherQuests:[]},unsubs=[];
@@ -6594,13 +6594,13 @@ import {
   getFirestore, doc, getDoc, setDoc, updateDoc, collection, onSnapshot,
   serverTimestamp, query, orderBy, limit, Timestamp, runTransaction
 } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
-import { firebaseConfig, ADMIN_UID } from "./firebase-config.js?v=4.7.4";
-import { REWARD_ITEMS, RARITY_META } from "./reward-data.js?v=4.7.4";
-import { DEFAULT_CHARACTER } from "./character-system.js?v=4.7.4";
+import { firebaseConfig, ADMIN_UID } from "./firebase-config.js?v=4.7.5";
+import { REWARD_ITEMS, RARITY_META } from "./reward-data.js?v=4.7.5";
+import { DEFAULT_CHARACTER } from "./character-system.js?v=4.7.5";
 import {
   QUEST_CONFIG, DEFAULT_TEACHER_QUESTS, localDayKey, activeQuestLimit,
   canAccessQuest, clampQuestReward, questDifficultyName, questObjectiveLabel
-} from "./quest-system.js?v=4.7.4";
+} from "./quest-system.js?v=4.7.5";
 
 const firebaseApp=initializeApp(firebaseConfig);
 const auth=getAuth(firebaseApp);
@@ -6679,7 +6679,7 @@ async function checkModeration(){
     if(s.banned){showGate("ถูกระงับการเข้า 2D Zone",`แบนถึง ${s.bannedUntil.toLocaleString("th-TH")}`);return false}
     if(s.kicked){showGate("ถูก GM เตะออกจาก 2D Zone",`กลับเข้าได้หลัง ${s.kickedUntil.toLocaleTimeString("th-TH")}`);return false}
     return true;
-  }catch(error){showGate("ตรวจสอบสิทธิ์ Zone ไม่สำเร็จ",error.message||String(error),"กรุณา Publish firestore.rules V4.7.4");return false}
+  }catch(error){showGate("ตรวจสอบสิทธิ์ Zone ไม่สำเร็จ",error.message||String(error),"กรุณา Publish firestore.rules V4.7.5");return false}
 }
 function listenModeration(){
   if(isGM())return;
@@ -6860,7 +6860,7 @@ async function acceptQuest(id){
 function startQuest(id){
   const q=teacherQuests.find(x=>x.id===id)||DEFAULT_TEACHER_QUESTS.find(x=>x.id===id);if(!q)return;
   if(isTouchOnly()){alert("รับภารกิจแล้ว กรุณาเปิดบัญชีนี้บนคอมพิวเตอร์เพื่อทำภารกิจ");return}
-  location.href=`./index.html?quest=${encodeURIComponent(id)}&v=4.7.4`;
+  location.href=`./index.html?quest=${encodeURIComponent(id)}&v=4.7.5`;
 }
 $("openWizardQuests").onclick=async()=>{await loadQuestProgress();renderQuestModal();$("zoneQuestModal").classList.remove("hidden")};
 $("closeWizardQuests").onclick=()=>$("zoneQuestModal").classList.add("hidden");
@@ -7545,8 +7545,8 @@ export function defaultMinRankForDifficulty(difficulty){
 ## lessons.js
 
 ```js
-import { HTML_LEVELS } from "./levels-html.js?v=4.7.4";
-import { PYTHON_LEVELS } from "./levels-python.js?v=4.7.4";
+import { HTML_LEVELS } from "./levels-html.js?v=4.7.5";
+import { PYTHON_LEVELS } from "./levels-python.js?v=4.7.5";
 
 export const LANGUAGES = [
   {

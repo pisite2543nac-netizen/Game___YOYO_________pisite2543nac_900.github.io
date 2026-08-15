@@ -1,0 +1,21 @@
+{
+  "syntax:app.js": true,
+  "syntax:admin.js": true,
+  "syntax:zone.js": true,
+  "syntax:ranking-system.js": true,
+  "syntax:quest-system.js": true,
+  "syntax:economy-system.js": true,
+  "syntax:reward-data.js": true,
+  "syntax:character-system.js": true,
+  "syntax:firebase-config.js": true,
+  "syntax:levels-html.js": true,
+  "stage27_found": true,
+  "stage27_no_copyright": true,
+  "stage27_text_ok": true,
+  "stage50_found": true,
+  "stage50_no_copyright": true,
+  "all_html_targets_no_copyright": true,
+  "firebase_thc_nr": true,
+  "runtime_sanitizer_added": true,
+  "all_passed": true
+}

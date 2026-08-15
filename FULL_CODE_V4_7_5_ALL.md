@@ -1,4 +1,4 @@
-# FULL CODE V4.7.5 THC-NR 15 DIGIT ACADEMIC REGISTER
+# FULL CODE V4.7.5 THC-NR KEYBOARD SAFE LEVELS
 
 
 ## index.html
@@ -4338,6 +4338,16 @@ const esc = v => String(v ?? "").replaceAll("&","&amp;").replaceAll("<","&lt;").
 const fmtDate = v => { try { return v?.toDate?.().toLocaleString("th-TH") || "-"; } catch { return "-"; } };
 const fmtTime = s => { s=Math.max(0,s); return `${Math.floor(s/60).toString().padStart(2,"0")}:${Math.floor(s%60).toString().padStart(2,"0")}`; };
 
+function sanitizeTypingTarget(value){
+  return String(value??"")
+    .replace(/\u00a0/g," ")
+    .replace(/[©®™]/g,"")
+    .replace(/[“”]/g,'"')
+    .replace(/[‘’]/g,"'")
+    .replace(/[–—]/g,"-")
+    .replace(/…/g,"...");
+}
+
 function showScreen(id){
   ["authScreen","userPortal","gameScreen","resultScreen","pvpGameScreen"].forEach(x => $(x)?.classList.toggle("hidden", x !== id));
   const playing = id === "gameScreen" || id === "pvpGameScreen";
@@ -7998,7 +8008,7 @@ export const HTML_LEVELS = [
     "description": "ด่าน HTML 27: footer",
     "usage": "footer คือส่วนท้าย",
     "benefit": "ฝึกอ่านและพิมพ์โครงสร้าง HTML ให้แม่นยำ พร้อมเข้าใจหน้าที่ของแท็ก",
-    "code": "<footer>\n  <p>© 2026 Code Academy</p>\n</footer>",
+    "code": "<footer>\n  <p>2026 Code Academy</p>\n</footer>",
     "outputExplain": "footer คือส่วนท้าย",
     "basePoints": 370,
     "rewardPoints": 42,
@@ -8343,7 +8353,7 @@ export const HTML_LEVELS = [
     "description": "ด่าน HTML 50: หน้าเกม Semantic",
     "usage": "ด่านสุดท้ายรวมโครงสร้าง HTML5 หลายส่วน",
     "benefit": "ฝึกอ่านและพิมพ์โครงสร้าง HTML ให้แม่นยำ พร้อมเข้าใจหน้าที่ของแท็ก",
-    "code": "<!DOCTYPE html>\n<html lang=\"th\">\n<head>\n  <meta charset=\"UTF-8\">\n  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n  <title>Code Typing Arena</title>\n</head>\n<body>\n  <header>\n    <h1>Code Typing Arena</h1>\n    <nav><a href=\"#classic\">Classic</a> <a href=\"#pvp\">PVP</a></nav>\n  </header>\n  <main>\n    <section id=\"classic\">\n      <h2>Classic Mode</h2>\n      <p>พิมพ์โค้ดให้ถูกต้องและเร็วที่สุด</p>\n      <button type=\"button\">เริ่มเกม</button>\n    </section>\n  </main>\n  <footer>© 2026 Nangrong Technical College</footer>\n</body>\n</html>",
+    "code": "<!DOCTYPE html>\n<html lang=\"th\">\n<head>\n  <meta charset=\"UTF-8\">\n  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n  <title>Code Typing Arena</title>\n</head>\n<body>\n  <header>\n    <h1>Code Typing Arena</h1>\n    <nav><a href=\"#classic\">Classic</a> <a href=\"#pvp\">PVP</a></nav>\n  </header>\n  <main>\n    <section id=\"classic\">\n      <h2>Classic Mode</h2>\n      <p>พิมพ์โค้ดให้ถูกต้องและเร็วที่สุด</p>\n      <button type=\"button\">เริ่มเกม</button>\n    </section>\n  </main>\n  <footer>2026 Nangrong Technical College</footer>\n</body>\n</html>",
     "outputExplain": "ด่านสุดท้ายรวมโครงสร้าง HTML5 หลายส่วน",
     "basePoints": 600,
     "rewardPoints": 70,
