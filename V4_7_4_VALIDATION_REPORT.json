@@ -1,0 +1,22 @@
+{
+  "syntax:app.js": true,
+  "syntax:admin.js": true,
+  "syntax:zone.js": true,
+  "syntax:ranking-system.js": true,
+  "syntax:quest-system.js": true,
+  "syntax:economy-system.js": true,
+  "syntax:reward-data.js": true,
+  "syntax:character-system.js": true,
+  "syntax:firebase-config.js": true,
+  "firebase_thc_nr": true,
+  "auth_domain_thc_nr": true,
+  "register_html_15": true,
+  "login_html_15": true,
+  "register_js_15": true,
+  "login_js_15": true,
+  "department_kept": true,
+  "major_kept": true,
+  "admin_academic_kept": true,
+  "old_admin_uid": true,
+  "all_passed": true
+}

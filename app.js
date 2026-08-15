@@ -7,14 +7,14 @@ import {
   getFirestore, collection, doc, getDoc, getDocs, setDoc, addDoc, updateDoc, deleteDoc,
   serverTimestamp, query, where, orderBy, limit, onSnapshot, runTransaction
 } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
-import { firebaseConfig } from "./firebase-config.js?v=4.7.2";
-import { LANGUAGES, LESSONS, DIFFICULTIES } from "./lessons.js?v=4.7.2";
-import { REWARD_ITEMS, RARITY_META } from "./reward-data.js?v=4.7.2";
-import { DEFAULT_CHARACTER, DEFAULT_ZONE_STATE } from "./character-system.js?v=4.7.2";
-import { OFFICIAL_STAGES, OFFICIAL_TOTAL_SCORE } from "./official-data.js?v=4.7.2";
-import { RANKING_CONFIG, seasonIdFromDate, seasonRange, calculateRankMetrics, rankingClassKey, rankProfiles } from "./ranking-system.js?v=4.7.2";
-import { TOKEN_REWARD_CONFIG, calculateStageTokenReward, maxTokenForLesson, classKey } from "./economy-system.js?v=4.7.2";
-import { DEFAULT_TEACHER_QUESTS, localDayKey, questObjectiveMet, questObjectiveLabel, clampQuestReward } from "./quest-system.js?v=4.7.2";
+import { firebaseConfig } from "./firebase-config.js?v=4.7.4";
+import { LANGUAGES, LESSONS, DIFFICULTIES } from "./lessons.js?v=4.7.4";
+import { REWARD_ITEMS, RARITY_META } from "./reward-data.js?v=4.7.4";
+import { DEFAULT_CHARACTER, DEFAULT_ZONE_STATE } from "./character-system.js?v=4.7.4";
+import { OFFICIAL_STAGES, OFFICIAL_TOTAL_SCORE } from "./official-data.js?v=4.7.4";
+import { RANKING_CONFIG, seasonIdFromDate, seasonRange, calculateRankMetrics, rankingClassKey, rankProfiles } from "./ranking-system.js?v=4.7.4";
+import { TOKEN_REWARD_CONFIG, calculateStageTokenReward, maxTokenForLesson, classKey } from "./economy-system.js?v=4.7.4";
+import { DEFAULT_TEACHER_QUESTS, localDayKey, questObjectiveMet, questObjectiveLabel, clampQuestReward } from "./quest-system.js?v=4.7.4";
 
 const firebaseApp = initializeApp(firebaseConfig);
 const auth = getAuth(firebaseApp);
@@ -99,14 +99,37 @@ $("loginTab").onclick=()=>{$("loginTab").classList.add("active");$("registerTab"
 $("registerTab").onclick=()=>{$("registerTab").classList.add("active");$("loginTab").classList.remove("active");$("registerPanel").classList.remove("hidden");$("loginPanel").classList.add("hidden")};
 document.querySelectorAll("[data-toggle-password]").forEach(btn=>btn.onclick=()=>{const i=$(btn.dataset.togglePassword);i.type=i.type==="password"?"text":"password";btn.textContent=i.type==="password"?"แสดง":"ซ่อน"});
 
+
+const MAJOR_CODE_MAP={
+  "เทคโนโลยีสารสนเทศ":"ทส.",
+  "เทคโนโลยีธุรกิจดิจิทัล":"ทธ.",
+  "คอมพิวเตอร์ธุรกิจ":"คธ."
+};
+function majorCodeFor(level,major){
+  const base=MAJOR_CODE_MAP[String(major||"").trim()]||"";
+  if(!base)return "";
+  return String(level||"").startsWith("ปวส")?`ส.${base}`:base;
+}
+function academicKey(user){
+  return [user?.educationLevel||"",user?.classroom||"",user?.department||"",user?.major||""].join("|");
+}
+function refreshMajorCodePreview(){
+  const level=$("educationLevel")?.value||"",major=$("major")?.value||"";
+  const code=majorCodeFor(level,major);
+  if($("majorCodePreview"))$("majorCodePreview").textContent=code?`รหัสสาขา: (${code})`:"รหัสสาขา: -";
+}
+
 function registerValid(){
-  return /^\d{8}$/.test($("studentId").value.trim()) &&
+  return /^\d{1,15}$/.test($("studentId").value.trim()) &&
     $("fullName").value.trim() && $("educationLevel").value && $("classroom").value &&
-    $("password").value.length >= 6 &&
+    $("department").value && $("major").value && $("password").value.length >= 6 &&
     $("password").value === $("confirmPassword").value && $("acceptRules").checked;
 }
 function updateRegister(){ $("registerButton").disabled = !registerValid(); }
-["studentId","fullName","educationLevel","classroom","password","confirmPassword","acceptRules"].forEach(id=>$(id).addEventListener("input",updateRegister));
+["studentId","fullName","educationLevel","classroom","department","major","password","confirmPassword","acceptRules"].forEach(id=>$(id).addEventListener("input",updateRegister));
+$("educationLevel").addEventListener("change",refreshMajorCodePreview);
+$("major").addEventListener("change",refreshMajorCodePreview);
+refreshMajorCodePreview();
 
 $("registerForm").addEventListener("submit",async e=>{
   e.preventDefault(); if(!registerValid()) return;
@@ -118,6 +141,9 @@ $("registerForm").addEventListener("submit",async e=>{
       uid:state.uid,studentId:sid,fullName:$("fullName").value.trim(),
       educationLevel:$("educationLevel").value,classroom:$("classroom").value,
       classKey:classKey($("educationLevel").value,$("classroom").value),
+      department:$("department").value,major:$("major").value,
+      majorCode:majorCodeFor($("educationLevel").value,$("major").value),
+      academicKey:[$("educationLevel").value,$("classroom").value,$("department").value,$("major").value].join("|"),
       role:"student",status:"active",
       tokenBalance:0,tokenLifetime:0,inventory:[],
       officialProgress:{},officialSubmitted:false,
@@ -135,6 +161,13 @@ $("registerForm").addEventListener("submit",async e=>{
 });
 
 $("loginForm").addEventListener("submit",async e=>{
+  // LOGIN_STUDENT_ID_15_GUARD
+  const loginStudentIdValue=$("loginStudentId").value.trim();
+  if(!/^\d{1,15}$/.test(loginStudentIdValue)){
+    e.preventDefault();
+    $("loginMessage").textContent="กรุณากรอกเลขประจำตัวนักศึกษาเป็นตัวเลข 1–15 หลัก";
+    return;
+  }
   e.preventDefault();
   try{
     const cred=await signInWithEmailAndPassword(auth,studentEmail($("loginStudentId").value.trim()),$("loginPassword").value);
@@ -163,7 +196,7 @@ async function routeAuthenticatedStudent(){
     }catch(error){
       console.warn("mobile route sync skipped:", error);
     }
-    location.replace("./zone.html?v=4.7.2");
+    location.replace("./zone.html?v=4.7.4");
     return;
   }
 
@@ -173,7 +206,7 @@ async function routeAuthenticatedStudent(){
 async function enterPortal(){
   await ensureProfileDefaults();
   showScreen("userPortal");
-  $("portalWelcome").textContent=`${state.player.fullName} · ${state.player.studentId} · ${state.player.educationLevel}${state.player.classroom}`;
+  $("portalWelcome").textContent=`${state.player.fullName} · ${state.player.studentId} · ${state.player.educationLevel}${state.player.classroom} · ${state.player.department||"-"} · ${state.player.major||"-"}${state.player.majorCode?` (${state.player.majorCode})`:""}`;
   $("userTokens").textContent=Number(state.player.tokenBalance||0).toLocaleString();
   renderUserRank();
   renderLanguages();
@@ -401,7 +434,7 @@ async function maybeLaunchQuestFromUrl(){
   if(!id||state.questLaunchHandled||!state.uid||!state.player)return false;
   state.questLaunchHandled=true;
   if(isMobileOrTabletDevice()){
-    location.replace("./zone.html?v=4.7.2");
+    location.replace("./zone.html?v=4.7.4");
     return true;
   }
   const quest=await resolveTeacherQuest(id);
@@ -494,7 +527,7 @@ async function startClassic(){
   state.started=true;state.startTime=performance.now();$("typingStatus").textContent="กำลังเล่น...";
   const r=await addDoc(collection(db,"attempts"),{
     uid:state.uid,studentId:state.player.studentId,fullName:state.player.fullName,
-    educationLevel:state.player.educationLevel,classroom:state.player.classroom,
+    educationLevel:state.player.educationLevel,classroom:state.player.classroom,department:state.player.department||"",major:state.player.major||"",majorCode:state.player.majorCode||majorCodeFor(state.player.educationLevel,state.player.major),
     language:state.language.name,languageId:state.language.id,modeName:state.gameMode==="official"?"Official":"Classic",
     difficulty:state.difficulty.name,difficultyId:state.difficulty.id,stage:state.lesson.stage,
     lessonId:state.lesson.id,levelTitle:state.lesson.title,questId:state.activeQuest?.id||null,questTitle:state.activeQuest?.title||null,status:"playing",
@@ -716,7 +749,7 @@ $("nextLevelButton").onclick=async()=>{
   state.lesson=next;state.difficulty=DIFFICULTIES.find(x=>x.id===next.difficulty);
   prepareClassic();showScreen("gameScreen");await requestRealFullscreen();setTimeout(()=>$("typingInput").focus({preventScroll:true}),100);
 };
-$("questZoneButton").onclick=()=>{location.href="./zone.html?v=4.7.2"};
+$("questZoneButton").onclick=()=>{location.href="./zone.html?v=4.7.4"};
 $("portalButton").onclick=async()=>{state.activeQuest=null;history.replaceState(null,"",location.pathname);await ensureProfileDefaults();await enterPortal()};
 
 function renderRewardShop(){
@@ -981,7 +1014,7 @@ async function saveCharacterGender(gender){
 
   // มือถือ/แท็บเล็ตใช้เฉพาะ 2D Zone หลังเลือกตัวละครเสร็จ
   if(isMobileOrTabletDevice()){
-    location.replace("./zone.html?v=4.7.2");
+    location.replace("./zone.html?v=4.7.4");
   }
 }
 
@@ -1113,6 +1146,10 @@ async function syncPublicProfile(){
       educationLevel:state.player.educationLevel||"",
       classroom:state.player.classroom||"",
       classKey:classKey(state.player.educationLevel,state.player.classroom),
+      department:state.player.department||"",
+      major:state.player.major||"",
+      majorCode:state.player.majorCode||majorCodeFor(state.player.educationLevel,state.player.major),
+      academicKey:academicKey(state.player),
       rank:state.player.rank||{tierId:"bronze",tierName:"Bronze",rating:0},
       avatarId:state.player.character?.avatarId||"default_student",
       character:{
@@ -1209,7 +1246,7 @@ function startSocialHub(){
 window.addEventListener('pagehide',()=>markOffline());
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')writePresence(document.body.classList.contains('game-active')?'game':'portal')});
 
-/* ===== V4.7.2 PVP MULTI ROOM · 1/3/5 SHOT · 1V1/2V2 RELAY · TOKEN WAGER ===== */
+/* ===== V4.7.4 PVP MULTI ROOM · 1/3/5 SHOT · 1V1/2V2 RELAY · TOKEN WAGER ===== */
 const PVP_ROOM_STALE_MS=20*60*1000;
 const PVP_CREATE_FEE=6;
 const PVP_COUNTDOWN_MS=3000;
@@ -1292,7 +1329,7 @@ async function createRoom(){
       const us=await tx.get(userRef),rs=await tx.get(roomRef);if(!us.exists())throw new Error("ไม่พบ User");if(rs.exists())throw new Error("Room Code ถูกใช้แล้ว กรุณาลองใหม่");
       const bal=Number(us.data().tokenBalance||0);if(bal<PVP_CREATE_FEE+cfg.wager)throw new Error(`Token ไม่พอ ต้องมี ${PVP_CREATE_FEE+cfg.wager}`);
       tx.update(userRef,{tokenBalance:bal-PVP_CREATE_FEE,updatedAt:serverTimestamp()});
-      tx.set(roomRef,{code,hostUid:state.uid,languageId:state.language.id,difficultyId:state.difficulty?.id||state.lesson.difficulty,teamMode:cfg.teamMode,shotCount:cfg.shotCount,maxPlayers:cfg.maxPlayers,wager:cfg.wager,creationFee:PVP_CREATE_FEE,creationFeePaid:true,lessonIds,shotIndex:0,relayLegs:{A:0,B:0},scores:{A:0,B:0},shotResults:{},status:"waiting",createdAt:serverTimestamp(),lastActivityAt:serverTimestamp(),players:{[state.uid]:{uid:state.uid,name:state.player.fullName,studentId:state.player.studentId,educationLevel:state.player.educationLevel,classroom:state.player.classroom,...assign,joinedOrder:0,stakeLocked:cfg.wager===0,progress:0,shotFinished:false,joinedAt:new Date().toISOString()}}});
+      tx.set(roomRef,{code,hostUid:state.uid,languageId:state.language.id,difficultyId:state.difficulty?.id||state.lesson.difficulty,teamMode:cfg.teamMode,shotCount:cfg.shotCount,maxPlayers:cfg.maxPlayers,wager:cfg.wager,creationFee:PVP_CREATE_FEE,creationFeePaid:true,lessonIds,shotIndex:0,relayLegs:{A:0,B:0},scores:{A:0,B:0},shotResults:{},status:"waiting",createdAt:serverTimestamp(),lastActivityAt:serverTimestamp(),players:{[state.uid]:{uid:state.uid,name:state.player.fullName,studentId:state.player.studentId,educationLevel:state.player.educationLevel,classroom:state.player.classroom,department:state.player.department||"",major:state.player.major||"",majorCode:state.player.majorCode||majorCodeFor(state.player.educationLevel,state.player.major),...assign,joinedOrder:0,stakeLocked:cfg.wager===0,progress:0,shotFinished:false,joinedAt:new Date().toISOString()}}});
     });
     await ensureProfileDefaults();if($("userTokens"))$("userTokens").textContent=Number(state.player?.tokenBalance||0).toLocaleString();
     setMatchmakingStatus("waiting",`สร้างห้อง ${code} แล้ว · จ่าย ${PVP_CREATE_FEE} Token`,`ค่าสร้างไม่คืน · ส่ง Code ให้เพื่อน หรือรอผู้เล่นเลือกห้อง`);listenRoom(code);
@@ -1303,7 +1340,7 @@ $("createRoomButton").onclick=createRoom;
 async function joinRoomByCode(rawCode){
   if(!renderPvpConfig())return;const code=String(rawCode||"").trim().toUpperCase();if(code.length!==6){setMatchmakingStatus("error","Room Code ไม่ถูกต้อง","Code ต้องมี 6 ตัวอักษร");return;}
   setMatchButtonsBusy(true);setMatchmakingStatus("searching",`กำลังเข้าห้อง ${code}...`,`ตรวจสอบที่ว่างและกติกาห้อง`);
-  try{await leaveCurrentLobby();const ref=doc(db,"pvp_rooms",code);await runTransaction(db,async tx=>{const snap=await tx.get(ref);if(!snap.exists())throw new Error("ไม่พบห้องนี้");const room=snap.data();if(!isJoinableRoom(room))throw new Error("ห้องเต็ม เริ่มแล้ว หมดอายุ หรือภาษาไม่ตรง");if(Number(state.player?.tokenBalance||0)<Number(room.wager||0))throw new Error(`Token ไม่พอ ต้องมี ${Number(room.wager||0)} Token`);const players={...(room.players||{})},assign=teamAssignment(players,room.teamMode);players[state.uid]={uid:state.uid,name:state.player.fullName,studentId:state.player.studentId,educationLevel:state.player.educationLevel,classroom:state.player.classroom,...assign,joinedOrder:Object.keys(players).length,stakeLocked:Number(room.wager||0)===0,progress:0,shotFinished:false,joinedAt:new Date().toISOString()};tx.update(ref,{players,lastActivityAt:serverTimestamp()});});state.roomCode=code;setMatchmakingStatus("matched",`เข้าห้อง ${code} แล้ว`,`รอสมาชิกครบและระบบล็อก Token`);listenRoom(code);
+  try{await leaveCurrentLobby();const ref=doc(db,"pvp_rooms",code);await runTransaction(db,async tx=>{const snap=await tx.get(ref);if(!snap.exists())throw new Error("ไม่พบห้องนี้");const room=snap.data();if(!isJoinableRoom(room))throw new Error("ห้องเต็ม เริ่มแล้ว หมดอายุ หรือภาษาไม่ตรง");if(Number(state.player?.tokenBalance||0)<Number(room.wager||0))throw new Error(`Token ไม่พอ ต้องมี ${Number(room.wager||0)} Token`);const players={...(room.players||{})},assign=teamAssignment(players,room.teamMode);players[state.uid]={uid:state.uid,name:state.player.fullName,studentId:state.player.studentId,educationLevel:state.player.educationLevel,classroom:state.player.classroom,department:state.player.department||"",major:state.player.major||"",majorCode:state.player.majorCode||majorCodeFor(state.player.educationLevel,state.player.major),...assign,joinedOrder:Object.keys(players).length,stakeLocked:Number(room.wager||0)===0,progress:0,shotFinished:false,joinedAt:new Date().toISOString()};tx.update(ref,{players,lastActivityAt:serverTimestamp()});});state.roomCode=code;setMatchmakingStatus("matched",`เข้าห้อง ${code} แล้ว`,`รอสมาชิกครบและระบบล็อก Token`);listenRoom(code);
   }catch(e){console.error(e);setMatchButtonsBusy(false);setMatchmakingStatus("error","เข้าห้องไม่สำเร็จ",e.message||"");}
 }
 $("joinRoomCodeButton").onclick=()=>joinRoomByCode($("joinRoomCodeInput").value);
@@ -1539,7 +1576,7 @@ updateDeviceUX();
 
 onAuthStateChanged(auth,async user=>{
   if(!user){state.uid=null;state.player=null;showScreen("authScreen");return;}
-  if(user.email==="pisit_2000@thc-nr.local"){location.replace("./admin.html?v=4.7.2");return;}
+  if(user.email==="pisit_2000@thc-nr.local"){location.replace("./admin.html?v=4.7.4");return;}
   state.uid=user.uid;
   try{
     await routeAuthenticatedStudent();

@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Admin | ระบบเกมพิมพ์ Code</title>
-  <link rel="stylesheet" href="./style.css?v=4.7.2">
+  <link rel="stylesheet" href="./style.css?v=4.7.4">
 </head>
 <body class="admin-page">
   <main class="wrap admin-wrap">
@@ -38,7 +38,7 @@
           <p>ผู้จัดทำ: นายพิสิษฐ์ หุนตระนี ครูพิเศษสอน</p>
         </div>
         <div>
-          <a class="btn gm-zone-entry" href="./zone.html?v=4.7.2">🌙 เข้า 2D Zone · GM</a>
+          <a class="btn gm-zone-entry" href="./zone.html?v=4.7.4">🌙 เข้า 2D Zone · GM</a>
           <a class="btn ghost" href="index.html">หน้าผู้เล่น</a>
           <button id="logoutAdmin" class="btn secondary">ออกจากระบบ</button>
         </div>
@@ -56,6 +56,7 @@
         <button class="tab active" data-tab="resultsTab">ผลการเล่น</button>
         <button class="tab" data-tab="usersTab">สมาชิก User</button>
         <button class="tab" data-tab="classroomsTab">🏫 แยกตามห้อง</button>
+        <button class="tab" data-tab="academicTab">🧭 ชั้น / ห้อง / แผนก / สาขา</button>
         <button class="tab" data-tab="levelsTab">จัดการโจทย์ Code</button>
         <button class="tab" data-tab="officialTab">คะแนนทางการ</button>
         <button class="tab" data-tab="rankingTab">Ranking</button>
@@ -101,7 +102,7 @@
         <div class="table-wrap">
           <table>
             <thead>
-              <tr><th>วันเวลา</th><th>เลขนักศึกษา</th><th>ชื่อ-นามสกุล</th><th>ชั้น/ห้อง</th><th>แต้ม</th><th>สถานะ</th><th>จัดการ</th></tr>
+              <tr><th>วันเวลา</th><th>เลขนักศึกษา</th><th>ชื่อ-นามสกุล</th><th>ชั้น/ห้อง</th><th>แผนก</th><th>สาขาวิชา</th><th>รหัสสาขา</th><th>แต้ม</th><th>สถานะ</th><th>จัดการ</th></tr>
             </thead>
             <tbody id="usersBody"></tbody>
           </table>
@@ -147,6 +148,27 @@
             </tr></thead>
             <tbody id="adminClassroomBody"></tbody>
           </table>
+        </div>
+      </section>
+
+      <section id="academicTab" class="admin-tab-panel hidden">
+        <div class="panel-title">
+          <div>
+            <h2>🧭 คัดแยกข้อมูลนักศึกษาแบบละเอียด</h2>
+            <p>กรองตามระดับชั้น ห้อง แผนก และสาขาวิชาได้พร้อมกัน พร้อมเรียงรหัสนักศึกษาจากน้อยไปมาก</p>
+          </div>
+        </div>
+        <div class="academic-filter-grid">
+          <label><span>ระดับชั้น</span><select id="academicLevelFilter"><option value="">ทุกระดับ</option></select></label>
+          <label><span>ห้อง</span><select id="academicRoomFilter"><option value="">ทุกห้อง</option></select></label>
+          <label><span>แผนก</span><select id="academicDepartmentFilter"><option value="">ทุกแผนก</option></select></label>
+          <label><span>สาขาวิชา</span><select id="academicMajorFilter"><option value="">ทุกสาขาวิชา</option></select></label>
+          <label class="academic-filter-search"><span>ค้นหา</span><input id="academicStudentSearch" type="search" placeholder="รหัสนักศึกษา หรือ ชื่อ"></label>
+        </div>
+        <div id="academicSummary" class="academic-summary">0 คน</div>
+        <div class="table-wrap">
+          <table><thead><tr><th>#</th><th>รหัสนักศึกษา</th><th>ชื่อ</th><th>ระดับ</th><th>ห้อง</th><th>แผนก</th><th>สาขาวิชา</th><th>รหัสสาขา</th><th>Token</th><th>Rank</th></tr></thead>
+          <tbody id="academicBody"></tbody></table>
         </div>
       </section>
 
@@ -230,7 +252,10 @@
         <div class="ranking-season-banner">
           <span>Season</span><strong id="adminSeasonId">-</strong>
           <span id="adminSeasonRange">-</span>
-          <label class="admin-ranking-filter"><span>แสดง</span><select id="adminRankingClassFilter"><option value="">ทุกห้อง</option></select></label>
+          <label class="admin-ranking-filter"><span>ระดับ</span><select id="adminRankingLevelFilter"><option value="">ทุกระดับ</option></select></label>
+          <label class="admin-ranking-filter"><span>ห้อง</span><select id="adminRankingClassFilter"><option value="">ทุกห้อง</option></select></label>
+          <label class="admin-ranking-filter"><span>แผนก</span><select id="adminRankingDepartmentFilter"><option value="">ทุกแผนก</option></select></label>
+          <label class="admin-ranking-filter"><span>สาขา</span><select id="adminRankingMajorFilter"><option value="">ทุกสาขาวิชา</option></select></label>
         </div>
         <div class="table-wrap">
           <table>
@@ -336,7 +361,7 @@
           <div class="admin-world-chat-input-row">
             <textarea id="gmWorldChatInput" maxlength="120" rows="2" placeholder="GM พิมพ์ข้อความถึงผู้เล่นทุกคน..."></textarea>
             <button id="sendGmWorldChat" class="btn primary" type="button">ส่งในแชตโลก</button>
-            <a class="btn gm-zone-entry" href="./zone.html?v=4.7.2#world-chat">เข้า World Chat</a>
+            <a class="btn gm-zone-entry" href="./zone.html?v=4.7.4#world-chat">เข้า World Chat</a>
           </div>
         </div>
 
@@ -367,6 +392,6 @@
   </main>
 
   <div id="adminToast" class="admin-toast hidden" aria-live="polite"></div>
-  <script type="module" src="./admin.js?v=4.7.2"></script>
+  <script type="module" src="./admin.js?v=4.7.4"></script>
 </body>
 </html>

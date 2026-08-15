@@ -1,0 +1,22 @@
+{
+  "syntax:app.js": true,
+  "syntax:admin.js": true,
+  "syntax:zone.js": true,
+  "syntax:ranking-system.js": true,
+  "syntax:quest-system.js": true,
+  "syntax:economy-system.js": true,
+  "syntax:reward-data.js": true,
+  "syntax:character-system.js": true,
+  "syntax:firebase-config.js": true,
+  "firebase_nr_game": true,
+  "department_options": true,
+  "major_options": true,
+  "major_codes": true,
+  "pvs_prefix": true,
+  "registration_stores_academic": true,
+  "admin_academic_tab": true,
+  "admin_four_filters": true,
+  "ranking_filters": true,
+  "admin_uid": true,
+  "all_passed": true
+}
